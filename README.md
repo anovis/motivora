@@ -1,0 +1,2 @@
+# motivora
+serverless text platform
