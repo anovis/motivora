@@ -4,4 +4,5 @@ app.debug = True
 
 from chalicelib import (
     frontend,
+    twilio_handlers
 )

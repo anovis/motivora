@@ -13,3 +13,4 @@ def list_users():
     users = Users.scan(Users.message_set == "EBNHC")
     user_list = [user.to_dict() for user in users]
     return {"data":user_list}
+

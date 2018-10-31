@@ -1,5 +1,5 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute
+from pynamodb.attributes import UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute, UnicodeSetAttribute
 
 
 class Users(Model):
@@ -8,13 +8,13 @@ class Users(Model):
 
     phone = UnicodeAttribute(hash_key=True)
     message_set = UnicodeAttribute()
-    next_message_body = UnicodeAttribute()
-    next_message = NumberAttribute()
+    # next_message_body = UnicodeAttribute()
+    next_message = NumberAttribute(default=1)
     send_message = BooleanAttribute(default=True)
     time = NumberAttribute(default=9)
-    messages_sent = NumberSetAttribute(default={})
-    attr_scores = JSONAttribute(default={})
-    message_response = JSONAttribute(default={})
+    messages_sent = NumberSetAttribute(default={}, null=True)
+    attr_scores = JSONAttribute(null=True)
+    message_response = JSONAttribute(null=True)
 
     def to_json(self):
         return self.to_dict()
