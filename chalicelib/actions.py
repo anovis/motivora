@@ -1,12 +1,13 @@
 import os
 from twilio.rest import Client
+import datetime
 from models import Messages,Users
 
 
 class UserActions:
     def __init__(self, phone, **kwargs):
-        self.phone = phone
-        self.message_received = kwargs.get('Body').lower()
+        self.phone = int(phone)
+        self.message_received = kwargs.get('Body','').lower()
         self.message_set = kwargs.get('message_set')
 
     def is_user(self):
@@ -26,8 +27,14 @@ class UserActions:
         return self._user
 
     def send_next_sms(self):
-        message = Messages.get(self.message_set,self.user.next_message)
-        self.send_sms(message)
+        user = Users.get(self.phone)
+        try:
+            message = Messages.get(self.message_set,user.next_message)
+            self.send_sms(message.body)
+            return True
+
+        except:
+            return False
 
     def send_sms(self, message):
         account_sid = os.environ.get('SID')
@@ -58,23 +65,62 @@ class UserActions:
 
         return True
 
-    def update_post_message(self, message_sent, next_message=None):
-        self.user.messages_sent.append(message_sent)
-        if next_message:
-            self.user.next_message.set(next_message)
-        else:
-            self.user.next_message.add(1)
+    def next_message_algorithm(self):
+        u = Users.get(self.phone)
+        return u.next_message + 1
 
-        self.user.save()
+    def set_next_message(self,):
+
+        u = Users.get(self.phone)
+        sent_message = u.next_message
+        next_message = self.next_message_algorithm()
+        u.update(
+            actions=[
+                Users.messages_sent.add(sent_message),
+                Users.prev_message.set(sent_message),
+                Users.next_message.set(next_message)
+            ]
+        )
+        u.save()
 
         return True
 
+    def should_set_time(self):
+        try:
+            u = Users.get(self.phone)
+            if len(u.messages_sent) == 1:
+                time = int(self.message_received)
+                if 0 <= time <=24:
+                    return True
+                return False
+        except:
+            return False
+
+    def update_time(self):
+        time = int(self.message_received)
+        u = Users.get(self.phone)
+        u.update(
+            actions=[
+                Users.time.set(time)
+            ]
+        )
+        u.save()
+
     def handle_message(self):
         if self.message_received in ['stop','end']:
-            self.user.send_message.set(False)
-
+            u = Users.get(self.phone)
+            u.update(
+                actions=[
+                    Users.send_message.set(False)
+                ]
+            )
+            u.save()
         else:
-            self.user.message_response.set({len(self.user.message_response),self.message_received})
-
-        self.user.save()
+            u = Users.get(self.phone)
+            new_dict = u.message_response
+            new_dict[len(new_dict)]= {'message':self.message_received,"timestamp":str(datetime.datetime.now()),"message_sent":u.prev_message}
+            u.update(actions=[
+               Users.message_response.set(new_dict)
+            ])
+            u.save()
         return True

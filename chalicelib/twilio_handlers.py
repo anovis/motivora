@@ -21,5 +21,13 @@ def handle_twilio():
         user_class.send_sms(message.body)
         user_class.update_post_message(0)
 
+    elif user_class.should_set_time():
+        user_class.update_time()
+        user_class.send_sms('Thank you for your response. The time has been set.')
+
+    else:
+        user_class.handle_message()
+        user_class.send_sms('Thank you for your feedback!')
+
     return {'data':200}
 
