@@ -1,6 +1,5 @@
 from pynamodb.models import Model
 from pynamodb.attributes import UnicodeAttribute, NumberAttribute, UnicodeSetAttribute
-from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 
 class Messages(Model):
     class Meta:
@@ -31,5 +30,15 @@ class Messages(Model):
             'total_disliked': self.total_disliked,
             'total_liked': self.total_liked,
             'total_resp': self.total_resp,
+            'total_sent': self.total_sent
+        }
+
+    def to_frontend(self):
+        return {
+            'id': self.id,
+            'message_set': self.message_set,
+            'body': self.body,
+            'total_disliked': self.total_disliked,
+            'total_liked': self.total_liked,
             'total_sent': self.total_sent
         }

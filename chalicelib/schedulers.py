@@ -1,7 +1,7 @@
 from chalicelib import app
 from chalice import Rate
 import datetime
-from models import Users
+from chalicelib.models import Users
 
 from chalicelib.actions import UserActions
 

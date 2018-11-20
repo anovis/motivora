@@ -16,9 +16,9 @@ class Container extends Component {
  
   onClick(tab){
     this.setState({currentTab:tab});
-    axios.get('http://localhost:3000/' + tab)
+    axios.get('https://5b36vt9t44.execute-api.us-east-1.amazonaws.com/api/' + tab)
     .then((response) => {
-      this.setState({tableData: response.data})
+      this.setState({tableData: response.data.data})
     })
     .catch((error) => {console.log(error)})
 
@@ -26,10 +26,10 @@ class Container extends Component {
       this.setState({columns:['phone','response','date']});
     }
     else if(tab ==='users'){
-      this.setState({columns:['phone','message_set','send_message','next_message']});
+      this.setState({columns:['phone','message_set','time','send_message','next_message']});
     }
     else{
-        this.setState({columns:['id','message_set','total_sent','total_liked','total_disliked','body']});
+        this.setState({columns:['id','message_set','body','total_sent','total_liked','total_disliked']});
     }
 
   }
@@ -108,10 +108,11 @@ constructor (props) {
     );
     }
     else{
+//             expandableRow={ this.isExpandableRow }  expandComponent={ this.expandComponent } removed
       return (
            <div>
-                <BootstrapTable data={this.props.tableData} options={ options } expandableRow={ this.isExpandableRow } expandComponent={ this.expandComponent } keyField={ col[0] } striped hover>
-               { col.map(name => <TableHeaderColumn dataField={ name } editable={ name==="body" ? true : false } dataSort={ true } filter={ { type: 'TextFilter', delay: 1000 } }>{ name }</TableHeaderColumn>) }
+                <BootstrapTable data={this.props.tableData} options={ options }  keyField={ col[0] } striped hover>
+               { col.map(name => <TableHeaderColumn dataField={ name } dataSort={ true } filter={ { type: 'TextFilter', delay: 1000 } }>{ name }</TableHeaderColumn>) }
                  </BootstrapTable>
               </div>
       );

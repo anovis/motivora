@@ -1,5 +1,5 @@
 from chalicelib import app
-from models import Messages,Users
+from chalicelib.models import Messages
 from chalicelib.actions import UserActions
 from urllib.parse import parse_qs
 

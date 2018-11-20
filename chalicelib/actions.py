@@ -1,7 +1,7 @@
 import os
 from twilio.rest import Client
 import datetime
-from models import Messages,Users
+from chalicelib.models import Messages,Users
 
 
 class UserActions:
@@ -52,7 +52,7 @@ class UserActions:
         if not message_set:
             return False
 
-        from models import Users
+        from chalicelib.models import Users
         #TODO message_set handle better
         new_user = Users(
             phone=self.phone,

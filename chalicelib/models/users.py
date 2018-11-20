@@ -49,3 +49,12 @@ class Users(Model):
             'attr_scores': self.attr_scores,
             'message_response': self.message_response,
         }
+
+    def to_frontend(self):
+        return {
+            'phone': self.phone,
+            'time': self.time,
+            'message_set': self.message_set,
+            'next_message': self.next_message,
+            'send_message': self.send_message,
+            }

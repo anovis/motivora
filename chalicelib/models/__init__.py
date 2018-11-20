@@ -1,5 +1,5 @@
-from models.messages import Messages
-from models.users import Users
+from chalicelib.models.messages import Messages
+from chalicelib.models.users import Users
 
 
 if not Messages.exists():
