@@ -88,7 +88,7 @@ class UserActions:
     def should_set_time(self):
         try:
             u = Users.get(self.phone)
-            if len(u.messages_sent) == 1:
+            if len(u.messages_sent) == 0:
                 time = int(self.message_received)
                 if 0 <= time <=24:
                     return True

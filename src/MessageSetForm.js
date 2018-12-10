@@ -29,7 +29,7 @@ class MessageSetForm extends Component {
     const value = target.value;
     const name = target.name;
     this.setState((prevState) => {
-      if (prevState[name] == undefined){
+      if (prevState[name] === undefined){
         return {[name]: [value]}
       }
       else{
@@ -47,7 +47,7 @@ class MessageSetForm extends Component {
 
 
   handleSubmit(event) {
-    axios.post('/addmessageset', {
+    axios.post('http://localhost:8000/messages', {
         data: this.state
       })
       .then(function (response) {
