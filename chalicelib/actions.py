@@ -2,6 +2,7 @@ import os
 from twilio.rest import Client
 import datetime
 from chalicelib.models import Messages,Users
+import pdb
 
 
 class UserActions:
@@ -65,15 +66,22 @@ class UserActions:
 
         return True
 
-    def next_message_algorithm(self):
+    def get_next_message(self):
         u = Users.get(self.phone)
-        return u.next_message + 1
+        # Serve the standard message set until after 14 days
+        # if(u.next_message < 14): return u.next_message + 1
+        return get_reccomended_message()
+
+    def get_reccomended_message(self):
+        # TODO - get the scheduler to run locally on demand so you can trigger this and act like it needs a new message to send
+        user = Users.get(self.phone)
+        pdb.set_trace()
 
     def set_next_message(self,):
 
         u = Users.get(self.phone)
         sent_message = u.next_message
-        next_message = self.next_message_algorithm()
+        next_message = self.get_next_message()
         u.update(
             actions=[
                 Users.messages_sent.add(sent_message),
