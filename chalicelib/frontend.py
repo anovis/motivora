@@ -2,6 +2,8 @@ from chalicelib import app
 from chalicelib.models import Messages,Users
 from chalice import Response
 
+from chalicelib.actions import UserActions
+
 @app.route('/messages', methods=['GET'], cors=True)
 def list_messages():
     # TODO only one message set
@@ -24,4 +26,10 @@ def list_users():
     users = Users.scan(Users.message_set == "EBNHC")
     user_list = [user.to_frontend() for user in users]
     return {"data": user_list}
+
+
+@app.route('/test', methods=['GET'], cors=True)
+def test():
+    user_class = UserActions('17602147229', message_set="EBNHC")
+    return user_class.get_next_message()
 

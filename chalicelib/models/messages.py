@@ -1,5 +1,5 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, NumberAttribute, UnicodeSetAttribute
+from pynamodb.attributes import UnicodeAttribute, NumberAttribute, UnicodeSetAttribute, MapAttribute
 
 class Messages(Model):
     class Meta:
@@ -7,7 +7,7 @@ class Messages(Model):
 
     id = NumberAttribute(range_key=True)
     message_set = UnicodeAttribute(hash_key=True)
-    attr_list = UnicodeSetAttribute()
+    attr_list = MapAttribute()
     body = UnicodeAttribute()
     seq = UnicodeAttribute()
     total_attr = NumberAttribute()

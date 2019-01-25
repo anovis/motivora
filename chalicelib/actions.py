@@ -2,6 +2,8 @@ import os
 from twilio.rest import Client
 import datetime
 from chalicelib.models import Messages,Users
+from collections import defaultdict
+import operator
 import pdb
 
 
@@ -33,7 +35,6 @@ class UserActions:
             message = Messages.get(self.message_set,user.next_message)
             self.send_sms(message.body)
             return True
-
         except:
             return False
 
@@ -63,22 +64,89 @@ class UserActions:
         )
 
         new_user.save()
-
         return True
 
     def get_next_message(self):
         u = Users.get(self.phone)
         # Serve the standard message set until after 14 days
         # if(u.next_message < 14): return u.next_message + 1
-        return get_reccomended_message()
+        return self.get_recommended_message()
 
-    def get_reccomended_message(self):
-        # TODO - get the scheduler to run locally on demand so you can trigger this and act like it needs a new message to send
+
+    def get_recommended_message(self):
         user = Users.get(self.phone)
-        pdb.set_trace()
+        scored_attributes = self.get_scored_attributes(user)
+        scored_potential_messages = self.get_scored_potential_messages(scored_attributes, user)
+        new_message = self.choose_new_recommended_message(scored_potential_messages)
+        return new_message
+
+
+    def choose_new_recommended_message(self, scored_potential_messages):
+        return max(scored_potential_messages.items(), key=operator.itemgetter(1))[0]
+
+
+    def get_scored_potential_messages(self, scored_attributes, user):
+        messages_scored = defaultdict(int)
+        all_msgs_og = Messages.query(self.message_set, Messages.id > 0)
+        all_msgs = [message.to_frontend() for message in all_msgs_og]
+        all_msgs_filtered = filter(lambda msg: msg['id'] not in user.messages_sent, all_msgs)
+        # Iterate through each potential message
+        for msg in all_msgs_filtered:
+            message = Messages.get(self.message_set, msg['id'])
+            attributes = message.attr_list.as_dict()
+            # Iterate through all attributes for a given message
+            for attr, boolean in attributes.items():
+                # Make sure that the attribute is marked at TRUE
+                if not boolean: continue
+                messages_scored[msg['id']] += scored_attributes[attr]
+
+        return messages_scored
+
+
+    # Returns a dictionary of attributes with weighted scores based on the user's
+    # rating of messages with these attributes and the number of times each attribute
+    # has been attached to a message that was shown to a user.
+    # 1. Iterate through all messages that a user has been sent
+    # 2. For each message that was sent, iterate through all attributes of that message
+    # 3. If the message was rated >= 5, add it to a dictionary of properties and scores,
+    # if the message was rated < 5 then subtract it from 10 and then subtract that
+    # from the dictionary of properties and scores.
+    # 4. Multiple the property scores by the number of occurences that each property
+    # has across all messages that have been sent to the user.
+    def get_scored_attributes(self, user):
+        attribute_dict = defaultdict(int)
+        attribute_occurrence_dict = defaultdict(int)
+
+        # Iterate through all messages sent
+        for msg_idx in user.messages_sent:
+            message = Messages.get(self.message_set, msg_idx)
+            message_score = int(user.message_response[str(msg_idx)]['message'])
+            attributes = message.attr_list.as_dict()
+            # Iterate through all attributes for a given message
+            for attr, boolean in attributes.items():
+                # Make sure that the attribute is marked at TRUE
+                if not boolean: continue
+                # If the score is >= 5 it is considered positive
+                score_is_positive = message_score >= 5
+                # Count the occurrences of each attribute
+                attribute_occurrence_dict[attr] += 1
+                if score_is_positive:
+                    attribute_dict[attr] += message_score
+                else:
+                    # Subtract the negative score from 10 to have an equal
+                    # negative effect on the overall score
+                    weighted_negative_score = 10 - message_score
+                    attribute_dict[attr] -= weighted_negative_score
+
+        # To give some weight to the frequency of each attribute, multiple each
+        # attribute's score by the number of times it was rated
+        for attr, occurrence in attribute_occurrence_dict.items():
+            attribute_dict[attr] *= attribute_occurrence_dict[attr]
+
+        return attribute_dict
+
 
     def set_next_message(self,):
-
         u = Users.get(self.phone)
         sent_message = u.next_message
         next_message = self.get_next_message()
@@ -90,7 +158,6 @@ class UserActions:
             ]
         )
         u.save()
-
         return True
 
     def should_set_time(self):
