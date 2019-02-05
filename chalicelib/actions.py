@@ -4,6 +4,10 @@ import datetime
 from chalicelib.models import Messages,Users
 from collections import defaultdict
 import operator
+from datetime import datetime
+import random
+from heapq import nlargest
+# TODO remove v
 import pdb
 
 
@@ -12,6 +16,8 @@ class UserActions:
         self.phone = int(phone)
         self.message_received = kwargs.get('Body','').lower()
         self.message_set = kwargs.get('message_set')
+        self.total_days = 28
+        self.initial_static_msg_days = 14
 
     def is_user(self):
         try:
@@ -69,7 +75,7 @@ class UserActions:
     def get_next_message(self):
         u = Users.get(self.phone)
         # Serve the standard message set until after 14 days
-        # if(u.next_message < 14): return u.next_message + 1
+        # if(u.next_message < self.initial_static_msg_days): return u.next_message + 1
         return self.get_recommended_message()
 
 
@@ -77,12 +83,22 @@ class UserActions:
         user = Users.get(self.phone)
         scored_attributes = self.get_scored_attributes(user)
         scored_potential_messages = self.get_scored_potential_messages(scored_attributes, user)
-        new_message = self.choose_new_recommended_message(scored_potential_messages)
+        new_message = self.choose_new_recommended_message(scored_potential_messages, user)
         return new_message
 
 
-    def choose_new_recommended_message(self, scored_potential_messages):
-        return max(scored_potential_messages.items(), key=operator.itemgetter(1))[0]
+    def choose_new_recommended_message(self, scored_potential_messages, user):
+        # Determine what day of the program we're on
+        created_time_diff = datetime.now() - user.created_time.replace(tzinfo=None)
+        # Determine the top # of messages to choose from based on the day of the
+        # program we're on. As the program progresses, this window gets smaller
+        # and smaller until at the end of the program we're just choosing the highest
+        # scoring message.
+        top_number_of_msgs_to_choose_from = self.total_days - created_time_diff.days
+        # Choose the highest scoring messages
+        potential_msg_keys = nlargest(top_number_of_msgs_to_choose_from, scored_potential_messages, key=scored_potential_messages.get)
+        # Choose a random message from the top_number_of_msgs_to_choose_from
+        return random.choice(potential_msg_keys)
 
 
     def get_scored_potential_messages(self, scored_attributes, user):
@@ -180,6 +196,11 @@ class UserActions:
             ]
         )
         u.save()
+
+    def days_between(self, d1, d2):
+        d1 = datetime.strptime(d1, "%Y-%m-%d")
+        d2 = datetime.strptime(d2, "%Y-%m-%d")
+        return abs((d2 - d1).days)
 
     def handle_message(self):
         if self.message_received in ['stop','end']:

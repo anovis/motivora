@@ -1,8 +1,7 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute
-
-
+from pynamodb.attributes import UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute, UTCDateTimeAttribute
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
+from datetime import datetime
 
 
 class TimeIndex(GlobalSecondaryIndex):
@@ -33,6 +32,7 @@ class Users(Model):
     messages_sent = NumberSetAttribute(null=True)
     attr_scores = JSONAttribute(null=True)
     message_response = JSONAttribute(default={}, null=True)
+    created_time = UTCDateTimeAttribute(default=datetime.now(), null=False)
 
     def to_json(self):
         return self.to_dict()
