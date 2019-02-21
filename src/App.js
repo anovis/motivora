@@ -46,31 +46,45 @@ class MainNavbar extends Component {
     this.state = {};
   }
 
-
   render() {
     console.log(this.props.currentTab);
-      var tabs = [];
-      if (this.props.currentTab === 'table'){
-        tabs.push(<li role="presentation" onClick={() => { this.props.onClick('table') }} className="active col-md-3"><a href="#">Table</a></li>)
-      }
-      else{
-        tabs.push(<li role="presentation" onClick={() => { this.props.onClick('table') }} className=" col-md-3"><a href="#">Table</a></li>)
-      }
-      if (this.props.currentTab === 'messagesetform'){
-        tabs.push(<li role="presentation" onClick={() => { this.props.onClick('messagesetform') }} className="active col-md-3"><a href="#">Add Message Set</a></li>)
-      }
-      else{
-        tabs.push(<li role="presentation" onClick={() => { this.props.onClick('messagesetform') }} className=" col-md-3"><a href="#">Add Message Set</a></li>)
-      }
+    var tabs = [];
+    if (this.props.currentTab === 'table'){
+      tabs.push(
+        <li key={1} role="presentation" onClick={() => { this.props.onClick('table') }} className="active col-md-3">
+          <a href="#">Table</a>
+        </li>
+      );
+    }
+    else{
+      tabs.push(
+        <li key={2} role="presentation" onClick={() => { this.props.onClick('table') }} className=" col-md-3">
+          <a href="#">Table</a>
+        </li>
+      );
+    }
+    if (this.props.currentTab === 'messagesetform'){
+      tabs.push(
+        <li key={3} role="presentation" onClick={() => { this.props.onClick('messagesetform') }} className="active col-md-3">
+        <a href="#">Add Message Set</a>
+        </li>
+      );
+    }
+    else{
+      tabs.push(
+        <li key={4} role="presentation" onClick={() => { this.props.onClick('messagesetform') }} className=" col-md-3">
+        <a href="#">Add Message Set</a>
+        </li>
+      );
+    }
     return (
       <div className='nav-bar'>
-      <ul className="nav nav-pills col-md-12">
-        {tabs}
-      </ul>
-    </div>
+        <ul className="nav nav-pills col-md-12">
+          {tabs}
+        </ul>
+      </div>
     );
   }
 }
-
 
 export default App;
