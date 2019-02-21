@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
-import PropTypes from 'prop-types';
 import 'react-bootstrap-table/dist/react-bootstrap-table.min.css';
 var axios = require('axios');
 
@@ -13,7 +12,7 @@ class Container extends Component {
     tableData : [],
     columns: ['phone','response','date']}
   }
- 
+
   onClick(tab){
     this.setState({currentTab:tab});
     axios.get('https://5b36vt9t44.execute-api.us-east-1.amazonaws.com/api/' + tab)
@@ -77,11 +76,29 @@ class BSTable extends React.Component {
 
 
 class Table extends Component {
-constructor (props) {
+
+  constructor (props) {
     super(props)
+    this.state = {};
+    this.cellEditProp = {
+      mode: 'dbclick',
+      afterSaveCell: this.onAfterSaveCell  // a hook for after saving cell
+    };
   }
 
-    isExpandableRow(row) {
+  onAfterSaveCell(row, cellName, cellValue) {
+    axios.post('/editMessageBody', {
+      row: row,
+      cellValue: cellValue
+    })
+    .then(function (response) {
+    })
+    .catch(function (error) {
+      console.log(error);
+    });
+  }
+
+  isExpandableRow(row) {
     if (row.next_message) return true;
     else return false;
   }
@@ -92,7 +109,6 @@ constructor (props) {
     );
   }
 
-
   render() {
     var col = this.props.columns;
     const options = {
@@ -100,49 +116,31 @@ constructor (props) {
     };
     if (this.props.columns.length ===6){
       return (
-         <div>
-              <BootstrapTable data={this.props.tableData} cellEdit={ cellEditProp } options={ options } keyField={ col[0] } striped hover>
-             { col.map(name => <TableHeaderColumn dataField={ name } editable={ name==="body" ? true : false } dataSort={ true } filter={ { type: 'TextFilter', delay: 1000 } }>{ name }</TableHeaderColumn>) }
-               </BootstrapTable>
-            </div>
-    );
+        <div>
+          <BootstrapTable data={this.props.tableData} cellEdit={ this.cellEditProp } options={ options } keyField={ col[0] } striped hover>
+            { col.map(name => <TableHeaderColumn dataField={ name } editable={ name==="body" ? true : false } dataSort={ true } filter={ { type: 'TextFilter', delay: 1000 } }>{ name }</TableHeaderColumn>) }
+          </BootstrapTable>
+        </div>
+      );
     }
     else{
-//             expandableRow={ this.isExpandableRow }  expandComponent={ this.expandComponent } removed
       return (
-           <div>
-                <BootstrapTable data={this.props.tableData} options={ options }  keyField={ col[0] } striped hover>
-               { col.map(name => <TableHeaderColumn dataField={ name } dataSort={ true } filter={ { type: 'TextFilter', delay: 1000 } }>{ name }</TableHeaderColumn>) }
-                 </BootstrapTable>
-              </div>
+        <div>
+          <BootstrapTable data={this.props.tableData} options={ options }  keyField={ col[0] } striped hover>
+         { col.map(name => <TableHeaderColumn dataField={ name } dataSort={ true } filter={ { type: 'TextFilter', delay: 1000 } }>{ name }</TableHeaderColumn>) }
+           </BootstrapTable>
+        </div>
       );
-  }
+    }
   }
 }
-
-function onAfterSaveCell(row, cellName, cellValue) {
-    axios.post('/editMessageBody', {
-        row: row,
-        cellValue: cellValue
-      })
-      .then(function (response) {
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
-}
-
-
-const cellEditProp = {
-  mode: 'dbclick',
-  afterSaveCell: onAfterSaveCell  // a hook for after saving cell
-};
 
 class Navbar extends Component {
-  constructor (props) {
-    super(props)
-  }
 
+  constructor (props) {
+    super(props);
+    this.state = {};
+  }
 
   render() {
     console.log(this.props.currentTab);

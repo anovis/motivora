@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, FormGroup,Checkbox,FormControl,Col ,Button,ControlLabel } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Col, Button, ControlLabel } from 'react-bootstrap';
 var axios = require('axios');
 
 class MessageSetForm extends Component {
@@ -63,8 +63,8 @@ class MessageSetForm extends Component {
 
     var AttrFormGroups = [];
     var optionGroups = [];
-    for (var i = 0; i < this.state.AttrNum; i++){
-      var attrName = 'Attr' + i; 
+    for (let i = 0; i < this.state.AttrNum; i++){
+      var attrName = 'Attr' + i;
       AttrFormGroups.push(     <FormGroup controlId={attrName}>
           <Col componentClass={ControlLabel} sm={2}>
             {attrName}
@@ -78,11 +78,11 @@ class MessageSetForm extends Component {
     }
 
     var MessageFormGroups = [];
-    for (var i = 0; i < this.state.MessageNum; i++){
-      var MessNum = 'Message' + i; 
-      var MessAttr = 'MessageAttr' + i; 
-      MessageFormGroups.push(  
-      <div>   
+    for (let i = 0; i < this.state.MessageNum; i++){
+      var MessNum = 'Message' + i;
+      var MessAttr = 'MessageAttr' + i;
+      MessageFormGroups.push(
+      <div>
       <ControlLabel>{MessNum}</ControlLabel>
         <FormGroup controlId={MessNum}>
           <Col componentClass={ControlLabel} sm={2}>
@@ -91,7 +91,7 @@ class MessageSetForm extends Component {
           <Col sm={10}>
             <FormControl type="text" name={MessNum} value={this.state.MessNum} onChange={this.handleChange} placeholder={MessNum + ' body'} />
           </Col>
-        </FormGroup>    
+        </FormGroup>
          <FormGroup controlId="formControlsSelectMultiple">
       <ControlLabel>Select Attribute</ControlLabel>
       <FormControl componentClass="select" multiple name={MessAttr} value={this.state[MessAttr]} onChange={this.handleSelect} >

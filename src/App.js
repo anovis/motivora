@@ -16,7 +16,7 @@ class App extends Component {
 
 
   render() {
-    var display = this.state.currentTab == 'table' ? <Container /> :  <MessageSetForm />
+    var display = this.state.currentTab === 'table' ? <Container /> :  <MessageSetForm />
     return (
       <div className="App">
         <div className="App-header">
@@ -40,8 +40,10 @@ class App extends Component {
 }
 
 class MainNavbar extends Component {
+
   constructor (props) {
     super(props)
+    this.state = {};
   }
 
 
