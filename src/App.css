@@ -33,3 +33,24 @@ h1 {
 .nav{
   margin-top: 10px;
 }
+
+.nav-bar li{
+  font-size: 13px;
+}
+
+form#add-message-form{
+  width: 60%;
+  margin: 0 auto;
+  margin-top: 90px;
+}
+
+form#add-message-form button{
+  background: #2f78b9;
+  color: white;
+  width: 120px;
+  height: 30px;
+}
+
+form#add-message-form button:hover{
+  opacity:0.7;
+}
