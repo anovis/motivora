@@ -16,6 +16,30 @@ def list_messages():
   message_list = [message.to_frontend() for message in messages]
   return {"data":message_list}
 
+# Updates a message
+@app.route('/messages', methods=['PATCH'], cors=True)
+def update_message():
+  message_id = int(app.current_request.json_body['data']['id'])
+  new_message = app.current_request.json_body['data']['message']
+  try:
+    message = Messages.get(message_set, message_id)
+    message.update(actions=[
+      Messages.body.set(new_message)
+    ])
+    return Response(
+      body='Success',
+      status_code=200,
+      headers={'Content-Type': 'text/plain'}
+    )
+  except Exception as e:
+    print(e)
+    return Response(
+      body='Something went wrong while trying to update your message.',
+      status_code=500,
+      headers={'Content-Type': 'text/plain'}
+    )
+
+
 # Allows for creating a new message in the message set
 @app.route('/messages', methods=['POST'], cors=True)
 def post_messages():

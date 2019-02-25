@@ -77,9 +77,11 @@ class Table extends Component {
   }
 
   onAfterSaveCell(row, cellName, cellValue) {
-    axios.post(Config.api + '/editMessageBody', {
-      row: row,
-      cellValue: cellValue
+    axios.patch(Config.api + '/messages', {
+      data:{
+        id: row.id,
+        message: row.body
+      }
     })
     .then(function (response) {
     })
