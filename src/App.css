@@ -3,14 +3,14 @@
 }
 
 .App-logo {
-  animation: App-logo-spin infinite 20s linear;
-  height: 80px;
+  height: 100%;
+  float: left;
+  padding: 8px 0;
 }
 
 .App-header {
-  background-color: #222;
-  height: 150px;
-  padding: 20px;
+  background-color: #15446d;
+  height: 50px;
   color: white;
 }
 
@@ -30,8 +30,35 @@ h1 {
   width:60%;
 }
 
+nav{
+  border-radius: 0px !important;
+}
+
 .nav{
   margin-top: 10px;
+}
+
+.navbar-brand{
+  padding: 16px !important;
+  margin-right: 0px !important;
+}
+
+.navbar-nav.mr-auto{
+  margin-left: auto;
+  margin-right: 0 !important;
+}
+
+.nav-link{
+  color: white;
+}
+
+.navbar-nav.mr-auto .btn{
+  border: 1px solid white;
+}
+
+.navbar-nav a{
+  font-size: 15px;
+  margin-left: 10px;
 }
 
 .nav-bar li{
@@ -41,7 +68,7 @@ h1 {
 form#add-message-form{
   width: 60%;
   margin: 0 auto;
-  margin-top: 90px;
+  margin-top: 20px;
 }
 
 form#add-message-form button{
@@ -53,4 +80,20 @@ form#add-message-form button{
 
 form#add-message-form button:hover{
   opacity:0.7;
+}
+
+.react-bs-table-bordered{
+  border: none !important;
+}
+
+.ajax-loader-container{
+  margin-top: 20px;
+}
+
+.ajax-loader-container img{
+  height: 40px;
+}
+
+#add-message-form .form-group{
+  height: 25px;
 }

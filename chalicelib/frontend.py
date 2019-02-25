@@ -55,12 +55,6 @@ def list_users():
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
 
-# Test route
-@app.route('/test', methods=['GET'], cors=True)
-def test():
-  user_class = UserActions('17602147229', message_set=message_set)
-  return user_class.get_next_message()
-
 #
 # Utility functions
 #

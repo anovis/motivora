@@ -1,87 +1,60 @@
 import React, { Component } from 'react';
-import logo from './logo.svg';
-import './App.css';
 import Container from './Container';
 import MessageSetForm from './MessageSetForm';
+import { Navbar, Nav, Button } from 'react-bootstrap';
+import './App.css';
 
 class App extends Component {
+
   constructor (props) {
     super(props)
-    this.state = {currentTab: 'table'
+    this.state = {
+      activePage: 'USERS'
     }
   }
-  onClick(tab){
-    this.setState({currentTab:tab});
+
+  renderActivePage() {
+    switch(this.state.activePage){
+      case 'ADD_MESSAGE':
+        return(
+          <div>
+            <h2 id="page-title">Add Message Set</h2>
+            <MessageSetForm/>
+          </div>
+        );
+      case 'USERS':
+        return(
+          <div>
+            <h2 id="page-title">All users</h2>
+            <Container activePage={this.state.activePage}/>
+          </div>
+        );
+      case 'MESSAGES':
+        return(
+          <div>
+            <h2 id="page-title">All messages</h2>
+            <Container activePage={this.state.activePage}/>
+          </div>
+        );
+      default:
+        console.error('No activePage');
+    }
   }
 
-
   render() {
-    var display = this.state.currentTab === 'table' ? <Container /> :  <MessageSetForm />
     return (
       <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Welcome to Motivora</h2>
-        </div>
-        <p className="App-intro">
-          Click the tabs below to view different Tables
-        </p>
-        <div className="col-md-9 col-md-offset-3">
-          <MainNavbar currentTab={this.state.currentTab} onClick={this.onClick.bind(this)} />
-        </div>
+        <Navbar bg="primary" variant="dark">
+          <Navbar.Brand href="#home">Motivora</Navbar.Brand>
+          <Nav className="mr-auto">
+            <Nav.Link href="#users" onClick={() => { this.setState({activePage: 'USERS'}) }}>Users</Nav.Link>
+            <Nav.Link href="#messages" onClick={() => { this.setState({activePage: 'MESSAGES'}) }}>Messages</Nav.Link>
+            <Button href="#add-message-set" onClick={() => { this.setState({activePage: 'ADD_MESSAGE'})  }}>Add Message Set</Button>
+          </Nav>
+        </Navbar>
         <div>
-          {display}
+          {this.renderActivePage()}
         </div>
-
-      </div>
-
-    );
-  }
-}
-
-class MainNavbar extends Component {
-
-  constructor (props) {
-    super(props)
-    this.state = {};
-  }
-
-  render() {
-    console.log(this.props.currentTab);
-    var tabs = [];
-    if (this.props.currentTab === 'table'){
-      tabs.push(
-        <li key={1} role="presentation" onClick={() => { this.props.onClick('table') }} className="active col-md-3">
-          <a href="#">Table</a>
-        </li>
-      );
-    }
-    else{
-      tabs.push(
-        <li key={2} role="presentation" onClick={() => { this.props.onClick('table') }} className=" col-md-3">
-          <a href="#">Table</a>
-        </li>
-      );
-    }
-    if (this.props.currentTab === 'messagesetform'){
-      tabs.push(
-        <li key={3} role="presentation" onClick={() => { this.props.onClick('messagesetform') }} className="active col-md-3">
-        <a href="#">Add Message Set</a>
-        </li>
-      );
-    }
-    else{
-      tabs.push(
-        <li key={4} role="presentation" onClick={() => { this.props.onClick('messagesetform') }} className=" col-md-3">
-        <a href="#">Add Message Set</a>
-        </li>
-      );
-    }
-    return (
-      <div className='nav-bar'>
-        <ul className="nav nav-pills col-md-12">
-          {tabs}
-        </ul>
       </div>
     );
   }

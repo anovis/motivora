@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Form, FormGroup, FormControl, Col, Button, ControlLabel } from 'react-bootstrap';
+import { Form, FormGroup, FormControl, Col, Button } from 'react-bootstrap';
 import Config from './config';
 var axios = require('axios');
 
@@ -80,7 +80,7 @@ class MessageSetForm extends Component {
       var attrName = 'Attr' + i;
       AttrFormGroups.push(
         <FormGroup key={i} controlId={attrName}>
-          <Col componentClass={ControlLabel} sm={2}>
+          <Col sm={2}>
             {attrName}
           </Col>
           <Col sm={10}>
@@ -99,9 +99,9 @@ class MessageSetForm extends Component {
       var MessAttr = 'MessageAttr' + i;
       MessageFormGroups.push(
         <div key={i}>
-          <ControlLabel>{MessNum}</ControlLabel>
+          <div>{MessNum}</div>
           <FormGroup controlId={MessNum}>
-            <Col componentClass={ControlLabel} sm={2}>
+            <Col sm={2}>
               {'body'}
             </Col>
             <Col sm={10}>
@@ -109,7 +109,7 @@ class MessageSetForm extends Component {
             </Col>
           </FormGroup>
           <FormGroup controlId="formControlsSelectMultiple">
-            <ControlLabel>Select Attribute</ControlLabel>
+            <div>Select Attribute</div>
             <FormControl componentClass="select" multiple name={MessAttr} value={this.state[MessAttr]} onChange={this.handleSelect} >
               {optionGroups}
             </FormControl>
@@ -119,9 +119,9 @@ class MessageSetForm extends Component {
     }
 
     return (
-      <Form horizontal id="add-message-form">
+      <Form id="add-message-form">
         <FormGroup controlId="formHorizontalName">
-          <Col componentClass={ControlLabel} sm={2}>
+          <Col sm={2}>
             Message Set Name
           </Col>
           <Col sm={10}>
@@ -129,7 +129,7 @@ class MessageSetForm extends Component {
           </Col>
         </FormGroup>
         <FormGroup controlId="formHorizontalAttrNum">
-          <Col componentClass={ControlLabel} sm={2}>
+          <Col sm={2}>
             Number of Attributes
           </Col>
           <Col sm={10}>
@@ -138,7 +138,7 @@ class MessageSetForm extends Component {
         </FormGroup>
         {AttrFormGroups}
         <FormGroup controlId="formHorizontalText">
-          <Col componentClass={ControlLabel} sm={2}>
+          <Col sm={2}>
            Number of Messages
           </Col>
           <Col sm={10}>
@@ -147,7 +147,7 @@ class MessageSetForm extends Component {
         </FormGroup>
         {MessageFormGroups}
         <FormGroup>
-          <Col smOffset={2} sm={10}>
+          <Col sm={10}>
             <Button type="submit" onClick={this.handleSubmit}>
                 Create Message Set
             </Button>
