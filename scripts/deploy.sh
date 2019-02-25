@@ -1,8 +1,8 @@
 #!/bin/bash
 export AWS_PROFILE=chalice
 
-echo Checking out master and pulling down latest tag
-git checkout master && git pull && git fetch --tags
+# echo Checking out master and pulling down latest tag
+# git checkout master && git pull && git fetch --tags
 CURRENT_TAG=`git describe --abbrev=0 --tags`
 
 echo Enter the git version tag for this release in the following format: v1.0.0

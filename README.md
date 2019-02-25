@@ -33,6 +33,10 @@ for the frontend run `yarn start`
 
 ## Deployment
 
+#### Deploy Frontend and Backend at once
+run `npm run deploy`
+This script will also great a git tag and push it to github.
+
 #### Frontend
 
 * run `yarn build` then copy all components of the build folder to s3. make sure the make the s3 folder public.

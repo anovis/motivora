@@ -17,7 +17,7 @@ def list_messages():
   return {"data":message_list}
 
 # Updates a message
-@app.route('/messages', methods=['PATCH'], cors=True)
+@app.route('/messages', methods=['PUT'], cors=True)
 def update_message():
   message_id = int(app.current_request.json_body['data']['id'])
   new_message = app.current_request.json_body['data']['message']

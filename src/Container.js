@@ -77,14 +77,13 @@ class Table extends Component {
   }
 
   onAfterSaveCell(row, cellName, cellValue) {
-    axios.patch(Config.api + '/messages', {
+    axios.put(Config.api + '/messages', {
       data:{
         id: row.id,
         message: row.body
       }
     })
-    .then(function (response) {
-    })
+    .then(function (response) {})
     .catch(function (error) {
       console.log(error);
     });
