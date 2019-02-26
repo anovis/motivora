@@ -38,6 +38,7 @@ class Messages(Model):
             'id': self.id,
             'message_set': self.message_set,
             'body': self.body,
+            'attributes': self.attr_list,
             'total_disliked': self.total_disliked,
             'total_liked': self.total_liked,
             'total_sent': self.total_sent

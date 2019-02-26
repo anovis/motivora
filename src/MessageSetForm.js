@@ -15,7 +15,7 @@ class MessageSetForm extends Component {
 
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.handleSelect = this.handleSelect.bind(this);
+    // this.handleSelect = this.handleSelect.bind(this);
   }
 
   handleChange(event) {
@@ -27,26 +27,26 @@ class MessageSetForm extends Component {
     });
   }
 
-    handleSelect(event) {
-    const target = event.target;
-    const value = target.value;
-    const name = target.name;
-    this.setState((prevState) => {
-      if (prevState[name] === undefined){
-        return {[name]: [value]}
-      }
-      else{
-        var index = prevState[name].indexOf(value);
-        if (index > -1){
-           prevState[name].splice(index, 1);
-        }
-        else{
-          prevState[name].push(value)
-        }
-        return {[name]: prevState[name]};
-      }
-    });
-  }
+  // handleSelect(event) {
+  //   const target = event.target;
+  //   const value = target.value;
+  //   const name = target.name;
+  //   this.setState((prevState) => {
+  //     if (prevState[name] === undefined){
+  //       return {[name]: [value]}
+  //     }
+  //     else{
+  //       var index = prevState[name].indexOf(value);
+  //       if (index > -1){
+  //          prevState[name].splice(index, 1);
+  //       }
+  //       else{
+  //         prevState[name].push(value)
+  //       }
+  //       return {[name]: prevState[name]};
+  //     }
+  //   });
+  // }
 
   formatNewMessagePayload() {
     let final = {
@@ -73,18 +73,34 @@ class MessageSetForm extends Component {
     event.preventDefault();
   }
 
-  renderAttributeSelections() {
+  onAttributeAssignedToMessage(messageAttrKey, attrVal, value) {
+    let currentAttrs = this.state[messageAttrKey] || [];
+    if(currentAttrs.length){
+      if(value === 'on'){
+        currentAttrs.pop(attrVal);
+      } else{
+        currentAttrs.push(attrVal);
+      }
+    } else{
+      currentAttrs.push(attrVal);
+    }
+    this.setState({ [messageAttrKey]: currentAttrs });
+  }
+
+  renderAttributeSelections(messageAttrKey) {
     var optionGroups = [];
     for (let i = 0; i < this.state.AttrNum; i++){
       var attrName = 'Attr' + i;
       if(this.state[attrName]){
+        const attr = this.state[attrName];
         optionGroups.push(
           <Form.Check
             key={attrName}
             type={'checkbox'}
             id={attrName}
-            label={this.state[attrName]}
+            label={attr}
             inline
+            onChange={target => this.onAttributeAssignedToMessage(messageAttrKey, attr, target.value)}
           />
         );
       }
@@ -131,7 +147,7 @@ class MessageSetForm extends Component {
               <FormControl type="text" name={MessNum} value={this.state.MessNum} onChange={this.handleChange} placeholder={MessNum + ' body'} />
             </Col>
           </FormGroup>
-          {this.renderAttributeSelections()}
+          {this.renderAttributeSelections(MessAttr)}
         </div>
       )
     }
