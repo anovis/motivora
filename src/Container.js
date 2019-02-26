@@ -59,7 +59,7 @@ class Table extends Component {
         endpoint = Config.api + '/users';
         break;
       case 'MESSAGES':
-        this.setState({columns:['id','message_set','body','total_sent','total_liked','total_disliked']});
+        this.setState({columns:['id','message_set','body','total_sent','total_liked','total_disliked', 'attr_list']});
         endpoint = Config.api + '/messages';
         break;
       default:
@@ -107,7 +107,7 @@ class Table extends Component {
       );
     }
     else{
-      if (this.state.columns.length === 6){
+      if (this.props.activePage === 'MESSAGES'){
         return (
           <div>
             <BootstrapTable data={ this.state.tableData } cellEdit={ this.cellEditProp } options={ options } keyField={ col[0] } striped hover>
