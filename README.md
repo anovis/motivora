@@ -34,8 +34,7 @@ for the frontend run `yarn start`
 ## Deployment
 
 #### Deploy Frontend and Backend at once
-run `npm run deploy`
-This script will also great a git tag and push it to github.
+run `npm run deploy` or `npm run deploy --git-tag` to also tag the release.
 
 #### Frontend
 

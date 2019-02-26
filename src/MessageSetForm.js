@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Form, FormGroup, FormControl, Col, Button } from 'react-bootstrap';
 import Config from './config';
+import './MessageSetForm.css';
 var axios = require('axios');
 
 class MessageSetForm extends Component {
@@ -72,10 +73,33 @@ class MessageSetForm extends Component {
     event.preventDefault();
   }
 
-
-  render() {
-    var AttrFormGroups = [];
+  renderAttributeSelections() {
     var optionGroups = [];
+    for (let i = 0; i < this.state.AttrNum; i++){
+      var attrName = 'Attr' + i;
+      if(this.state[attrName]){
+        optionGroups.push(
+          <Form.Check
+            key={attrName}
+            type={'checkbox'}
+            id={attrName}
+            label={this.state[attrName]}
+            inline
+          />
+        );
+      }
+    }
+    return optionGroups.length ?
+      <FormGroup controlId="formControlsSelectMultiple">
+        <div>Select attributes for this message</div>
+        {optionGroups}
+      </FormGroup>
+      :
+      null;
+  }
+
+  renderAttributeInputs() {
+    var AttrFormGroups = [];
     for (let i = 0; i < this.state.AttrNum; i++){
       var attrName = 'Attr' + i;
       AttrFormGroups.push(
@@ -88,41 +112,38 @@ class MessageSetForm extends Component {
           </Col>
         </FormGroup>
       );
-      optionGroups.push(
-        <option key={i} value={this.state[attrName]}>{this.state[attrName]} </option>
-      );
     }
+    return AttrFormGroups;
+  }
 
+  renderMessageInputs() {
     var MessageFormGroups = [];
     for (let i = 0; i < this.state.MessageNum; i++){
       var MessNum = 'Message' + i;
       var MessAttr = 'MessageAttr' + i;
       MessageFormGroups.push(
         <div key={i}>
-          <div>{MessNum}</div>
           <FormGroup controlId={MessNum}>
             <Col sm={2}>
-              {'body'}
+              {MessNum}
             </Col>
             <Col sm={10}>
               <FormControl type="text" name={MessNum} value={this.state.MessNum} onChange={this.handleChange} placeholder={MessNum + ' body'} />
             </Col>
           </FormGroup>
-          <FormGroup controlId="formControlsSelectMultiple">
-            <div>Select Attribute</div>
-            <FormControl componentClass="select" multiple name={MessAttr} value={this.state[MessAttr]} onChange={this.handleSelect} >
-              {optionGroups}
-            </FormControl>
-          </FormGroup>
+          {this.renderAttributeSelections()}
         </div>
       )
     }
+    return MessageFormGroups;
+  }
 
+  render() {
     return (
       <Form id="add-message-form">
         <FormGroup controlId="formHorizontalName">
           <Col sm={2}>
-            Message Set Name
+            <b>Message Set Name</b>
           </Col>
           <Col sm={10}>
             <FormControl type="text" name='MessageSetName' value={this.state.MessageSetName} onChange={this.handleChange} placeholder="Message Set Name" />
@@ -130,26 +151,26 @@ class MessageSetForm extends Component {
         </FormGroup>
         <FormGroup controlId="formHorizontalAttrNum">
           <Col sm={2}>
-            Number of Attributes
+            <b>Number of Attributes</b>
           </Col>
           <Col sm={10}>
             <FormControl type="number" name='AttrNum' value={this.state.AttrNum} onChange={this.handleChange} placeholder="Number of Attributes" />
           </Col>
         </FormGroup>
-        {AttrFormGroups}
+        {this.renderAttributeInputs()}
         <FormGroup controlId="formHorizontalText">
           <Col sm={2}>
-           Number of Messages
+            <b>Number of Messages</b>
           </Col>
           <Col sm={10}>
             <FormControl type="number" name='MessageNum' value={this.state.MessageNum} onChange={this.handleChange} placeholder="Number of Messages" />
           </Col>
         </FormGroup>
-        {MessageFormGroups}
-        <FormGroup>
-          <Col sm={10}>
-            <Button type="submit" onClick={this.handleSubmit}>
-                Create Message Set
+        {this.renderMessageInputs()}
+        <FormGroup id="create-message-set-button">
+          <Col sm={{ span: 10, offset: 1 }}>
+            <Button type="submit" onClick={this.handleSubmit} size="lg">
+              Create Message Set
             </Button>
           </Col>
         </FormGroup>
