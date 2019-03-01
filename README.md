@@ -55,3 +55,11 @@ run `npm run deploy` or `npm run deploy --git-tag` to also tag the release.
 *  text join to twilio number
 *  prompted for time to receive messages (0-24)
 *  receive texts daily and respond with number (0-10) on how much you liked it
+
+## Upload messages to dynamo in bulk
+
+Everything you need is in the ./scripts/dynamo_csv_upload/ folder
+
+1. Save your raw CSV as raw_data.csv (needs to be the same format/columns as raw_data.csv.example)
+2. While in the /dynamo_csv_upload folder, run `npm i` and then run `sh upload_messages.sh`
+3. Check dynamo to make sure that your data got saved.

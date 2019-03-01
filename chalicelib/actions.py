@@ -75,8 +75,17 @@ class UserActions:
     def get_next_message(self):
         u = Users.get(self.phone)
         # Serve the standard message set until after 14 days
-        # if(u.next_message < self.initial_static_msg_days): return u.next_message + 1
-        return self.get_recommended_message()
+        if(u.next_message < self.initial_static_msg_days):
+          print()
+          print("Chosen next message: " + str(u.next_message + 1))
+          print()
+          return u.next_message + 1
+
+        next_message = self.get_recommended_message()
+        print()
+        print("Chosen next message: " + str(next_message))
+        print()
+        return next_message
 
 
     def get_recommended_message(self):

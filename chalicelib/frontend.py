@@ -79,6 +79,15 @@ def list_users():
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
 
+@app.route('/test', methods=['GET'], cors=True)
+def test():
+  user = Users.get(17602147229)
+  user_obj = UserActions(**user.to_dict())
+  is_successful = user_obj.send_next_sms()
+  if is_successful:
+      user_obj.send_sms('How helpful was this message?”  [Scale of 0-10, with 0=not helpful at all and 10=very helpful]')
+      user_obj.set_next_message()
+
 #
 # Utility functions
 #
