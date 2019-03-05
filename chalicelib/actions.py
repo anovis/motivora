@@ -223,7 +223,7 @@ class UserActions:
         else:
             u = Users.get(self.phone)
             new_dict = u.message_response
-            new_dict[len(new_dict)]= {'message':self.message_received,"timestamp":str(datetime.datetime.now()),"message_sent":u.prev_message}
+            new_dict[len(new_dict)]= {'message':self.message_received,"timestamp":str(datetime.now()),"message_sent":u.prev_message}
             u.update(actions=[
                Users.message_response.set(new_dict)
             ])
