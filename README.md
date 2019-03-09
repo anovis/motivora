@@ -36,7 +36,7 @@ So essentially:
 1. `export AWS_PROFILE=chalice`
 2. `chalice local`
 3. `./ngrok http 8000`
-4. `http http://b87c4337.ngrok.io/test` where `/test` is some test endpoint that you can add in the `frontend.py` file for local testing of specific parts of the functions.
+4. `http http://b87c4337.ngrok.io/test` where `/test` is some test endpoint that you can add in the `frontend.py` file for local testing of specific parts of the functions. Where `http` is from [HTTPie](https://httpie.org/) (use it, it's awesome).
 
 ### Front end React app
 
