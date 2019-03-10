@@ -23,8 +23,6 @@ class Users(Model):
 
     phone = NumberAttribute(hash_key=True)
     message_set = UnicodeAttribute()
-    # next_message_body = UnicodeAttribute()
-    next_message = NumberAttribute(default=1)
     prev_message = NumberAttribute(default=1)
     send_message = BooleanAttribute(default=True)
     time = NumberAttribute(default=9)
@@ -42,7 +40,6 @@ class Users(Model):
             'phone': self.phone,
             'message_set': self.message_set,
             'time': self.time,
-            'next_message': self.next_message,
             'prev_message': self.prev_message,
             'send_message': self.send_message,
             'messages_sent': self.messages_sent,
@@ -55,6 +52,5 @@ class Users(Model):
             'phone': self.phone,
             'time': self.time,
             'message_set': self.message_set,
-            'next_message': self.next_message,
             'send_message': self.send_message,
             }

@@ -16,8 +16,10 @@ class UserActions:
         self.phone = int(phone)
         self.message_received = kwargs.get('Body','').lower()
         self.message_set = kwargs.get('message_set')
-        self.total_days = 28
+        # Total program days
+        self.total_days = 27
         self.initial_static_msg_days = 14
+        self.last_message_sent = 0
 
     def is_user(self):
         try:
@@ -38,7 +40,9 @@ class UserActions:
     def send_next_sms(self):
         user = Users.get(self.phone)
         try:
-            message = Messages.get(self.message_set,user.next_message)
+            next_message_id = self.get_next_message()
+            message = Messages.get(self.message_set, next_message_id)
+            self.last_message_sent = next_message_id;
             self.send_sms(message.body)
             return True
         except:
@@ -75,38 +79,64 @@ class UserActions:
     def get_next_message(self):
         u = Users.get(self.phone)
         # Serve the standard message set until after 14 days
-        if(u.next_message < self.initial_static_msg_days):
-          print()
-          print("Chosen next message: " + str(u.next_message + 1))
-          print()
-          return u.next_message + 1
+        # Total program is 28 days
+        last_message_sent_id = len(u.messages_sent)
+        if(last_message_sent_id < self.initial_static_msg_days):
+          message = Messages.get(self.message_set, last_message_sent_id + 1)
+          log_message = message.to_json()
+          log_message['attr_list'] = message.to_json()['attr_list'].as_dict()
+          self.log("Chosen next message: " + str(log_message))
+          return last_message_sent_id + 1
 
         next_message = self.get_recommended_message()
-        print()
-        print("Chosen next message: " + str(next_message))
-        print()
+        message = Messages.get(self.message_set, next_message)
+        log_message = message.to_json()
+        log_message['attr_list'] = message.to_json()['attr_list'].as_dict()
+        self.log("Chosen next message: " + str(log_message))
         return next_message
 
+    def log(self, msg):
+      print()
+      print(msg)
+      print()
+
+    def sent_messages_length(self):
+        user = Users.get(self.phone)
+        return len(user.messages_sent) if user.messages_sent != None else 0
 
     def get_recommended_message(self):
         user = Users.get(self.phone)
         scored_attributes = self.get_scored_attributes(user)
+        print()
+        print(scored_attributes)
+        print()
         scored_potential_messages = self.get_scored_potential_messages(scored_attributes, user)
+        print()
+        print(scored_potential_messages)
+        print()
         new_message = self.choose_new_recommended_message(scored_potential_messages, user)
+        print()
+        print(new_message)
+        print()
         return new_message
 
+        # TODO last run had message 14 repeated twice. run things from now that we're starting at just having sent 13
 
     def choose_new_recommended_message(self, scored_potential_messages, user):
         # Determine what day of the program we're on
         created_time_diff = datetime.now() - user.created_time.replace(tzinfo=None)
-        # Determine the top # of messages to choose from based on the day of the
-        # program we're on. As the program progresses, this window gets smaller
+        # Determine the top # of messages to choose from based on the number of messages
+        # we've sent already. As the program progresses, this window gets smaller
         # and smaller until at the end of the program we're just choosing the highest
         # scoring message.
-        top_number_of_msgs_to_choose_from = self.total_days - created_time_diff.days
+        diff = self.total_days - len(user.messages_sent)
+        top_number_of_msgs_to_choose_from = diff if diff > 0 else 1
         # Choose the highest scoring messages
         potential_msg_keys = nlargest(top_number_of_msgs_to_choose_from, scored_potential_messages, key=scored_potential_messages.get)
         # Choose a random message from the top_number_of_msgs_to_choose_from
+        print()
+        print(diff, top_number_of_msgs_to_choose_from, potential_msg_keys)
+        print()
         return random.choice(potential_msg_keys)
 
 
@@ -142,10 +172,13 @@ class UserActions:
         attribute_dict = defaultdict(int)
         attribute_occurrence_dict = defaultdict(int)
 
-        # Iterate through all messages sent
-        for msg_idx in user.messages_sent:
+        # Iterate through all messages that have been rated
+        rated_responses = [*user.message_response.keys()]
+        rated_responses.remove('0')
+        for msg_sent_idx in rated_responses:
+            msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
             message = Messages.get(self.message_set, msg_idx)
-            message_score = int(user.message_response[str(msg_idx)]['message'])
+            message_score = self.get_message_score_for_idx(user.message_response, msg_idx)
             attributes = message.attr_list.as_dict()
             # Iterate through all attributes for a given message
             for attr, boolean in attributes.items():
@@ -171,15 +204,21 @@ class UserActions:
         return attribute_dict
 
 
-    def set_next_message(self,):
+    def get_message_score_for_idx(self, message_response, msg_idx):
+        for key in message_response.keys():
+            if message_response[key]["message_sent"] == msg_idx:
+                return int(message_response[key]['message'])
+        print(message_response)
+        raise Exception('Msg Idx not found in messages sent - ' + str(msg_idx))
+        return 0
+
+
+    def set_next_message(self):
         u = Users.get(self.phone)
-        sent_message = u.next_message
-        next_message = self.get_next_message()
         u.update(
             actions=[
-                Users.messages_sent.add(sent_message),
-                Users.prev_message.set(sent_message),
-                Users.next_message.set(next_message)
+                Users.messages_sent.add(self.last_message_sent),
+                Users.prev_message.set(self.last_message_sent),
             ]
         )
         u.save()
@@ -223,9 +262,10 @@ class UserActions:
         else:
             u = Users.get(self.phone)
             new_dict = u.message_response
-            new_dict[len(new_dict)]= {'message':self.message_received,"timestamp":str(datetime.now()),"message_sent":u.prev_message}
+            new_dict[len(new_dict)]= {'message': self.message_received, "timestamp": str(datetime.now()), "message_sent": u.prev_message}
             u.update(actions=[
                Users.message_response.set(new_dict)
             ])
             u.save()
+            self.log("Rated message index: " + str(u.prev_message) + " - Rating: " + str(self.message_received))
         return True

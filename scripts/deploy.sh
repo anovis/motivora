@@ -1,5 +1,6 @@
 #!/bin/bash
 export AWS_PROFILE=chalice
+export AWS_DEFAULT_REGION=us-east-1
 
 # Should we include git tag?
 if [ "$1" = "--git-tag" ]

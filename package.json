@@ -26,7 +26,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject",
-    "deploy": "sh scripts/deploy.sh"
+    "deploy": "sh scripts/deploy.sh",
+    "chalice-local": "sh scripts/chalice-local.sh"
   },
   "proxy": "http://localhost:3001",
   "browserslist": [
