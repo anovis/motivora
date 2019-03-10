@@ -1,6 +1,5 @@
 from pynamodb.models import Model
 from pynamodb.attributes import UnicodeAttribute, NumberAttribute, UnicodeSetAttribute, MapAttribute
-import pdb
 
 class Messages(Model):
     class Meta:

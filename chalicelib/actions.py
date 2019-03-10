@@ -7,8 +7,6 @@ import operator
 from datetime import datetime
 import random
 from heapq import nlargest
-# TODO remove v
-import pdb
 
 
 class UserActions:

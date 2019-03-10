@@ -25,7 +25,7 @@ create a `.chalice` folder in the root directory of the project and add this to 
 
 ## Test locally
 
-run `chalice local` to start local version of api's. if you want to interact with it via twilio then use
+run `npm run chalice-local` to start local version of api's. if you want to interact with it via twilio then use
 ngrok to mock an endpoint and forward to localhost:8000.
 `https://ngrok.com/`
 
