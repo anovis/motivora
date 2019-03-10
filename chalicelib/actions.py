@@ -1,7 +1,7 @@
 import os
 from twilio.rest import Client
 import datetime
-from chalicelib.models import Messages,Users
+from chalicelib.models import Messages, Users
 from collections import defaultdict
 import operator
 from datetime import datetime
@@ -16,8 +16,8 @@ class UserActions:
         self.phone = int(phone)
         self.message_received = kwargs.get('Body','').lower()
         self.message_set = kwargs.get('message_set')
-        # Total program days
-        self.total_days = 27
+        # Total program days (including first day with no motivational message)
+        self.total_days = 29
         self.initial_static_msg_days = 14
         self.last_message_sent = 0
 
@@ -64,15 +64,11 @@ class UserActions:
         if not message_set:
             return False
 
-        from chalicelib.models import Users
-        #TODO message_set handle better
         new_user = Users(
             phone=self.phone,
             message_set=message_set,
-            next_message=1,
-            send_message=True,
+            send_message=True
         )
-
         new_user.save()
         return True
 
@@ -80,7 +76,7 @@ class UserActions:
         u = Users.get(self.phone)
         # Serve the standard message set until after 14 days
         # Total program is 28 days
-        last_message_sent_id = len(u.messages_sent)
+        last_message_sent_id = u.prev_message
         if(last_message_sent_id < self.initial_static_msg_days):
           message = Messages.get(self.message_set, last_message_sent_id + 1)
           log_message = message.to_json()
@@ -227,7 +223,7 @@ class UserActions:
     def should_set_time(self):
         try:
             u = Users.get(self.phone)
-            if len(u.messages_sent) == 0:
+            if u.prev_message == 0:
                 time = int(self.message_received)
                 if 0 <= time <=24:
                     return True

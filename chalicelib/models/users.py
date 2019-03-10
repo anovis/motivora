@@ -23,11 +23,11 @@ class Users(Model):
 
     phone = NumberAttribute(hash_key=True)
     message_set = UnicodeAttribute()
-    prev_message = NumberAttribute(default=1)
+    prev_message = NumberAttribute(default=0)
     send_message = BooleanAttribute(default=True)
     time = NumberAttribute(default=9)
     time_index = TimeIndex()
-    messages_sent = NumberSetAttribute(null=True)
+    messages_sent = NumberSetAttribute(default=[0])
     attr_scores = JSONAttribute(null=True)
     message_response = JSONAttribute(default={}, null=True)
     created_time = UTCDateTimeAttribute(default=datetime.now(), null=False)
