@@ -1,9 +1,7 @@
 import os
 from twilio.rest import Client
-import datetime
 from chalicelib.models import Messages, Users
 from collections import defaultdict
-import operator
 from datetime import datetime
 import random
 from heapq import nlargest
@@ -88,11 +86,6 @@ class UserActions:
         log_message['attr_list'] = message.to_json()['attr_list'].as_dict()
         self.log("Chosen next message: " + str(log_message))
         return next_message
-
-    def log(self, msg):
-      print()
-      print(msg)
-      print()
 
     def sent_messages_length(self):
         user = Users.get(self.phone)
@@ -239,11 +232,6 @@ class UserActions:
         )
         u.save()
 
-    def days_between(self, d1, d2):
-        d1 = datetime.strptime(d1, "%Y-%m-%d")
-        d2 = datetime.strptime(d2, "%Y-%m-%d")
-        return abs((d2 - d1).days)
-
     def handle_message(self):
         if self.message_received in ['stop','end']:
             u = Users.get(self.phone)
@@ -263,3 +251,8 @@ class UserActions:
             u.save()
             self.log("Rated message index: " + str(u.prev_message) + " - Rating: " + str(self.message_received))
         return True
+
+    def log(self, msg):
+      print()
+      print(msg)
+      print()
