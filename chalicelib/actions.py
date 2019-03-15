@@ -5,6 +5,7 @@ from collections import defaultdict
 from datetime import datetime
 import random
 from heapq import nlargest
+import pdb
 
 
 class UserActions:
@@ -107,11 +108,13 @@ class UserActions:
         print()
         return new_message
 
-        # TODO last run had message 14 repeated twice. run things from now that we're starting at just having sent 13
 
     def choose_new_recommended_message(self, scored_potential_messages, user):
-        # Determine what day of the program we're on
-        created_time_diff = datetime.now() - user.created_time.replace(tzinfo=None)
+        # Create a new dictionary with a random ordering of keys so that the
+        # nlargest function doesn't pick the top scored messages after they're sorted
+        scored_potential_messages_keys = [ idx for idx in scored_potential_messages.keys() ]
+        random.shuffle(scored_potential_messages_keys)
+        new_scored_potential_messages = { idx : scored_potential_messages[idx] for idx in scored_potential_messages_keys }
         # Determine the top # of messages to choose from based on the number of messages
         # we've sent already. As the program progresses, this window gets smaller
         # and smaller until at the end of the program we're just choosing the highest
@@ -119,7 +122,7 @@ class UserActions:
         diff = self.total_days - len(user.messages_sent)
         top_number_of_msgs_to_choose_from = diff if diff > 0 else 1
         # Choose the highest scoring messages
-        potential_msg_keys = nlargest(top_number_of_msgs_to_choose_from, scored_potential_messages, key=scored_potential_messages.get)
+        potential_msg_keys = nlargest(top_number_of_msgs_to_choose_from, new_scored_potential_messages, key=new_scored_potential_messages.get)
         # Choose a random message from the top_number_of_msgs_to_choose_from
         print()
         print(diff, top_number_of_msgs_to_choose_from, potential_msg_keys)
