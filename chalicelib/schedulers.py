@@ -9,7 +9,7 @@ from chalicelib.actions import UserActions
 @app.schedule(Rate(1, unit=Rate.HOURS))
 def every_hour(event):
     hour = datetime.now().hour
-    user_list = Users.time_index.query(hash_key=hour)
+    user_list = Users.time_index.query(hour, Users.send_message == True)
     for user in user_list:
         user_obj = UserActions(**user.to_dict())
         # Only send for the first 28 days
