@@ -108,7 +108,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-#dynao csv upload
+#dynamo csv upload
 /scripts/dynamo_csv_upload/node_modules
 /scripts/dynamo_csv_upload/raw_data.csv
 /scripts/dynamo_csv_upload/data_to_upload/*

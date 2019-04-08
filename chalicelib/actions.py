@@ -236,7 +236,7 @@ class UserActions:
         u.save()
 
     def handle_message(self):
-        if self.message_received.lower() in ['stop','end']:
+        if self.message_received.strip().lower() in ['stop','end']:
             u = Users.get(self.phone)
             u.update(
                 actions=[
