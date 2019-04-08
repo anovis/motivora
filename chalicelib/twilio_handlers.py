@@ -1,4 +1,5 @@
 from chalicelib import app
+from chalice import Response
 from chalicelib.models import Messages
 from chalicelib.actions import UserActions
 from urllib.parse import parse_qs
@@ -12,22 +13,30 @@ def handle_twilio():
         # TODO only EBNHC for now
         message_set = "EBNHC"
         user_class = UserActions(phone, message_set=message_set, **parsed_request)
+        action_taken = ''
 
         # New user send "join"
         if (not user_class.is_user()) and user_class.message_received.lower() == 'join':
             user_class.add_user()
             message = Messages.get(message_set, 0)
             user_class.send_sms(message.body)
+            action_taken = 'Successfully added new user'
         # New user responding with time that they'd like to be messaged
         elif user_class.should_set_time():
             user_class.update_time()
             user_class.send_sms('Thank you for your response. The time has been set.')
+            action_taken = 'Successfully set preferred time for new user'
         # User responding to each message with a rating
         else:
             user_class.handle_message()
             user_class.send_sms('Thank you for your feedback!')
+            action_taken = 'Successfully saved user rating of message'
 
-        return {'data': 200}
+        return Response(
+          body=action_taken,
+          status_code=200,
+          headers={'Content-Type': 'text/plain'}
+        )
     except Exception as e:
       return {'error': str(e)}
 

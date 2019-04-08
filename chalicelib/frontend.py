@@ -3,6 +3,7 @@ from chalicelib.models import Messages, Users
 from chalice import Response
 from chalicelib.actions import UserActions
 from collections import defaultdict
+import pdb
 
 # TODO only works for one message set currently
 message_set = "EBNHC"

@@ -23,24 +23,20 @@ create a `.chalice` folder in the root directory of the project and add this to 
 }
 ```
 
-## Test locally
-
-run `npm run chalice-local` to start local version of api's. if you want to interact with it via twilio then use
-ngrok to mock an endpoint and forward to localhost:8000.
-`https://ngrok.com/`
+## Run locally
 
 ### Chalice (Lambda functions)
 
 First set up the appropriate AWS profile for chalice to use to connect to AWS by running `aws configure --profile chalice`.
-Then run `export AWS_PROFILE=chalice` to use the chalice profile as the default when running `chalice local`.
 
-Run `chalice local` to start local version of api's. Use ngrok(`https://ngrok.com/`) to expose the chalice server to the internet by running: `./ngrok http 8000`. You can now hit the ngrok endpoint with either curl or httpie (`https://httpie.org/`) locally to trigger the functions.
+Then run `npm run chalice-local` to start local version of api's.
+
+Use ngrok(`https://ngrok.com/`) to expose the chalice server to the internet by running: `./ngrok http 8000`. You can now hit the ngrok endpoint with either curl or httpie (`https://httpie.org/`) locally to trigger the functions.
 
 So essentially:
-1. `export AWS_PROFILE=chalice`
-2. `chalice local`
-3. `./ngrok http 8000`
-4. `http http://b87c4337.ngrok.io/test` where `/test` is some test endpoint that you can add in the `frontend.py` file for local testing of specific parts of the functions. Where `http` is from [HTTPie](https://httpie.org/) (use it, it's awesome).
+1. In a new terminal window run `npm run chalice-local`
+3. In another new terminal window run `./ngrok http 8000`
+4. In another new terminal window run `http http://b87c4337.ngrok.io/test` where `/test` is some test endpoint that you can add in the `frontend.py` file for local testing of specific parts of the functions. Where `http` is from [HTTPie](https://httpie.org/) (use it, it's awesome).
 
 ### Front end React app
 
