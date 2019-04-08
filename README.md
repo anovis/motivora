@@ -47,14 +47,13 @@ For the frontend run `yarn start`
 #### Deploy Frontend and Backend at once
 run `npm run deploy` or `npm run deploy --git-tag` to also tag the release.
 
-#### Frontend
+#### Frontend only (no git tag created)
 
-* run `yarn build` then copy all components of the build folder to s3. make sure the make the s3 folder public.
-* TODO (right now i hard coded the api gateway address, but this should be in a config to trigger between localhost and api gateway)
+run `export AWS_PROFILE=chalice && export AWS_DEFAULT_REGION=us-east-1 && npm install && npm run build && aws s3 sync build/ s3://motivora-website`
 
-#### Lambdas
+#### Lambdas (no git tag created)
 
-* run `chalice deploy` to deploy api gateway and lambdas.
+run `export AWS_PROFILE=chalice && export AWS_DEFAULT_REGION=us-east-1 && chalice deploy` to deploy api gateway and lambdas.
 
 #### Twilio
 
