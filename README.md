@@ -23,7 +23,7 @@ create a `.chalice` folder in the root directory of the project and add this to 
 }
 ```
 
-## Test locally
+## Run locally
 
 ### Chalice (Lambda functions)
 

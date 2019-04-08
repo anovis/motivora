@@ -78,16 +78,6 @@ def list_users():
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
 
-@app.route('/test', methods=['GET'], cors=True)
-def test():
-  # users = Users.scan(Users.send_message == "true")
-  # user_list = Users.time_index.query(hash_key=9)
-  # Users.time_index.query(hash_key=hour)
-  # user_list = [user.to_frontend() for user in users]
-  for user in Users.time_index.query(2, Users.send_message == False):
-      print(user.phone)
-  # print(user_list)
-
 #
 # Utility functions
 #
