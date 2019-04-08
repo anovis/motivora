@@ -1,5 +1,5 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, NumberAttribute, UnicodeSetAttribute
+from pynamodb.attributes import UnicodeAttribute, NumberAttribute, MapAttribute
 
 class Messages(Model):
     class Meta:
@@ -7,7 +7,7 @@ class Messages(Model):
 
     id = NumberAttribute(range_key=True)
     message_set = UnicodeAttribute(hash_key=True)
-    attr_list = UnicodeSetAttribute()
+    attr_list = MapAttribute()
     body = UnicodeAttribute()
     seq = UnicodeAttribute()
     total_attr = NumberAttribute()
@@ -34,10 +34,15 @@ class Messages(Model):
         }
 
     def to_frontend(self):
+        if(self.attr_list is None):
+          attr_list = ''
+        else:
+          attr_list = str(self.attr_list.as_dict())
         return {
             'id': self.id,
             'message_set': self.message_set,
             'body': self.body,
+            'attr_list': attr_list,
             'total_disliked': self.total_disliked,
             'total_liked': self.total_liked,
             'total_sent': self.total_sent

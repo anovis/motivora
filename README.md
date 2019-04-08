@@ -25,6 +25,10 @@ create a `.chalice` folder in the root directory of the project and add this to 
 
 ## Test locally
 
+run `npm run chalice-local` to start local version of api's. if you want to interact with it via twilio then use
+ngrok to mock an endpoint and forward to localhost:8000.
+`https://ngrok.com/`
+
 ### Chalice (Lambda functions)
 
 First set up the appropriate AWS profile for chalice to use to connect to AWS by running `aws configure --profile chalice`.
@@ -32,7 +36,7 @@ Then run `export AWS_PROFILE=chalice` to use the chalice profile as the default 
 
 Run `chalice local` to start local version of api's. Use ngrok(`https://ngrok.com/`) to expose the chalice server to the internet by running: `./ngrok http 8000`. You can now hit the ngrok endpoint with either curl or httpie (`https://httpie.org/`) locally to trigger the functions.
 
-So essentially: 
+So essentially:
 1. `export AWS_PROFILE=chalice`
 2. `chalice local`
 3. `./ngrok http 8000`
@@ -43,6 +47,9 @@ So essentially:
 For the frontend run `yarn start`
 
 ## Deployment
+
+#### Deploy Frontend and Backend at once
+run `npm run deploy` or `npm run deploy --git-tag` to also tag the release.
 
 #### Frontend
 
@@ -63,3 +70,11 @@ For the frontend run `yarn start`
 *  text join to twilio number
 *  prompted for time to receive messages (0-24)
 *  receive texts daily and respond with number (0-10) on how much you liked it
+
+## Upload messages to dynamo in bulk
+
+Everything you need is in the ./scripts/dynamo_csv_upload/ folder
+
+1. Save your raw CSV as raw_data.csv (needs to be the same format/columns as raw_data.csv.example)
+2. While in the /dynamo_csv_upload folder, run `npm i` and then run `sh upload_messages.sh`
+3. Check dynamo to make sure that your data got saved.

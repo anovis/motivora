@@ -1,8 +1,7 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute
-
-
+from pynamodb.attributes import UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute, UTCDateTimeAttribute
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
+from datetime import datetime
 
 
 class TimeIndex(GlobalSecondaryIndex):
@@ -24,15 +23,14 @@ class Users(Model):
 
     phone = NumberAttribute(hash_key=True)
     message_set = UnicodeAttribute()
-    # next_message_body = UnicodeAttribute()
-    next_message = NumberAttribute(default=1)
-    prev_message = NumberAttribute(default=1)
+    prev_message = NumberAttribute(default=0)
     send_message = BooleanAttribute(default=True)
     time = NumberAttribute(default=9)
     time_index = TimeIndex()
-    messages_sent = NumberSetAttribute(null=True)
+    messages_sent = NumberSetAttribute(default=[0])
     attr_scores = JSONAttribute(null=True)
     message_response = JSONAttribute(default={}, null=True)
+    created_time = UTCDateTimeAttribute(default=datetime.now(), null=False)
 
     def to_json(self):
         return self.to_dict()
@@ -42,7 +40,6 @@ class Users(Model):
             'phone': self.phone,
             'message_set': self.message_set,
             'time': self.time,
-            'next_message': self.next_message,
             'prev_message': self.prev_message,
             'send_message': self.send_message,
             'messages_sent': self.messages_sent,
@@ -55,6 +52,5 @@ class Users(Model):
             'phone': self.phone,
             'time': self.time,
             'message_set': self.message_set,
-            'next_message': self.next_message,
             'send_message': self.send_message,
             }
