@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # Prepare data files
+rm data_to_upload/*
 node prepare_json_data.js
 
 # Iterate through all data files and upload each
