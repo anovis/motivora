@@ -226,7 +226,11 @@ class UserActions:
             return False
 
     def update_time(self):
-        time = int(self.message_received)
+        # Since we ask for the time in ET, add 4 hours to it to get it into GMT
+        # which is the timezone that we store the time in.
+        time = int(self.message_received) + 4
+        if(time > 24):
+            time = abs(24 - time)
         u = Users.get(self.phone)
         u.update(
             actions=[
