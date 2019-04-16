@@ -8,6 +8,8 @@ node prepare_json_data.js
 # This loop ended up not working because AWS errored on some of the uploads.
 # Ended up just manually running the command for reach json file. Feel free
 # to try and get this loop running in the future if need be.
+# EXAMPLE: aws dynamodb batch-write-item --request-items "file://data-11.json" --region us-east-1 --profile chalice
+
 # for filename in ./data_to_upload/*.json; do
 #   sleep 1
 #   echo $filename
