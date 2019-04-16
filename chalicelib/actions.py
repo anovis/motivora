@@ -218,10 +218,7 @@ class UserActions:
         try:
             u = Users.get(self.phone)
             if u.prev_message == 0:
-                time = int(self.message_received)
-                if 0 <= time <=24:
-                    return True
-                return False
+                return True
         except:
             return False
 
@@ -248,8 +245,24 @@ class UserActions:
                 ]
             )
             u.save()
+        elif self.message_received.strip().lower() in ['start']:
+            u = Users.get(self.phone)
+            u.update(
+                actions=[
+                    Users.send_message.set(True)
+                ]
+            )
+            u.save()
+        elif int(self.message_received) < 0 or int(self.message_received) > 10:
+            self.send_sms('Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
         else:
             u = Users.get(self.phone)
+            # Make sure that we don't already have a rating for this message
+            for k in u.message_response.keys():
+                if u.message_response[k]["message_sent"] == u.prev_message:
+                    self.send_sms("You've already rated the previous message. Please wait for the next message to send another rating.")
+                    return False
+            # Create a new response entry
             new_dict = u.message_response
             new_dict[len(new_dict)]= {'message': self.message_received, "timestamp": str(datetime.now()), "message_sent": u.prev_message}
             u.update(actions=[
@@ -257,6 +270,7 @@ class UserActions:
             ])
             u.save()
             self.log("Rated message index: " + str(u.prev_message) + " - Rating: " + str(self.message_received))
+            self.send_sms('Thank you for your feedback!')
         return True
 
     def log(self, msg):

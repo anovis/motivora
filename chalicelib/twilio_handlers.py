@@ -21,12 +21,14 @@ def handle_twilio():
             user_class.send_sms(message.body)
         # New user responding with time that they'd like to be messaged
         elif user_class.should_set_time():
-            user_class.update_time()
-            user_class.send_sms('Thank you for your response. The time has been set.')
+            if 0 <= int(user_class.message_received) <= 24:
+                user_class.update_time()
+                user_class.send_sms('Thank you for your response. The time has been set.')
+            else:
+                user_class.send_sms('Please respond with the time that you would like to receive messages (a number between 0 and 24 - Eastern Timezone).')
         # User responding to each message with a rating
         else:
             user_class.handle_message()
-            user_class.send_sms('Thank you for your feedback!')
 
         return Response(
           body='',
