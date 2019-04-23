@@ -24,7 +24,7 @@ echo Deploying frontend app
 echo
 echo Running npm install, npm test, npm run build, pushing to S3, creating git tag and pushing to github
 
-npm install && npm run build && aws s3 sync build/ s3://motivora-website
+npm install && npm run build && aws s3 sync build/ s3://motivora-dashboard
 
 # Backend
 echo
