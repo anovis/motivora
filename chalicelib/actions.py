@@ -159,6 +159,8 @@ class UserActions:
     # 4. Multiple the property scores by the number of occurences that each property
     # has across all messages that have been sent to the user.
     def get_scored_attributes(self, user):
+        slow_down_constant = 2
+        total_possible_rating = 10
         attribute_dict = defaultdict(int)
         attribute_occurrence_dict = defaultdict(int)
 
@@ -179,17 +181,14 @@ class UserActions:
                 # Count the occurrences of each attribute
                 attribute_occurrence_dict[attr] += 1
                 if score_is_positive:
-                    attribute_dict[attr] += message_score
+                    # Divide message score by a constant to slow down algorithm learning
+                    attribute_dict[attr] += (message_score / slow_down_constant)
                 else:
-                    # Subtract the negative score from 10 to have an equal
+                    # Subtract the negative score from total possible rating to have an equal
                     # negative effect on the overall score
-                    weighted_negative_score = 10 - message_score
+                    # Divide message score by a constant to slow down algorithm learning
+                    weighted_negative_score = (total_possible_rating - message_score) / slow_down_constant
                     attribute_dict[attr] -= weighted_negative_score
-
-        # To give some weight to the frequency of each attribute, multiple each
-        # attribute's score by the number of times it was rated
-        for attr, occurrence in attribute_occurrence_dict.items():
-            attribute_dict[attr] *= attribute_occurrence_dict[attr]
 
         return attribute_dict
 
