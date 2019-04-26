@@ -265,7 +265,7 @@ class UserActions:
                 ]
             )
             u.save()
-        elif not is_int(self.message_received) or int(self.message_received) < 0 or int(self.message_received) > 10:
+        elif not self.is_int(self.message_received) or int(self.message_received) < 0 or int(self.message_received) > 10:
             self.send_sms('Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
         else:
             u = Users.get(self.phone)
