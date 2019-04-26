@@ -3,11 +3,18 @@ from chalice import Response
 from chalicelib.models import Messages
 from chalicelib.actions import UserActions
 from urllib.parse import parse_qs
+import sentry_sdk
+from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+
+sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994',
+                integrations=[AwsLambdaIntegration()])
 
 @app.route('/twilio/handle', methods=['GET','POST'], content_types=['application/x-www-form-urlencoded', 'application/json'], cors=True)
 def handle_twilio():
     try:
         raw_request = app.current_request.raw_body
+        print(raw_request)
+
         parsed_request = {key.decode(): val[0].decode() for key, val in parse_qs(raw_request).items()}
         phone = parsed_request.get('From')
         # TODO only EBNHC for now
@@ -21,7 +28,7 @@ def handle_twilio():
             user_class.send_sms(message.body)
         # New user responding with time that they'd like to be messaged
         elif user_class.should_set_time():
-            if 0 <= int(user_class.message_received) <= 24:
+            if time_is_valid(user_class):
                 user_class.update_time()
                 user_class.send_sms('Thank you for your response. The time has been set.')
             else:
@@ -36,6 +43,12 @@ def handle_twilio():
           headers={'Content-Type': 'text/plain'}
         )
     except Exception as e:
-      return {'error': str(e)}
+          sentry_sdk.capture_exception(e)
+          return {'error': str(e)}
 
+def time_is_valid(user_class):
+    if user_class.is_int(user_class.message_received):
+        return 0 <= int(user_class.message_received) <= 24
+    else:
+        return False
 
