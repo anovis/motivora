@@ -17,6 +17,7 @@ def every_hour(event):
         user_list = Users.time_index.query(hour, Users.send_message == True)
         print(hour, user_list)
         for user in user_list:
+            print(hour, user.to_dict())
             user_obj = UserActions(**user.to_dict())
             # Only send for the first 28 days
             if user_obj.sent_messages_length() >= user_obj.total_days: return 'Program ended (28 days)'
@@ -24,7 +25,6 @@ def every_hour(event):
             if is_successful:
                 user_obj.send_sms('How helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]')
                 user_obj.set_next_message()
-            return False
     except Exception as e:
       sentry_sdk.capture_exception(e)
       return {'error': str(e)}
