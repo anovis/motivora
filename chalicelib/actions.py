@@ -7,6 +7,11 @@ import random
 from heapq import nlargest
 import pdb
 
+import sentry_sdk
+from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
+
+sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994',
+                integrations=[AwsLambdaIntegration()])
 
 class UserActions:
     def __init__(self, phone, **kwargs):
@@ -22,7 +27,13 @@ class UserActions:
         try:
             Users.get(self.phone)
             return True
-        except:
+        except Exception as e:
+            return False
+
+    def is_int(self, string):
+        try:
+            return isinstance(int(string), int)
+        except Exception as e:
             return False
 
     @property
@@ -42,7 +53,8 @@ class UserActions:
             self.last_message_sent = next_message_id;
             self.send_sms(message.body)
             return True
-        except:
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
             return False
 
     def send_sms(self, message):
@@ -198,7 +210,7 @@ class UserActions:
             if message_response[key]["message_sent"] == msg_idx:
                 return int(message_response[key]['message'])
         print(message_response)
-        raise Exception('Msg Idx not found in messages sent - ' + str(msg_idx))
+        sentry_sdk.capture_exception(Exception('Msg Idx not found in messages sent - ' + str(msg_idx)))
         return 0
 
 
@@ -218,7 +230,8 @@ class UserActions:
             u = Users.get(self.phone)
             if u.prev_message == 0:
                 return True
-        except:
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
             return False
 
     def update_time(self):
@@ -252,7 +265,7 @@ class UserActions:
                 ]
             )
             u.save()
-        elif int(self.message_received) < 0 or int(self.message_received) > 10:
+        elif not self.is_int(self.message_received) or int(self.message_received) < 0 or int(self.message_received) > 10:
             self.send_sms('Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
         else:
             u = Users.get(self.phone)
