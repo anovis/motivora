@@ -15,7 +15,7 @@ def every_hour(event):
     try:
         hour = datetime.now().hour
         user_list = Users.time_index.query(hour, Users.send_message == True)
-        print("Hour " + hour, "Users " + len(list(user_list)))
+        print("Hour " + str(hour), "Users " + str(len(list(user_list))))
         for user in user_list:
             print(hour, user.to_dict())
             user_obj = UserActions(**user.to_dict())
