@@ -83,12 +83,14 @@ def list_users():
 def test():
   user = Users.get(17602147229)
   user_obj = UserActions(**user.to_dict())
+  print("Hour: " + str(16), "Phone: " + str(user_obj.phone))
   # Only send for the first 28 days
-  if user_obj.sent_messages_length() >= user_obj.total_days: return 'Program ended (28 days)'
-  is_successful = user_obj.send_next_sms()
-  if is_successful:
-      user_obj.send_sms('How helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]')
-      user_obj.set_next_message()
+  if user_obj.sent_messages_length() >= user_obj.total_days:
+      print('Program ended (28 days) ' + str(user_obj.phone))
+  else:
+      is_successful = user_obj.send_next_sms()
+      if is_successful:
+          user_obj.set_next_message()
   return False
 
 #
