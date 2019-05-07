@@ -48,10 +48,11 @@ class UserActions:
     def send_next_sms(self):
         user = Users.get(self.phone)
         try:
+            rating_request = '\n\nHow helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]'
             next_message_id = self.get_next_message()
             message = Messages.get(self.message_set, next_message_id)
             self.last_message_sent = next_message_id;
-            self.send_sms(message.body)
+            self.send_sms(message.body + rating_request)
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)
@@ -282,7 +283,6 @@ class UserActions:
             ])
             u.save()
             self.log("Rated message index: " + str(u.prev_message) + " - Rating: " + str(self.message_received))
-            self.send_sms('Thank you for your feedback!')
         return True
 
     def log(self, msg):
