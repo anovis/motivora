@@ -81,7 +81,7 @@ def list_users():
 # Test endpoint only used locally
 @app.route('/test', methods=['GET'], cors=True)
 def test():
-  user = Users.get(17602147229)
+  user = Users.get(17818194295)
   user_obj = UserActions(**user.to_dict())
   print("Hour: " + str(12), "Phone: " + str(user_obj.phone))
   # Only send for the first 28 days

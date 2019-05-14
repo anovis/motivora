@@ -136,11 +136,24 @@ class UserActions:
         top_number_of_msgs_to_choose_from = diff if diff > 0 else 1
         # Choose the highest scoring messages
         potential_msg_keys = nlargest(top_number_of_msgs_to_choose_from, new_scored_potential_messages, key=new_scored_potential_messages.get)
+        # Create a collection of potential messages that is partially reccomended and
+        # partially random.
+        potential_msg_keys_with_rand = self.get_potential_msg_keys_with_rand(potential_msg_keys, new_scored_potential_messages, top_number_of_msgs_to_choose_from)
         # Choose a random message from the top_number_of_msgs_to_choose_from
         print()
-        print(diff, top_number_of_msgs_to_choose_from, potential_msg_keys)
+        print(diff, top_number_of_msgs_to_choose_from, potential_msg_keys_with_rand)
         print()
-        return random.choice(potential_msg_keys)
+        return random.choice(potential_msg_keys_with_rand)
+
+    def get_potential_msg_keys_with_rand(self, recommended_msg_keys, scored_potential_msg_keys, window_size):
+        # Return an array of message keys comprising 70% reccomended and 30%
+        # random messages.
+        rand_pool = [el for el in scored_potential_msg_keys if el not in recommended_msg_keys]
+        random_msgs_percentage = 0.3
+        number_of_random_messages = round(random_msgs_percentage * window_size)
+        rand = rand_pool[0:number_of_random_messages]
+        reccomended = recommended_msg_keys[0:window_size-number_of_random_messages]
+        return rand + reccomended
 
 
     def get_scored_potential_messages(self, scored_attributes, user):
