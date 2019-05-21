@@ -15,8 +15,8 @@ create a `.chalice` folder in the root directory of the project and add this to 
     "TOKEN" : "TWILIO TOKEN",
     "PHONE" : "TWILIO PHONE NUMBER"
   },
-  "lambda_timeout": 900, //15 minutes
-  "lambda_memory_size": 1024, //1024 MB
+  "lambda_timeout": 900,
+  "lambda_memory_size": 1024,
   "stages": {
     "dev": {
       "api_gateway_stage": "api"
