@@ -1,8 +1,9 @@
 from chalicelib import app
-from chalicelib.models import Messages, Users
+from chalicelib.models import Messages, Users, Invocations
 from chalice import Response
 from chalicelib.actions import UserActions
 from collections import defaultdict
+from datetime import datetime
 import pdb
 
 # TODO only works for one message set currently
@@ -81,17 +82,30 @@ def list_users():
 # Test endpoint only used locally
 @app.route('/test', methods=['GET'], cors=True)
 def test():
+  hour = 1
   user = Users.get(17818194295)
   user_obj = UserActions(**user.to_dict())
-  print("Hour: " + str(12), "Phone: " + str(user_obj.phone))
+  print("Hour: " + str(hour), "Phone: " + str(user_obj.phone))
+  invocation_id = datetime.today().strftime('%Y-%m-%d') + '--HOUR--' + str(hour)
+  # Only send for users that haven't recieved a message for this Lambda invocation
+  if user_obj.has_processed_for_invocation_id(invocation_id):
+      print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
   # Only send for the first 28 days
-  if user_obj.sent_messages_length() >= user_obj.total_days:
+  elif user_obj.sent_messages_length() >= user_obj.total_days:
       print('Program ended (28 days) ' + str(user_obj.phone))
   else:
       print('Sending message to ' + str(user_obj.phone))
       is_successful = user_obj.send_next_sms()
       if is_successful:
           user_obj.set_next_message()
+          # Keep track of the fact that we processed this user for this
+          # Lambda invocation. Could be that we don't get to all of them
+          # and so the Lambda function would automatically retry.
+          new_invocation = Invocations(
+              invocation_id=invocation_id,
+              phone=user_obj.phone
+          )
+          new_invocation.save()
       else:
           sentry_sdk.capture_exception('Message sending unsuccessful for ' + str(user_obj.phone))
   return False

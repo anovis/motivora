@@ -1,6 +1,6 @@
 import os
 from twilio.rest import Client
-from chalicelib.models import Messages, Users
+from chalicelib.models import Messages, Users, Invocations
 from collections import defaultdict
 from datetime import datetime
 import random
@@ -26,6 +26,15 @@ class UserActions:
     def is_user(self):
         try:
             Users.get(self.phone)
+            return True
+        except Exception as e:
+            return False
+
+    def has_processed_for_invocation_id(self, invocation_id):
+        try:
+            found = Invocations.query(invocation_id, Invocations.phone == self.phone)
+            found_arr = [f for f in found]
+            if len(found_arr) == 0: return False
             return True
         except Exception as e:
             return False
