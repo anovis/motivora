@@ -1,7 +1,7 @@
 from chalicelib import app
 from chalice import Rate
 from datetime import datetime
-from chalicelib.models import Users
+from chalicelib.models import Users, Invocations
 from chalicelib.actions import UserActions
 
 import sentry_sdk
