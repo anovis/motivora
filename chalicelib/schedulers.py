@@ -21,7 +21,7 @@ def every_hour(event):
             user_obj = UserActions(**user.to_dict())
             print("Hour: " + str(hour), "Phone: " + str(user_obj.phone))
             # Create invocation ID for today and this hour
-            invocation_id = datetime.today().strftime('%Y-%m-%d') + '--HOUR--' + str(hour)
+            invocation_id = datetime.today().strftime('%Y-%m-%d:%H') + '-' + str(user_obj.phone)
             # Only send for users that haven't recieved a message for this Lambda invocation
             if user_obj.has_processed_for_invocation_id(invocation_id):
                 print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
@@ -37,8 +37,7 @@ def every_hour(event):
                     # Lambda invocation. Could be that we don't get to all of them
                     # and so the Lambda function would automatically retry.
                     new_invocation = Invocations(
-                        invocation_id=invocation_id,
-                        phone=user_obj.phone
+                        invocation_id=invocation_id
                     )
                     new_invocation.save()
                 else:
