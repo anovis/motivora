@@ -32,7 +32,7 @@ class UserActions:
 
     def has_processed_for_invocation_id(self, invocation_id):
         try:
-            found = Invocations.query(invocation_id, Invocations.phone == self.phone)
+            found = Invocations.query(invocation_id)
             found_arr = [f for f in found]
             if len(found_arr) == 0: return False
             return True

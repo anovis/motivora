@@ -7,7 +7,7 @@ if not Messages.exists():
     Messages.create_table(read_capacity_units=20, write_capacity_units=5, wait=True)
 
 if not Users.exists():
-    Users.create_table(read_capacity_units=20, write_capacity_units=5, wait=True)
+    Users.create_table(read_capacity_units=5, write_capacity_units=5, wait=True)
 
 if not Invocations.exists():
     Invocations.create_table(read_capacity_units=5, write_capacity_units=5, wait=True)
