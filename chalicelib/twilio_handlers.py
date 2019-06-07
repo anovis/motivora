@@ -32,7 +32,7 @@ def handle_twilio():
                 user_class.update_time()
                 user_class.send_sms('Thank you for your response. The time has been set.')
             else:
-                user_class.send_sms('Please respond with the time that you would like to receive messages (a number between 0 and 24 - Eastern Timezone).')
+                user_class.send_sms('Please respond with the time that you would like to receive messages (a number between 0 and 23 - Eastern Timezone).')
         # User responding to each message with a rating
         else:
             user_class.handle_message()
