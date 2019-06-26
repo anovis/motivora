@@ -43,6 +43,7 @@ def handle_twilio():
           headers={'Content-Type': 'text/plain'}
         )
     except Exception as e:
+          print(e)
           sentry_sdk.capture_exception(e)
           return {'error': str(e)}
 
