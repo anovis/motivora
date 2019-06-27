@@ -15,7 +15,7 @@ def handle_twilio():
         raw_request = app.current_request.raw_body
         print(raw_request)
 
-        parsed_request = {key.decode(): val[0].decode() for key, val in parse_qs(raw_request).items()}
+        parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
         phone = parsed_request.get('From')
         # TODO only EBNHC for now
         message_set = "EBNHC"
