@@ -22,10 +22,13 @@ def handle_twilio():
         user_class = UserActions(phone, message_set=message_set, **parsed_request)
 
         # New user send "join"
-        if (not user_class.is_user()) and user_class.message_received.lower() == 'join':
-            user_class.add_user()
-            message = Messages.get(message_set, 0)
-            user_class.send_sms(message.body)
+        if not user_class.is_user():
+            if user_class.message_received.lower() == 'join':
+                user_class.add_user()
+                message = Messages.get(message_set, 0)
+                user_class.send_sms(message.body)
+            else:
+                user_class.send_sms('If you would like to enroll in this text messaging program, please respond with "Join".')
         # New user responding with time that they'd like to be messaged
         elif user_class.should_set_time():
             if time_is_valid(user_class):
