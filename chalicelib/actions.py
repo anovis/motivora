@@ -68,9 +68,9 @@ class UserActions:
             sentry_sdk.capture_exception(e)
             return False
 
-    def get_anti_spam_message():
+    def get_anti_spam_message(self):
         if self.phone in self.anti_spam_phone_numbers:
-            return '\n\nText STOP to stop receiving messages.'
+            return '\n\nText STOP to stop receiving messages'
         else:
             return ''
 
