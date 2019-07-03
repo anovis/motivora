@@ -22,6 +22,7 @@ class UserActions:
         self.total_days = 29
         self.initial_static_msg_days = 14
         self.last_message_sent = 0
+        self.anti_spam_phone_numbers = [19782108436]
 
     def is_user(self):
         try:
@@ -61,11 +62,17 @@ class UserActions:
             next_message_id = self.get_next_message()
             message = Messages.get(self.message_set, next_message_id)
             self.last_message_sent = next_message_id;
-            self.send_sms(message.body + rating_request)
+            self.send_sms(message.body + rating_request + self.get_anti_spam_message())
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)
             return False
+
+    def get_anti_spam_message(self):
+        if self.phone in self.anti_spam_phone_numbers:
+            return '\n\nText STOP to stop receiving messages'
+        else:
+            return ''
 
     def send_sms(self, message):
         account_sid = os.environ.get('SID')
