@@ -22,7 +22,7 @@ class UserActions:
         self.total_days = 29
         self.initial_static_msg_days = 14
         self.last_message_sent = 0
-        self.anti_spam_phone_numbers = [17818194295]
+        self.anti_spam_phone_numbers = [19782108436]
 
     def is_user(self):
         try:
