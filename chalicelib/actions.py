@@ -245,15 +245,20 @@ class UserActions:
 
 
     def set_next_message(self):
-        u = Users.get(self.phone)
-        u.update(
-            actions=[
-                Users.messages_sent.add(self.last_message_sent),
-                Users.prev_message.set(self.last_message_sent),
-            ]
-        )
-        u.save()
-        return True
+        try:
+            u = Users.get(self.phone)
+            u.update(
+                actions=[
+                    Users.messages_sent.add(self.last_message_sent),
+                    Users.prev_message.set(self.last_message_sent),
+                ]
+            )
+            u.save()
+            return True
+        except Exception as e:
+            print(e)
+            sentry_sdk.capture_exception(e)
+            return False
 
     def should_set_time(self):
         try:
