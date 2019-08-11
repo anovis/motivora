@@ -15,7 +15,7 @@ def every_hour(event):
     try:
         hour = datetime.now().hour
         user_list = Users.time_index.query(hour, Users.send_message == True)
-        print("Fetching users with hour: " + str(hour))
+        print("Fetching users with send_message True and with hour: " + str(hour))
         # Iterate through users for this time
         for user in user_list:
             user_obj = UserActions(**user.to_dict())
@@ -27,22 +27,32 @@ def every_hour(event):
                 print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
             # Only send for the first 28 days
             elif user_obj.sent_messages_length() >= user_obj.total_days:
-                print('Program ended (28 days) ' + str(user_obj.phone))
+                print('Program ended (28 days) ' + str(user_obj.phone) + '. Setting send_message to False.')
+                user.update(
+                    actions=[
+                        Users.send_message.set(False)
+                    ]
+                )
+                user.save()
             else:
                 print('Sending message to ' + str(user_obj.phone))
                 is_successful = user_obj.send_next_sms()
                 if is_successful:
+                    print('Setting next message')
                     user_obj.set_next_message()
                     # Keep track of the fact that we processed this user for this
                     # Lambda invocation. Could be that we don't get to all of them
                     # and so the Lambda function would automatically retry.
+                    print('Setting invocation ID')
                     new_invocation = Invocations(
                         invocation_id=invocation_id
                     )
                     new_invocation.save()
                 else:
+                    print('Message sending unsuccessful for ' + str(user_obj.phone))
                     sentry_sdk.capture_exception('Message sending unsuccessful for ' + str(user_obj.phone))
     except Exception as e:
+      print(e)
       sentry_sdk.capture_exception(e)
       return {'error': str(e)}
 

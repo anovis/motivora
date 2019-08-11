@@ -129,4 +129,3 @@ def format_message_attributes_for_model(attributes):
     formatted_attrs[attr] = True
   return formatted_attrs
 
-
