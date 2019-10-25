@@ -42,7 +42,7 @@ So essentially:
 
 ### Front end React app
 
-For the frontend run `yarn start`
+For the frontend run `npm start` or `yarn start` (depending on which package manager you use)
 
 ## Deployment
 
