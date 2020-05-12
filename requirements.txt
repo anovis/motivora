@@ -9,7 +9,7 @@ enum-compat==0.0.2
 idna==2.7
 jmespath==0.9.3
 PyJWT==1.6.4
-pynamodb==3.3.1
+pynamodb==4.3.1
 PySocks==1.6.8
 python-dateutil==2.7.4
 pytz==2018.6

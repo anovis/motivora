@@ -29,7 +29,11 @@ create a `.chalice` folder in the root directory of the project and add this to 
 
 ### Chalice (Lambda functions)
 
-First set up the appropriate AWS profile for chalice to use to connect to AWS by running `aws configure --profile chalice`.
+Install AWS command line tools, if necessary, by going here: https://docs.aws.amazon.com/cli/latest/userguide/install-bundle.html
+
+Create an AWS key pair here: https://console.aws.amazon.com/iam/home?region=us-east-1#/security_credentials
+
+Set up the appropriate AWS profile on your local machine for chalice to use to connect to AWS by running `aws configure --profile chalice`.
 
 Then run `npm run chalice-local` to start local version of api's.
 
