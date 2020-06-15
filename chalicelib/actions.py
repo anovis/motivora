@@ -2,7 +2,7 @@ import os
 from twilio.rest import Client
 from chalicelib.models import Messages, Users, Invocations
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 import random
 from heapq import nlargest
 import pdb
@@ -20,9 +20,12 @@ class UserActions:
         self.message_set = kwargs.get('message_set')
         # Total program days (including first day with no motivational message)
         self.total_days = 29
+        self.prelim_rated_messages = 16
         self.initial_static_msg_days = 14
         self.last_message_sent = 0
         self.anti_spam_phone_numbers = [19782108436]
+        self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
+        self.days_before_rating_reminder = 5
 
     def is_user(self):
         try:
@@ -63,10 +66,42 @@ class UserActions:
             message = Messages.get(self.message_set, next_message_id)
             self.last_message_sent = next_message_id;
             self.send_sms(message.body + rating_request + self.get_anti_spam_message())
+            self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)
             return False
+
+    def send_reminder_sms_if_needed(self, num_non_ratings):
+        user = Users.get(self.phone)
+        if not (self.has_consecutive_non_ratings(user, num_non_ratings)):
+            return False
+        try:
+            self.send_sms(self.reminder_message_text)
+            return True
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            return False
+
+
+    def has_consecutive_non_ratings(self, user, num_non_ratings):
+        # Get created_at_date
+        created_date = user.created_time.date() - timedelta(days=1)
+        # Get date of last rating
+        last_rated_index = str(len(user.message_response) - 1)
+        last_rated_day = user.message_response[last_rated_index]['timestamp'][0:10]
+        last_rated_date = datetime.strptime(last_rated_day, '%Y-%m-%d').date()
+        # Use created_at + last_rated to create a last_seen date
+        last_seen_date = max(created_date, last_rated_date)
+        today = datetime.now().date()
+        days_since_rating = (today - last_seen_date).days - 1
+        print("%s days since rating for %s"%(days_since_rating, user.phone))
+        # Return True only if this the day we should be sending the message
+        if days_since_rating > 0 and ((days_since_rating % num_non_ratings) == 0):
+            return True
+        else:
+            return False
+
 
     def get_anti_spam_message(self):
         if self.phone in self.anti_spam_phone_numbers:
@@ -119,7 +154,7 @@ class UserActions:
 
     def sent_messages_length(self):
         user = Users.get(self.phone)
-        return len(user.messages_sent) if user.messages_sent != None else 0
+        return len(user.messages_sent) - self.prelim_rated_messages if user.messages_sent != None else 0
 
     def get_recommended_message(self):
         user = Users.get(self.phone)
