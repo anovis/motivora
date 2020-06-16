@@ -70,15 +70,18 @@ class UserActions:
         return self._user
 
     # Retrieves the next message to be sent, formats it appropriately, and triggers the SMS sending
-    def send_next_sms(self):
+    def send_next_sms(self, is_test=False):
         user = Users.get(self.phone)
         try:
             rating_request = '\n\nHow helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]'
             next_message_id = self.get_next_message()
             message = Messages.get(self.message_set, next_message_id)
             self.last_message_sent = next_message_id;
-            self.send_sms(message.body + rating_request + self.get_anti_spam_message())
-            self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
+            if is_test:
+                print("Would send messge: %s"%(message.body + rating_request + self.get_anti_spam_message()))
+            else:
+                self.send_sms(message.body + rating_request + self.get_anti_spam_message())
+                self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)

@@ -75,22 +75,6 @@ def every_minute(event):
         user.save()
     else:
         print('Sending message to ' + str(user_obj.phone))
-        is_successful = user_obj.send_next_sms()
-        if is_successful:
-            print('Setting next message')
-            user_obj.set_next_message()
-            # Keep track of the fact that we processed this user for this
-            # Lambda invocation. Could be that we don't get to all of them
-            # and so the Lambda function would automatically retry.
-            print('Setting invocation ID')
-            new_invocation = Invocations(
-                invocation_id=invocation_id
-            )
-            new_invocation.save()
-        else:
-            print('Message sending unsuccessful for ' + str(user_obj.phone))
-            sentry_sdk.capture_exception('Message sending unsuccessful for ' + str(user_obj.phone))
-
-
+        is_successful = user_obj.send_next_sms(True)
 
 
