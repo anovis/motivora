@@ -7,6 +7,11 @@ import random
 from heapq import nlargest
 import pdb
 
+import string
+#import nltk
+#from nltk.corpus import stopwords
+#from chalicelib.actions import UserActions
+
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 
@@ -15,17 +20,23 @@ sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994'
 
 class UserActions:
     def __init__(self, phone, **kwargs):
+        #nltk.download('stopwords')
+        #nltk.download('punkt')
         self.phone = int(phone)
         self.message_received = kwargs.get('Body','').lower()
         self.message_set = kwargs.get('message_set')
         # Total program days (including first day with no motivational message)
-        self.total_days = 29
-        self.prelim_rated_messages = 16
-        self.initial_static_msg_days = 14
+        self.total_days = 46
+        self.initial_static_msg_days = 16
         self.last_message_sent = 0
         self.anti_spam_phone_numbers = [19782108436]
         self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
-        self.days_before_rating_reminder = 5
+        self.days_before_rating_reminder = 3
+        # Tuning params for message selection
+        self.total_attr_count = 6
+        self.historical_message_discount_factor = 0.9 # Determines how quickly older ratings are down-weighted
+        self.unranked_attr_boost = 0.1 # Additional score boost for messages with attrs that have not yet been ranked
+        self.prob_of_selection_on_iteration = 0. # Minimal boost for top messages
 
     def is_user(self):
         try:
@@ -58,6 +69,7 @@ class UserActions:
             self._user = Users.get(self.phone)
         return self._user
 
+    # Retrieves the next message to be sent, formats it appropriately, and triggers the SMS sending
     def send_next_sms(self):
         user = Users.get(self.phone)
         try:
@@ -135,16 +147,6 @@ class UserActions:
 
     def get_next_message(self):
         u = Users.get(self.phone)
-        # Serve the standard message set until after 14 days
-        # Total program is 28 days
-        last_message_sent_id = u.prev_message
-        if(last_message_sent_id < self.initial_static_msg_days):
-          message = Messages.get(self.message_set, last_message_sent_id + 1)
-          log_message = message.to_json()
-          log_message['attr_list'] = message.to_json()['attr_list'].as_dict()
-          self.log("Chosen next message: " + str(log_message))
-          return last_message_sent_id + 1
-
         next_message = self.get_recommended_message()
         message = Messages.get(self.message_set, next_message)
         log_message = message.to_json()
@@ -154,120 +156,183 @@ class UserActions:
 
     def sent_messages_length(self):
         user = Users.get(self.phone)
-        return len(user.messages_sent) - self.prelim_rated_messages if user.messages_sent != None else 0
+        return len(user.messages_sent) if user.messages_sent != None else 0
 
     def get_recommended_message(self):
         user = Users.get(self.phone)
-        scored_attributes = self.get_scored_attributes(user)
-        print()
-        print(scored_attributes)
-        print()
-        scored_potential_messages = self.get_scored_potential_messages(scored_attributes, user)
-        print()
-        print(scored_potential_messages)
-        print()
-        new_message = self.choose_new_recommended_message(scored_potential_messages, user)
-        print()
-        print(new_message)
-        print()
+        user_obj = UserActions(**user.to_dict())
+        scored_attributes = user_obj.get_scored_attributes(user_obj, user)
+        print("\n%s\n"%(scored_attributes))
+
+        scored_potential_messages = user_obj.get_scored_potential_messages(user_obj, scored_attributes, user)
+        print("\n%s\n"%(scored_potential_messages))
+
+        new_message = user_obj.choose_new_recommended_message(user_obj, scored_potential_messages, user)
+        print("\n%s\n"%(new_message))
+
         return new_message
 
 
-    def choose_new_recommended_message(self, scored_potential_messages, user):
-        # Create a new dictionary with a random ordering of keys so that the
-        # nlargest function doesn't pick the top scored messages after they're sorted
+    # Sort scored_potential_messages hash by score
+    # Iterate over the hash, and select each new entry with a prob_of_selection_on_iteration probability
+    def choose_new_recommended_message(self, user_obj, scored_potential_messages, user):
+        # Randomize key ordering
         scored_potential_messages_keys = [ idx for idx in scored_potential_messages.keys() ]
         random.shuffle(scored_potential_messages_keys)
         new_scored_potential_messages = { idx : scored_potential_messages[idx] for idx in scored_potential_messages_keys }
-        # Determine the top # of messages to choose from based on the number of messages
-        # we've sent already. As the program progresses, this window gets smaller
-        # and smaller until at the end of the program we're just choosing the highest
-        # scoring message.
-        diff = self.total_days - len(user.messages_sent)
-        top_number_of_msgs_to_choose_from = diff if diff > 0 else 1
-        # Choose the highest scoring messages
-        potential_msg_keys = nlargest(top_number_of_msgs_to_choose_from, new_scored_potential_messages, key=new_scored_potential_messages.get)
-        # Create a collection of potential messages that is partially reccomended and
-        # partially random.
-        potential_msg_keys_with_rand = self.get_potential_msg_keys_with_rand(potential_msg_keys, new_scored_potential_messages, top_number_of_msgs_to_choose_from)
-        # Choose a random message from the top_number_of_msgs_to_choose_from
-        print()
-        print(diff, top_number_of_msgs_to_choose_from, potential_msg_keys_with_rand)
-        print()
-        return random.choice(potential_msg_keys_with_rand)
+        # Sort hash by score value
+        sorted_messages = {k: v for k, v in sorted(new_scored_potential_messages.items(), key=lambda item: item[1],reverse= True)}
+        # Iterate over each message, and consider each key in sequence with a likelihood of prob_of_selection_on_iteration
+        selected_id = None
+        for id, score in sorted_messages.items():
+            r = random.random() 
+            if r < self.prob_of_selection_on_iteration:
+                selected_id = id
+                break
+        # If we get to the end of our hash without choosing anything, default to the first key
+        if selected_id is None:
+            for id, score in sorted_messages.items():
+                selected_id = id
+                break
+        return selected_id
 
-    def get_potential_msg_keys_with_rand(self, recommended_msg_keys, scored_potential_msg_keys, window_size):
-        # Return an array of message keys comprising 70% reccomended and 30%
-        # random messages.
-        rand_pool = [el for el in scored_potential_msg_keys if el not in recommended_msg_keys]
-        random_msgs_percentage = 0.3
-        number_of_random_messages = round(random_msgs_percentage * window_size)
-        rand = rand_pool[0:number_of_random_messages]
-        reccomended = recommended_msg_keys[0:window_size-number_of_random_messages]
-        return rand + reccomended
-
-
-    def get_scored_potential_messages(self, scored_attributes, user):
+    # Retrive all messages from DynamoDB
+    # Sum average ratings for each attribute of that message:
+    #   > If we have seen a message's attr before, use the average score of rated messages with that attr
+    #   > If we have not seen a message's attr before, use the average score of all rated messages, plus delta (optimize to see all attrs)
+    #   > If a message does not have a particular attr, use the average score of all rated messages
+    #
+    # Return a hash of message_id => score
+    def get_scored_potential_messages(self, user_obj, scored_attributes, user):
         messages_scored = defaultdict(int)
-        all_msgs_og = Messages.query(self.message_set, Messages.id > 0)
+        all_msgs_og = Messages.query(user_obj.message_set, Messages.id > 0)
         all_msgs = [message.to_frontend() for message in all_msgs_og]
         all_msgs_filtered = filter(lambda msg: msg['id'] not in user.messages_sent, all_msgs)
         # Iterate through each potential message
         for msg in all_msgs_filtered:
-            message = Messages.get(self.message_set, msg['id'])
+            message = Messages.get(user_obj.message_set, msg['id'])
             attributes = message.attr_list.as_dict()
             # Iterate through all attributes for a given message
             for attr, boolean in attributes.items():
                 # Make sure that the attribute is marked at TRUE
                 if not boolean: continue
-                messages_scored[msg['id']] += scored_attributes[attr]
-
+                if attr in scored_attributes: # An attribute we've seen before, in a scored message
+                    messages_scored[msg['id']] += scored_attributes[attr]
+                else: # An attribute that has never been scored
+                    messages_scored[msg['id']] += scored_attributes['MESSAGE'] + self.unranked_attr_boost
+            # Sum scores for all attributes that were not seen in this message
+            messages_scored[msg['id']] /= self.total_attr_count
+            # Round all scores to the nearest tenth
+            messages_scored[msg['id']] = round(messages_scored[msg['id']], 1)
         return messages_scored
+
+
+    def get_word_rareness():
+        all_msgs_og = Messages.query(user_obj.message_set, Messages.id > 0)
+        all_msgs = [message.to_frontend() for message in all_msgs_og]
+        all_msgs_filtered = filter(lambda msg: msg['id'] not in user.messages_sent, all_msgs)
+        token_scores = {}
+        for msg in all_msgs_filtered:
+            message = Messages.get(user_obj.message_set, msg['id'])
+            user_rating = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            print("%s;%s;%s"%(msg['id'], message.body, user_rating))
+            clean_tokens = get_clean_tokens_from_message(message.body)
+            for clean_token in clean_tokens:
+                if clean_token not in token_scores:
+                    token_scores[clean_token] = {
+                        'absolute_count': 0
+                    }
+                token_scores[clean_token]['absolute_count'] += 1
+        normalized_token_scores = {}
+        for token, score_hash in token_scores.items():
+            normalized_token_scores[token] = {
+                'rareness': token_scores[token]['absolute_count'] / len(all_msgs)
+            }
+        return normalized_token_scores
+
+
+    def get_clean_tokens_from_message(message):
+        tokens = nltk.word_tokenize(message)
+        clean_tokens = []
+        for token in tokens:
+            # Remove punctuation from tokens
+            clean_token = token.translate(str.maketrans('', '', string.punctuation))
+            clean_token = clean_token.lower()
+            # Exclude tokens that are in our stopwords set, or have 1 or fewer characters
+            if (clean_token in stopwords) or len(clean_token) <= 1:
+                continue
+            # Ensure each token is only counted once per message
+            if clean_token not in clean_tokens:
+                clean_tokens.append(clean_token)
+        return clean_tokens
+
+
+    def get_scored_words(message, message_score, weight, token_scores, dict_rareness, rareness_scores):
+        clean_tokens = get_clean_tokens_from_message(message)
+        rareness = 0
+        rareness_count = 0
+        for clean_token in clean_tokens:
+            if clean_token not in token_scores:
+                token_scores[clean_token] = {
+                    'absolute_count': 0,
+                    'absolute_score': 0
+                }
+            token_scores[clean_token]['absolute_count'] += 1
+            token_scores[clean_token]['absolute_score'] += message_score
+            if clean_token in dict_rareness:
+                rareness += dict_rareness[clean_token]['rareness']
+                rareness_count += 1
+        overall_rareness = rareness / rareness_count
+        rareness_scores[overall_rareness] = message_score
+        return token_scores, rareness_scores
 
 
     # Returns a dictionary of attributes with weighted scores based on the user's
     # rating of messages with these attributes and the number of times each attribute
     # has been attached to a message that was shown to a user.
-    # 1. Iterate through all messages that a user has been sent
-    # 2. For each message that was sent, iterate through all attributes of that message
-    # 3. If the message was rated >= 5, add it to a dictionary of properties and scores,
-    # if the message was rated < 5 then subtract it from 10 and then subtract that
-    # from the dictionary of properties and scores.
-    # 4. Multiple the property scores by the number of occurences that each property
-    # has across all messages that have been sent to the user.
-    def get_scored_attributes(self, user):
-        slow_down_constant = 2
-        total_possible_rating = 10
-        attribute_dict = defaultdict(int)
-        attribute_occurrence_dict = defaultdict(int)
-
-        # Iterate through all messages that have been rated
+    def get_scored_attributes(self, user_obj, user):
+        # Compute an average score per category the message has associated with it
+        attribute_scores = {}
+        #token_scores = {}
+        #rareness_scores = {}
         rated_responses = [*user.message_response.keys()]
-        rated_responses.remove('0')
+        rating_total = 0
         for msg_sent_idx in rated_responses:
+            weight = (self.historical_message_discount_factor)**((len(rated_responses) - 1) - int(msg_sent_idx))
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
-            message = Messages.get(self.message_set, msg_idx)
-            message_score = self.get_message_score_for_idx(user.message_response, msg_idx)
+            message = Messages.get(user_obj.message_set, msg_idx)
+            message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            #token_scores, rareness_scores = get_scored_words(message.body, message_score, weight, token_scores, dict_rareness, rareness_scores)
+            rating_total += message_score
             attributes = message.attr_list.as_dict()
+            attributes["WEIGHTED MESSAGE"] = True
             # Iterate through all attributes for a given message
             for attr, boolean in attributes.items():
-                # Make sure that the attribute is marked at TRUE
+                # Make sure that the attribute is marked as True
                 if not boolean: continue
-                # If the score is >= 5 it is considered positive
-                score_is_positive = message_score >= 5
-                # Count the occurrences of each attribute
-                attribute_occurrence_dict[attr] += 1
-                if score_is_positive:
-                    # Divide message score by a constant to slow down algorithm learning
-                    attribute_dict[attr] += (message_score / slow_down_constant)
+                if attr not in attribute_scores:
+                    attribute_scores[attr] = {
+                        'weighted_score': message_score*weight,
+                        'weighted_count': weight,
+                        'absolute_score': message_score,
+                        'absolute_count': 1
+                    }
                 else:
-                    # Subtract the negative score from total possible rating to have an equal
-                    # negative effect on the overall score
-                    # Divide message score by a constant to slow down algorithm learning
-                    weighted_negative_score = (total_possible_rating - message_score) / slow_down_constant
-                    attribute_dict[attr] -= weighted_negative_score
-
-        return attribute_dict
+                    attribute_scores[attr]['weighted_score'] += message_score*weight
+                    attribute_scores[attr]['weighted_count'] += weight
+                    attribute_scores[attr]['absolute_score'] += message_score
+                    attribute_scores[attr]['absolute_count'] += 1
+        # Compute normalized scores for each attribute (taking into account the weighted_count for each)
+        normalized_attribute_scores = {'MESSAGE': rating_total / len(rated_responses)}
+        for attr, score_hash in attribute_scores.items():
+            normalized_attribute_scores[attr] = attribute_scores[attr]['weighted_score'] / attribute_scores[attr]['weighted_count']
+        # Compute overall word scores for each word
+        #normalized_token_scores = {}
+        #for token, score_hash in token_scores.items():
+        #    normalized_token_scores[token] = {}
+        #    normalized_token_scores[token]['average_score'] = token_scores[token]['absolute_score'] / token_scores[token]['absolute_count']
+        #    normalized_token_scores[token]['rareness']      = token_scores[token]['absolute_count'] / len(rated_responses)
+        return normalized_attribute_scores#, normalized_token_scores, rareness_scores
 
 
     def get_message_score_for_idx(self, message_response, msg_idx):
