@@ -26,7 +26,7 @@ class UserActions:
         self.message_received = kwargs.get('Body','').lower()
         self.message_set = kwargs.get('message_set')
         # Total program days (including first day with no motivational message)
-        self.total_days = 46
+        self.total_days = 72
         self.initial_static_msg_days = 16
         self.last_message_sent = 0
         self.anti_spam_phone_numbers = [19782108436]
