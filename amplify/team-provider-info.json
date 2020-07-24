@@ -1,0 +1,20 @@
+{
+    "prod": {
+        "awscloudformation": {
+            "AuthRoleName": "amplify-motivora-prod-144355-authRole",
+            "UnauthRoleArn": "arn:aws:iam::548444980772:role/amplify-motivora-prod-144355-unauthRole",
+            "AuthRoleArn": "arn:aws:iam::548444980772:role/amplify-motivora-prod-144355-authRole",
+            "Region": "us-east-1",
+            "DeploymentBucketName": "amplify-motivora-prod-144355-deployment",
+            "UnauthRoleName": "amplify-motivora-prod-144355-unauthRole",
+            "StackName": "amplify-motivora-prod-144355",
+            "StackId": "arn:aws:cloudformation:us-east-1:548444980772:stack/amplify-motivora-prod-144355/1b6cead0-cdbc-11ea-97b8-124c09213289",
+            "AmplifyAppId": "d1xs1x82je39pr"
+        },
+        "categories": {
+            "auth": {
+                "motivora9a8d1a6a": {}
+            }
+        }
+    }
+}

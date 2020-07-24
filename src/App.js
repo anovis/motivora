@@ -3,6 +3,7 @@ import Container from './Container';
 import MessageSetForm from './MessageSetForm';
 import { Navbar, Nav, Button } from 'react-bootstrap';
 import './App.css';
+import { withAuthenticator, AmplifySignOut } from '@aws-amplify/ui-react';
 
 class App extends Component {
 
@@ -50,6 +51,7 @@ class App extends Component {
             <Nav.Link href="#users" onClick={() => { this.setState({activePage: 'USERS'}) }}>Users</Nav.Link>
             <Nav.Link href="#messages" onClick={() => { this.setState({activePage: 'MESSAGES'}) }}>Messages</Nav.Link>
             <Button href="#add-message-set" onClick={() => { this.setState({activePage: 'ADD_MESSAGE'})  }}>Add Message Set</Button>
+            <AmplifySignOut />
           </Nav>
         </Navbar>
         <div>
@@ -60,4 +62,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default withAuthenticator(App);

@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "axios": "^0.16.1",
+    "@aws-amplify/ui-react": "^0.2.12",
+    "aws-amplify": "^3.0.21",
+    "axios": "^0.19.2",
     "body-parser": "^1.17.2",
     "bootstrap": ">=4.1.2",
     "cron": "^1.2.1",

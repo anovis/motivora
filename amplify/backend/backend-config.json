@@ -1,0 +1,10 @@
+{
+	"auth": {
+		"motivora9a8d1a6a": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": [],
+			"customAuth": false
+		}
+	}
+}
