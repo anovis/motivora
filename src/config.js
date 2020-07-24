@@ -1,10 +1,11 @@
 
-// const endpoint = process.env.NODE_ENV === "production" ?
-//   "https://sj0fyj60d0.execute-api.us-east-1.amazonaws.com/api" :
-//   "localhost:3000";
+const endpoint = (process.env.NODE_ENV === "development") ?
+	"http://127.0.0.1:8000" 
+		:
+	"https://sj0fyj60d0.execute-api.us-east-1.amazonaws.com/api";
 
 const Config = {
-  api: 'https://sj0fyj60d0.execute-api.us-east-1.amazonaws.com/api'
+  api: endpoint
 };
 
 export default Config;
