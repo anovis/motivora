@@ -43,9 +43,9 @@ def handle_direct_sms_response():
         print(raw_request)
 
         parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
-        #phone = parsed_request.get('From')
-        phone = "18479270519"
-        parsed_request = {'From': '18479270519', 'Body': 'hello, motivora!'}
+        phone = parsed_request.get('From')
+        #phone = "18479270519"
+        #parsed_request = {'From': '18479270519', 'Body': 'hello, motivora!'}
         user_class = UserActions(phone, **parsed_request)
 
         if user_class.is_user():
