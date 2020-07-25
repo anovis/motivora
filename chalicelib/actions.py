@@ -20,22 +20,25 @@ sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994'
 
 class UserActions:
     def __init__(self, phone, **kwargs):
-        self.motivational_phone_number   = "+18583485825"
-        self.goal_setting_phone_number   = "+16177419271"
-        self.direct_message_phone_number = "+16177419617"
+        # Twilio phone numbers
+        self.motivational_phone_number   = os.environ.get('MOTIVATIONAL_PHONE')
+        self.goal_setting_phone_number   = os.environ.get('GOAL_SETTING_PHONE')
+        self.direct_message_phone_number = os.environ.get('DIRECT_MESSAGE_PHONE')
 
-        #nltk.download('stopwords')
-        #nltk.download('punkt')
+        # Reminder message config
+        self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
+        self.days_before_rating_reminder = 3
+
         self.phone = int(phone)
         self.message_received = kwargs.get('Body','').lower()
         self.message_set = kwargs.get('message_set')
+
         # Total program days (including first day with no motivational message)
         self.total_days = 72
         self.initial_static_msg_days = 16
         self.last_message_sent = 0
         self.anti_spam_phone_numbers = [19782108436]
-        self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
-        self.days_before_rating_reminder = 3
+        
         # Tuning params for message selection
         self.total_attr_count = 6
         self.historical_message_discount_factor = 0.9 # Determines how quickly older ratings are down-weighted
