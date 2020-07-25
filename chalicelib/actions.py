@@ -20,6 +20,10 @@ sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994'
 
 class UserActions:
     def __init__(self, phone, **kwargs):
+        self.motivational_phone_number   = "+18583485825"
+        self.goal_setting_phone_number   = "+16177419271"
+        self.direct_message_phone_number = "+16177419617"
+
         #nltk.download('stopwords')
         #nltk.download('punkt')
         self.phone = int(phone)
@@ -80,7 +84,7 @@ class UserActions:
             if is_test:
                 print("Would send messge: %s"%(message.body + rating_request + self.get_anti_spam_message()))
             else:
-                self.send_sms(message.body + rating_request + self.get_anti_spam_message())
+                self.send_motivational_sms(message.body + rating_request + self.get_anti_spam_message())
                 self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
             return True
         except Exception as e:
@@ -92,7 +96,7 @@ class UserActions:
         if not (self.has_consecutive_non_ratings(user, num_non_ratings)):
             return False
         try:
-            self.send_sms(self.reminder_message_text)
+            self.send_motivational_sms(self.reminder_message_text)
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)
@@ -124,13 +128,22 @@ class UserActions:
         else:
             return ''
 
-    def send_sms(self, message):
+    def send_motivational_sms(self, message):
+        self.send_sms(message, self.motivational_phone_number)
+
+    def send_direct_message_sms(self, message):
+        self.send_sms(message, self.direct_message_phone_number)
+
+    def send_goal_setting_sms(self, message):
+        self.send_sms(message, self.goal_setting_phone_number)
+
+    def send_sms(self, message, sender_phone_number):
         account_sid = os.environ.get('SID')
         auth_token = os.environ.get('TOKEN')
         client = Client(account_sid, auth_token)
         message = client.messages.create(
             body=message,
-            from_=os.environ.get('PHONE'),
+            from_=sender_phone_number,
             to=self.phone
         )
         return message.sid
@@ -404,13 +417,13 @@ class UserActions:
             )
             u.save()
         elif not self.is_int(self.message_received) or int(self.message_received) < 0 or int(self.message_received) > 10:
-            self.send_sms('Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
+            self.send_motivational_sms('Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
         else:
             u = Users.get(self.phone)
             # Make sure that we don't already have a rating for this message
             for k in u.message_response.keys():
                 if u.message_response[k]["message_sent"] == u.prev_message:
-                    self.send_sms("You've already rated the previous message. Please wait for the next message to send another rating.")
+                    self.send_motivational_sms("You've already rated the previous message. Please wait for the next message to send another rating.")
                     return False
             # Create a new response entry
             new_dict = u.message_response

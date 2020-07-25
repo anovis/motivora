@@ -79,6 +79,30 @@ def list_users():
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
 
+# Sends a direct message to a user
+@app.route('/users/send_message', methods=['POST'], cors=True)
+def send_direct_message_to_user():
+  print("send_message")
+  payload = app.current_request.json_body
+  phone_number = payload['phone_number']
+  message      = payload['message']
+  user = Users.get(phone_number)
+  user_obj = UserActions(**user.to_dict())
+  try:
+    user_obj.send_direct_message_sms(message)
+  except Exception as e:
+    print(e)
+    return Response(
+      body='Something went wrong while trying to send your message.',
+      status_code=500,
+      headers={'Content-Type': 'text/plain'}
+    )
+  return Response(
+    body='Success',
+    status_code=200,
+    headers={'Content-Type': 'text/plain'}
+  )
+
 # Test endpoint only used locally
 @app.route('/test', methods=['GET'], cors=True)
 def test():

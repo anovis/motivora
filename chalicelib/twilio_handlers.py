@@ -23,22 +23,68 @@ def handle_twilio():
 
         # New user send "join"
         if not user_class.is_user():
-            if user_class.message_received.lower() == 'join':
-                user_class.add_user()
-                message = Messages.get(message_set, 0)
-                user_class.send_sms(message.body)
-            else:
-                user_class.send_sms('If you would like to enroll in this text messaging program, please respond with "Join".')
-        # New user responding with time that they'd like to be messaged
-        elif user_class.should_set_time():
-            if time_is_valid(user_class):
-                user_class.update_time()
-                user_class.send_sms('Thank you for your response. The time has been set.')
-            else:
-                user_class.send_sms('Please respond with the time that you would like to receive messages (a number between 0 and 23 - Eastern Timezone).')
+            print("Received message from unenrolled user!")
         # User responding to each message with a rating
         else:
             user_class.handle_message()
+
+        return Response(
+          body='',
+          status_code=200,
+          headers={'Content-Type': 'text/plain'}
+        )
+    except Exception as e:
+          print(e)
+          sentry_sdk.capture_exception(e)
+          return {'error': str(e)}
+
+@app.route('/twilio/handle_direct_sms_response', methods=['GET','POST'], content_types=['application/x-www-form-urlencoded', 'application/json'], cors=True)
+def handle_direct_sms_response():
+    try:
+        raw_request = app.current_request.raw_body
+        print(raw_request)
+
+        parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
+        phone = parsed_request.get('From')
+        # TODO only EBNHC for now
+        message_set = "EBNHC"
+        user_class = UserActions(phone, message_set=message_set, **parsed_request)
+
+        # New user send "join"
+        if not user_class.is_user():
+            print("Received message from unenrolled user!")
+        # User responding to each message with a rating
+        else:
+            user_class.send_direct_message_sms("Message received, thank you!")
+
+        return Response(
+          body='',
+          status_code=200,
+          headers={'Content-Type': 'text/plain'}
+        )
+    except Exception as e:
+          print(e)
+          sentry_sdk.capture_exception(e)
+          return {'error': str(e)}
+
+@app.route('/twilio/handle_goal_setting_response', methods=['GET','POST'], content_types=['application/x-www-form-urlencoded', 'application/json'], cors=True)
+def handle_goal_setting_response():
+    try:
+        raw_request = app.current_request.raw_body
+        print(raw_request)
+
+        parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
+        phone = parsed_request.get('From')
+        # TODO only EBNHC for now
+        message_set = "EBNHC"
+        user_class = UserActions(phone, message_set=message_set, **parsed_request)
+
+        # New user send "join"
+        if not user_class.is_user():
+            print("Received message from unenrolled user!")
+        # User responding to each message with a rating
+        else:
+            user_class.send_goal_setting_sms("Message received, thank you!")
 
         return Response(
           body='',
