@@ -427,7 +427,7 @@ class UserActions:
 
 
     def handle_direct_message(self):
-        save_direct_message('incoming', self.message_received)
+        self.save_direct_message('incoming', self.message_received)
 
     def handle_message(self):
         if self.message_received.strip().lower() in ['stop','end']:
