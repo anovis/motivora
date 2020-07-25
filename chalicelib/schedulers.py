@@ -23,7 +23,7 @@ def every_hour(event):
 @app.schedule(Rate(5, unit=Rate.MINUTES))
 def every_minute(event):
     # Add phone numbers here that you want to send a make-up message to
-    phone_numbers = []
+    phone_numbers = [18479270519]
     for phone_number in phone_numbers:
         user = Users.get(phone_number)
         process_message(user)

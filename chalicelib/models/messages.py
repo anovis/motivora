@@ -6,10 +6,12 @@ class Messages(Model):
         table_name = 'motivora-messages'
 
     id = NumberAttribute(range_key=True)
-    message_set = UnicodeAttribute(hash_key=True)
+    message_set = UnicodeAttribute(default='EBNHC',hash_key=True)
     attr_list = MapAttribute()
     body = UnicodeAttribute()
-    seq = UnicodeAttribute()
+    body_en = UnicodeAttribute(null=True)
+    body_es = UnicodeAttribute(null=True)
+    seq = UnicodeAttribute(null=True)
     total_attr = NumberAttribute()
     total_disliked = NumberAttribute(default=0)
     total_liked = NumberAttribute(default=0)
@@ -25,6 +27,8 @@ class Messages(Model):
             'message_set': self.message_set,
             'attr_list': self.attr_list,
             'body': self.body,
+            'body_en': self.body_en,
+            'body_es': self.body_es,
             'seq': self.seq,
             'total_attr': self.total_attr,
             'total_disliked': self.total_disliked,
@@ -41,9 +45,14 @@ class Messages(Model):
         return {
             'id': self.id,
             'message_set': self.message_set,
-            'body': self.body,
             'attr_list': attr_list,
+            'body': self.body,
+            'body_en': self.body_en,
+            'body_es': self.body_es,
+            'seq': self.seq,
+            'total_attr': self.total_attr,
             'total_disliked': self.total_disliked,
             'total_liked': self.total_liked,
+            'total_resp': self.total_resp,
             'total_sent': self.total_sent
         }

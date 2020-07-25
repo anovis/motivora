@@ -1,5 +1,5 @@
 from chalicelib import app
-from chalicelib.models import Messages, Users, Invocations
+from chalicelib.models import Messages, Users, Invocations, DecisionTrees
 from chalice import Response
 from chalicelib.actions import UserActions
 from collections import defaultdict
@@ -7,11 +7,15 @@ from datetime import datetime
 import pdb
 
 # TODO only works for one message set currently
-message_set = "EBNHC"
+DEFAULT_MESSAGE_SET = "EBNHC"
 
 # Returns all messages
 @app.route('/messages', methods=['GET'], cors=True)
 def list_messages():
+  payload = app.current_request.json_body
+  message_set = DEFAULT_MESSAGE_SET
+  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
+    message_set = payload['message_set']
   messages = Messages.query(message_set, Messages.id >= 0)
   message_list = [message.to_frontend() for message in messages]
   return {"data":message_list}
@@ -19,6 +23,10 @@ def list_messages():
 # Updates a message
 @app.route('/messages', methods=['PUT'], cors=True)
 def update_message():
+  payload = app.current_request.json_body
+  message_set = DEFAULT_MESSAGE_SET
+  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
+    message_set = payload['message_set']
   message_id = int(app.current_request.json_body['data']['id'])
   new_message = app.current_request.json_body['data']['message']
   try:
@@ -47,7 +55,7 @@ def post_messages():
   print(payload)
   try:
     # Create each new message
-    current_largest_id = get_current_largest_message_id()
+    current_largest_id = get_current_largest_message_id(payload['data']['messageSetName'])
     for message in payload['data']['messages']:
       current_largest_id += 1
       new_message = Messages(
@@ -75,6 +83,10 @@ def post_messages():
 # Returns all users
 @app.route('/users', methods=['GET'], cors=True)
 def list_users():
+  payload = app.current_request.json_body
+  message_set = DEFAULT_MESSAGE_SET
+  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
+    message_set = payload['message_set']
   users = Users.scan(Users.message_set == message_set)
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
@@ -138,7 +150,7 @@ def test():
 #
 
 # Get the largest ID of existing messages
-def get_current_largest_message_id():
+def get_current_largest_message_id(message_set):
   highest_id = 0
   all_messages = Messages.query(message_set)
   for msg in all_messages:

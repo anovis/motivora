@@ -19,14 +19,12 @@ def handle_twilio():
         phone = parsed_request.get('From')
         # TODO only EBNHC for now
         message_set = "EBNHC"
-        user_class = UserActions(phone, message_set=message_set, **parsed_request)
-
-        # New user send "join"
-        if not user_class.is_user():
-            print("Received message from unenrolled user!")
-        # User responding to each message with a rating
-        else:
-            user_class.handle_message()
+        try:
+          user = Users.get(phone)
+          user_class = UserActions(phone, message_set=user.message_set, **parsed_request)
+          user_class.handle_message()
+        except Users.DoesNotExist:
+          print("Received message from unenrolled user!")
 
         return Response(
           body='',
@@ -45,17 +43,13 @@ def handle_direct_sms_response():
         print(raw_request)
 
         parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
-        phone = parsed_request.get('From')
-        # TODO only EBNHC for now
-        message_set = "EBNHC"
-        user_class = UserActions(phone, message_set=message_set, **parsed_request)
+        #phone = parsed_request.get('From')
+        phone = "18479270519"
+        parsed_request = {'From': '18479270519', 'Body': 'hello, motivora!'}
+        user_class = UserActions(phone, **parsed_request)
 
-        # New user send "join"
-        if not user_class.is_user():
-            print("Received message from unenrolled user!")
-        # User responding to each message with a rating
-        else:
-            user_class.send_direct_message_sms("Message received, thank you!")
+        if user_class.is_user():
+          user_class.handle_direct_message()
 
         return Response(
           body='',

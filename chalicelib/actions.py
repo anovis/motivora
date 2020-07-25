@@ -31,7 +31,6 @@ class UserActions:
 
         self.phone = int(phone)
         self.message_received = kwargs.get('Body','').lower()
-        self.message_set = kwargs.get('message_set')
 
         # Total program days (including first day with no motivational message)
         self.total_days = 72
@@ -82,12 +81,13 @@ class UserActions:
         try:
             rating_request = '\n\nHow helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]'
             next_message_id = self.get_next_message()
-            message = Messages.get(self.message_set, next_message_id)
+            message = Messages.get(user.message_set, next_message_id)
             self.last_message_sent = next_message_id;
+            body = self.get_message_body(message)
             if is_test:
-                print("Would send messge: %s"%(message.body + rating_request + self.get_anti_spam_message()))
+                print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
             else:
-                self.send_motivational_sms(message.body + rating_request + self.get_anti_spam_message())
+                self.send_motivational_sms(body + rating_request + self.get_anti_spam_message())
                 self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
             return True
         except Exception as e:
@@ -105,6 +105,15 @@ class UserActions:
             sentry_sdk.capture_exception(e)
             return False
 
+    def get_message_body(self, message):
+        user = Users.get(self.phone)
+        if (user.lang_code == "en"):
+            body = message.body_en
+        elif (user.lang_code == "es"):
+            body = message.body_es
+        if body is None:
+            body = message.body
+        return body
 
     def has_consecutive_non_ratings(self, user, num_non_ratings):
         # Get created_at_date
@@ -136,6 +145,7 @@ class UserActions:
 
     def send_direct_message_sms(self, message):
         self.send_sms(message, self.direct_message_phone_number)
+        self.save_direct_message('outgoing', message)
 
     def send_goal_setting_sms(self, message):
         self.send_sms(message, self.goal_setting_phone_number)
@@ -167,7 +177,7 @@ class UserActions:
     def get_next_message(self):
         u = Users.get(self.phone)
         next_message = self.get_recommended_message()
-        message = Messages.get(self.message_set, next_message)
+        message = Messages.get(u.message_set, next_message)
         log_message = message.to_json()
         log_message['attr_list'] = message.to_json()['attr_list'].as_dict()
         self.log("Chosen next message: " + str(log_message))
@@ -224,12 +234,12 @@ class UserActions:
     # Return a hash of message_id => score
     def get_scored_potential_messages(self, user_obj, scored_attributes, user):
         messages_scored = defaultdict(int)
-        all_msgs_og = Messages.query(user_obj.message_set, Messages.id > 0)
+        all_msgs_og = Messages.query(user.message_set, Messages.id > 0)
         all_msgs = [message.to_frontend() for message in all_msgs_og]
         all_msgs_filtered = filter(lambda msg: msg['id'] not in user.messages_sent, all_msgs)
         # Iterate through each potential message
         for msg in all_msgs_filtered:
-            message = Messages.get(user_obj.message_set, msg['id'])
+            message = Messages.get(user.message_set, msg['id'])
             attributes = message.attr_list.as_dict()
             # Iterate through all attributes for a given message
             for attr, boolean in attributes.items():
@@ -247,12 +257,12 @@ class UserActions:
 
 
     def get_word_rareness():
-        all_msgs_og = Messages.query(user_obj.message_set, Messages.id > 0)
+        all_msgs_og = Messages.query(user.message_set, Messages.id > 0)
         all_msgs = [message.to_frontend() for message in all_msgs_og]
         all_msgs_filtered = filter(lambda msg: msg['id'] not in user.messages_sent, all_msgs)
         token_scores = {}
         for msg in all_msgs_filtered:
-            message = Messages.get(user_obj.message_set, msg['id'])
+            message = Messages.get(user.message_set, msg['id'])
             user_rating = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
             print("%s;%s;%s"%(msg['id'], message.body, user_rating))
             clean_tokens = get_clean_tokens_from_message(message.body)
@@ -319,7 +329,7 @@ class UserActions:
         for msg_sent_idx in rated_responses:
             weight = (self.historical_message_discount_factor)**((len(rated_responses) - 1) - int(msg_sent_idx))
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
-            message = Messages.get(user_obj.message_set, msg_idx)
+            message = Messages.get(user.message_set, msg_idx)
             message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
             #token_scores, rareness_scores = get_scored_words(message.body, message_score, weight, token_scores, dict_rareness, rareness_scores)
             rating_total += message_score
@@ -401,6 +411,23 @@ class UserActions:
             ]
         )
         u.save()
+
+    def save_direct_message(self, direction, message):
+        u = Users.get(self.phone)
+        next_key = '0'
+        print(u.direct_message_response.keys())
+        if (len(u.direct_message_response.keys()) > 0):
+            next_key = int(sorted(u.direct_message_response.keys(), key=lambda x: int(x))[-1]) + 1
+        u.direct_message_response[next_key] = {
+            'direction': direction,
+            'message'  : message,
+            'timestamp': str(datetime.now())
+        }
+        u.save()
+
+
+    def handle_direct_message(self):
+        save_direct_message('incoming', self.message_received)
 
     def handle_message(self):
         if self.message_received.strip().lower() in ['stop','end']:
