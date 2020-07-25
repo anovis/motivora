@@ -9,11 +9,10 @@ create a `.chalice` folder in the root directory of the project and add this to 
   "version": "2.0",
   "app_name": "motivora",
   "manage_iam_role": false,
-  "iam_role_arn": "arn:aws:iam::ACOUNT_ID:role/ROLE_NAME",
+  "iam_role_arn": "arn:aws:iam::ACCOUNT_ID:role/ROLE_NAME",
   "environment_variables":{
     "SID":"TWILIO SID",
     "TOKEN" : "TWILIO TOKEN",
-    "PHONE" : "TWILIO PHONE NUMBER"
   },
   "lambda_timeout": 900,
   "lambda_memory_size": 1024,
