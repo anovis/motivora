@@ -358,6 +358,10 @@ class UserActions:
         for attr, score_hash in attribute_scores.items():
             weighted_score = attribute_scores[attr]['weighted_score'] / attribute_scores[attr]['weighted_count']
             normalized_attribute_scores[attr] = weighted_score
+        # Give a boost to preferred_attributes
+        for attr, score_hash in attribute_scores.items():
+            if attr in user.preferred_attrs:
+                normalized_attribute_scores[attr] += normalized_attribute_scores["WEIGHTED MESSAGE"]
         # Compute overall word scores for each word
         #normalized_token_scores = {}
         #for token, score_hash in token_scores.items():
