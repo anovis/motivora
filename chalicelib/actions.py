@@ -505,6 +505,77 @@ class UserActions:
             self.log("Rated message index: " + str(u.prev_message) + " - Rating: " + str(self.message_received))
         return True
 
+
+    # update_message_ratings takes an array of hashes in the following format:
+    # [{
+    #   'sent_at': timestamp (timestamp that starts with YYYY-MM-DD HH:MM:SS)
+    #   'msg_id': message_being_rated,
+    #   'rating': rating (int between 0 and 10)
+    #  }, ... ]
+    #
+    # Note that only 1 rated message can be considered per calendar day.
+    def update_message_ratings(self, update_arr):
+        user = Users.get(self.phone)
+        for row in update_arr:
+            sent_at = row['sent_at'][0:19]
+            if len(sent_at) < 10:
+                print("Could not process sent_at value in row: %s"%(row))
+                continue
+            new_message_responses = {}
+            found = False
+            for j in sorted(user.message_response.keys(), key=lambda x: int(x)):
+                rating_data = user.message_response[j]
+                if sent_at[0:10] <= rating_data['timestamp'][0:10]:
+                    action = "APPEND"
+                    if (sent_at[0:10] == rating_data['timestamp'][0:10]):
+                        action = "REPLACE"
+                    
+                    insert_id = j
+                    for k in sorted(user.message_response.keys(), key=lambda x: int(x)):
+                        if k < insert_id:
+                            new_message_responses[k] = user.message_response[k]
+                        elif k == insert_id:
+                            # Insert current message
+                            new_message_responses[k] = {
+                                'message': str(row['rating']),
+                                'timestamp': sent_at,
+                                'message_sent': int(row['msg_id'])
+                            }
+                            # Move previous message to new slot
+                            new_id = str(int(k) + 1)
+                            new_message_responses[new_id] = user.message_response[k]
+                        elif k > insert_id:
+                            new_id = k
+                            if action == "APPEND":
+                                new_id = str(int(k) + 1)
+                            new_message_responses[new_id] = user.message_response[k]
+                    found = True
+                    break
+            if not found:
+                action = "APPEND"
+                insert_id = '0'
+                if (len(user.message_response.keys()) > 0):
+                    insert_id = str(int(sorted(user.message_response.keys(), key=lambda x: int(x))[-1]) + 1)
+                print("About to APPEND to end for %s"%(insert_id))
+                new_message_responses = user.message_response
+                new_message_responses[insert_id] = {
+                                'message': str(row['rating']),
+                                'timestamp': sent_at,
+                                'message_sent': int(row['msg_id'])
+                            }
+        
+            # Summarize changes
+            print("sent_at: %s, eval: %s | id = %s, action=%s"%(sent_at, rating_data['timestamp'], insert_id, action))
+            print(new_message_responses)
+        
+            # Make the user update
+            user.update(
+                    actions=[
+                        Users.message_response.set(new_message_responses), 
+                        Users.messages_sent.add(int(row['msg_id'])),
+                    ]
+            )
+
     def log(self, msg):
       print()
       print(msg)

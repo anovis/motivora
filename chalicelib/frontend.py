@@ -115,6 +115,32 @@ def send_direct_message_to_user():
     headers={'Content-Type': 'text/plain'}
   )
 
+# Params must be a hash with two keys:
+#   phone_number: Must be an 11-digit int, starting with 1
+#   message_ratings: Must be an array of JSON hashes that follows the format described by update_message_ratings
+@app.route('/users/add_message_rating', methods=['POST'], cors=True)
+def send_direct_message_to_user():
+  print("add_message_rating")
+  payload = app.current_request.json_body
+  update_arr   = payload['message_ratings']
+  phone        = payload['phone_number']
+  user = Users.get(phone)
+  user_obj = UserActions(**user.to_dict())
+  try:
+    user_obj.update_message_ratings(update_arr)
+  except Exception as e:
+    print(e)
+    return Response(
+      body='Something went wrong while trying to send your message.',
+      status_code=500,
+      headers={'Content-Type': 'text/plain'}
+    )
+  return Response(
+    body='Success',
+    status_code=200,
+    headers={'Content-Type': 'text/plain'}
+  )
+
 # Test endpoint only used locally
 @app.route('/test', methods=['GET'], cors=True)
 def test():
