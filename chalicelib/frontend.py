@@ -129,6 +129,18 @@ def list_users():
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
 
+@app.route('/users/message_history', methods=['GET'], cors=True)
+def get_message_history():
+  payload = app.current_request.json_body
+  user = Users.get(payload['phone'])
+  user_obj = UserActions(**user.to_dict())
+  m = list(user.messages_sent)
+  return Response(
+    body={"messages_ranked": user.message_response, "messages_sent": m},
+    status_code=200,
+    headers={'Content-Type': 'text/plain'}
+  )
+
 @app.route('/users/ranked_attrs', methods=['GET'], cors=True)
 def get_ranked_attrs():
   payload = app.current_request.json_body
