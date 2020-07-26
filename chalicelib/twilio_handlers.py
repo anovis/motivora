@@ -69,16 +69,12 @@ def handle_goal_setting_response():
 
         parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
         phone = parsed_request.get('From')
-        # TODO only EBNHC for now
-        message_set = "EBNHC"
-        user_class = UserActions(phone, message_set=message_set, **parsed_request)
+        #phone = "18479270519"
+        #parsed_request = {'From': '18479270519', 'Body': '1'}
+        user_class = UserActions(phone, **parsed_request)
 
-        # New user send "join"
-        if not user_class.is_user():
-            print("Received message from unenrolled user!")
-        # User responding to each message with a rating
-        else:
-            user_class.send_goal_setting_sms("Message received, thank you!")
+        if user_class.is_user():
+          user_class.handle_goal_setting_message()
 
         return Response(
           body='',

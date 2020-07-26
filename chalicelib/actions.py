@@ -1,6 +1,6 @@
 import os
 from twilio.rest import Client
-from chalicelib.models import Messages, Users, Invocations
+from chalicelib.models import Messages, Users, DecisionTrees, Invocations
 from collections import defaultdict
 from datetime import datetime, timedelta
 import random
@@ -27,6 +27,7 @@ class UserActions:
 
         # Reminder message config
         self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
+        self.decision_tree_mistake_text = " is not a valid answer. Please try again."
         self.days_before_rating_reminder = 3
 
         self.phone = int(phone)
@@ -428,6 +429,45 @@ class UserActions:
 
     def handle_direct_message(self):
         self.save_direct_message('incoming', self.message_received)
+
+    def handle_goal_setting_message(self):
+        u = Users.get(self.phone)
+        cur_key = '-1'
+        print(u.weekly_goals_message_response.keys())
+        if (len(u.weekly_goals_message_response.keys()) > 0):
+            cur_key = sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1]
+        if cur_key not in u.weekly_goals_message_response.keys() or u.weekly_goals_message_response[cur_key]['status'] == 'complete':
+            cur_key = str(int(cur_key) + 1)
+            decision_tree = DecisionTrees.get(200000)
+            u.weekly_goals_message_response[cur_key] = {
+                'goal': self.message_received,
+                'status': 'ongoing',
+                'decision_tree_ids': []
+            }
+            message = decision_tree.message.replace("[ENTER GOAL]", u.weekly_goals_message_response[cur_key]['goal'], 1)
+        else:
+            last_decision_tree_id = u.weekly_goals_message_response[cur_key]['decision_tree_ids'][-1]
+            decision_trees = DecisionTrees.parent_id_index.query(last_decision_tree_id)
+            try:
+                next_choice = int(self.message_received)
+            except ValueError:
+                self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
+                return
+            decision_tree = None
+            for d in decision_trees:
+                print("%s, %s, %s"%(d.min_response_val, d.max_response_val, next_choice))
+                if (d.min_response_val <= next_choice and d.max_response_val >= next_choice):
+                    print("%s, %s"%(d.goal, u.weekly_goals_message_response[cur_key]['goal']))
+                    if (d.goal is None or d.goal.lower() == u.weekly_goals_message_response[cur_key]['goal']):
+                        decision_tree = d
+                        break
+            if decision_tree is None:
+                self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
+                return
+            message = decision_tree.message
+        u.weekly_goals_message_response[cur_key]['decision_tree_ids'].append(decision_tree.id)
+        u.save()
+        self.send_goal_setting_sms(message)
 
     def handle_message(self):
         if self.message_received.strip().lower() in ['stop','end']:
