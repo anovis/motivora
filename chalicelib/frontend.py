@@ -80,6 +80,45 @@ def post_messages():
     headers={'Content-Type': 'text/plain'}
   )
 
+# Allows for creating or updating a user
+@app.route('/user', methods=['POST'], cors=True)
+def post_user():
+  payload = app.current_request.json_body
+  print(payload)
+  try:
+    user = Users.get(payload['phone'])
+  except Users.DoesNotExist:
+    user = Users(payload['phone'])
+
+  try:
+    if 'messageSetName' in payload:
+      user.update(actions=[Users.message_response.set(payload['messageSetName'])]) 
+  
+    if 'lang_code' in payload:
+      user.update(actions=[Users.lang_code.set(payload['lang_code'])]) 
+  
+    if 'time' in payload:
+      user.update(actions=[Users.time.set(payload['time'])]) 
+  
+    if 'preferred_attrs' in payload:
+      user.update(actions=[Users.preferred_attrs.set(payload['preferred_attrs'])]) 
+
+    if 'send_message' in payload:
+      user.update(actions=[Users.send_message.set(payload['send_message'])]) 
+
+  except Exception as e:
+    print(e)
+    return Response(
+      body='Something went wrong while trying to add your messages.',
+      status_code=500,
+      headers={'Content-Type': 'text/plain'}
+    )
+  return Response(
+    body=user.to_frontend(),
+    status_code=200,
+    headers={'Content-Type': 'text/plain'}
+  )
+
 # Returns all users
 @app.route('/users', methods=['GET'], cors=True)
 def list_users():
@@ -115,15 +154,12 @@ def send_direct_message_to_user():
     headers={'Content-Type': 'text/plain'}
   )
 
-# Params must be a hash with two keys:
-#   phone_number: Must be an 11-digit int, starting with 1
-#   message_ratings: Must be an array of JSON hashes that follows the format described by update_message_ratings
 @app.route('/users/add_message_rating', methods=['POST'], cors=True)
 def send_direct_message_to_user():
   print("add_message_rating")
   payload = app.current_request.json_body
   update_arr   = payload['message_ratings']
-  phone        = payload['phone_number']
+  phone        = payload['phone']
   user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
   try:
