@@ -6,7 +6,6 @@ from collections import defaultdict
 from datetime import datetime
 import pdb
 
-# TODO only works for one message set currently
 DEFAULT_MESSAGE_SET = "EBNHC"
 
 # Returns all messages
@@ -129,6 +128,26 @@ def list_users():
   users = Users.scan(Users.message_set == message_set)
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
+
+@app.route('/users/ranked_attrs', methods=['GET'], cors=True)
+def get_ranked_attrs():
+  payload = app.current_request.json_body
+  user = Users.get(payload['phone'])
+  user_obj = UserActions(**user.to_dict())
+  try:
+    ranked_attrs = user_obj.get_scored_attributes(user_obj, user)
+  except Exception as e:
+    print(e)
+    return Response(
+      body='Something went wrong while trying to send your message.',
+      status_code=500,
+      headers={'Content-Type': 'text/plain'}
+    )
+  return Response(
+    body={"data": ranked_attrs},
+    status_code=200,
+    headers={'Content-Type': 'text/plain'}
+  )
 
 # Sends a direct message to a user
 @app.route('/users/send_message', methods=['POST'], cors=True)

@@ -41,7 +41,7 @@ class UserActions:
         
         # Tuning params for message selection
         self.total_attr_count = 6
-        self.historical_message_discount_factor = 0.9 # Determines how quickly older ratings are down-weighted
+        self.historical_message_discount_factor = 0.1 # Determines how quickly older ratings are down-weighted
         self.unranked_attr_boost = 0.1 # Additional score boost for messages with attrs that have not yet been ranked
         self.prob_of_selection_on_iteration = 0. # Minimal boost for top messages
 
@@ -352,10 +352,12 @@ class UserActions:
                     attribute_scores[attr]['weighted_count'] += weight
                     attribute_scores[attr]['absolute_score'] += message_score
                     attribute_scores[attr]['absolute_count'] += 1
+                #print("Added: %s, %s (%s) to %s = %s"%(message_score, weight, message_score*weight, attr, attribute_scores[attr]['weighted_score']))
         # Compute normalized scores for each attribute (taking into account the weighted_count for each)
         normalized_attribute_scores = {'MESSAGE': rating_total / len(rated_responses)}
         for attr, score_hash in attribute_scores.items():
-            normalized_attribute_scores[attr] = attribute_scores[attr]['weighted_score'] / attribute_scores[attr]['weighted_count']
+            weighted_score = attribute_scores[attr]['weighted_score'] / attribute_scores[attr]['weighted_count']
+            normalized_attribute_scores[attr] = weighted_score
         # Compute overall word scores for each word
         #normalized_token_scores = {}
         #for token, score_hash in token_scores.items():
@@ -469,6 +471,7 @@ class UserActions:
         u.save()
         self.send_goal_setting_sms(message)
 
+    # The handle_message function specifically handles daily motivational text messages
     def handle_message(self):
         if self.message_received.strip().lower() in ['stop','end']:
             u = Users.get(self.phone)
