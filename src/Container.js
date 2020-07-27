@@ -63,7 +63,7 @@ class Table extends Component {
 				endpoint = Config.api + '/responses';
 				break;
 			case'USERS':
-				this.setState({columns:['phone','message_set','time','send_message','lang_code']});
+				this.setState({columns:['created_time', 'phone','message_set','time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages']});
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
