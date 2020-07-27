@@ -49,10 +49,4 @@ class Messages(Model):
             'body': self.body,
             'body_en': self.body_en,
             'body_es': self.body_es,
-            'seq': self.seq,
-            'total_attr': self.total_attr,
-            'total_disliked': self.total_disliked,
-            'total_liked': self.total_liked,
-            'total_resp': self.total_resp,
-            'total_sent': self.total_sent
         }
