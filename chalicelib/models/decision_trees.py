@@ -1,5 +1,5 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute, UTCDateTimeAttribute, UnicodeSetAttribute
+from pynamodb.attributes import BooleanAttribute, UnicodeAttribute, JSONAttribute, BooleanAttribute, NumberSetAttribute, NumberAttribute, UTCDateTimeAttribute, UnicodeSetAttribute
 from pynamodb.indexes import GlobalSecondaryIndex, AllProjection
 from datetime import datetime
 
@@ -25,6 +25,7 @@ class DecisionTrees(Model):
     min_response_val  = NumberAttribute(null=True)
     max_response_val  = NumberAttribute(null=True)
     goal              = UnicodeAttribute(null=True)
+    is_terminal       = BooleanAttribute()
 
     # Indices
     parent_id_index   = ParentIdIndex()

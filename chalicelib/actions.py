@@ -500,6 +500,8 @@ class UserActions:
                 return
             message = decision_tree.message
         u.weekly_goals_message_response[cur_key]['decision_tree_ids'].append(decision_tree.id)
+        if decision_tree.is_terminal:
+            u.weekly_goals_message_response[cur_key]['status'] = 'complete'
         u.save()
         self.send_goal_setting_sms(message)
 
