@@ -155,6 +155,7 @@ class Table extends Component {
 						insertRow={ this.hasInsertRow() }
 						options={ options } 
 						keyField={ col[0] } 
+						exportCSV={ true }
 						striped 
 						hover
 					>
