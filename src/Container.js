@@ -6,7 +6,7 @@ import Config from './config';
 import axios from 'axios';
 import loader from './images/ajax-loader.gif';
 import tableEditionConfig from './tableEditionConfig.js';
-console.log(tableEditionConfig)
+
 
 class Container extends Component {
 
@@ -63,11 +63,11 @@ class Table extends Component {
 				endpoint = Config.api + '/responses';
 				break;
 			case'USERS':
-				this.setState({columns:['phone','message_set','time','send_message','lang_code']});
+				this.setState({columns:['created_time', 'phone','message_set','time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages']});
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
-				this.setState({columns:['id','message_set','body','total_sent','total_liked','total_disliked', 'attr_list']});
+				this.setState({columns:['id','message_set','body_en','body_es','total_sent','total_liked','total_disliked', 'attr_list']});
 				endpoint = Config.api + '/messages';
 				break;
 			default:
@@ -109,16 +109,36 @@ class Table extends Component {
 				console.log(error);
 			});
 	}
+	afterInsertRow(row) {
+		console.log(row)
+	}
 
 	isExpandableRow(row) {
 		if (row.next_message) return true;
 		else return false;
 	}
 
+	hasInsertRow() {
+		if (this.props.activePage === 'USERS') {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	getKeyField() {
+		if (this.props.activePage === 'USERS') {
+			return 'phone';
+		} else {
+			return 'id';
+		}
+
+	}
+
 	render() {
 		var col = this.state.columns;
 		const options = {
-			expandRowBgColor: 'rgb(249, 104, 104)'
+			expandRowBgColor: 'rgb(249, 104, 104)',
+			afterInsertRow: this.afterInsertRow
 		};
 		if (this.state.loadingData){
 			return (
@@ -129,7 +149,15 @@ class Table extends Component {
 		} else {
 			return (
 				<div>
-					<BootstrapTable data={ this.state.tableData } cellEdit={ this.cellEditProp[this.props.activePage] } options={ options } keyField={ col[0] } striped hover>
+					<BootstrapTable 
+						data={ this.state.tableData } 
+						cellEdit={ this.cellEditProp[this.props.activePage] } 
+						insertRow={ this.hasInsertRow() }
+						options={ options } 
+						keyField={ col[0] } 
+						striped 
+						hover
+					>
 						{col.map((name, idx) =>
 							<TableHeaderColumn
 								key={idx}
@@ -137,6 +165,7 @@ class Table extends Component {
 								editable={ tableEditionConfig[this.props.activePage][name] }
 								dataSort={ true }
 								filter={ { type: 'TextFilter', delay: 1000 } }
+								keyField={ this.getKeyField() }
 							>
 								{ name }
 							</TableHeaderColumn>
