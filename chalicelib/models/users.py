@@ -45,6 +45,7 @@ class Users(Model):
         return self.to_dict()
 
     def to_dict(self):
+        created_at = str(self.created_time)
         return {
             'phone': self.phone,
             'message_set': self.message_set,
@@ -57,13 +58,20 @@ class Users(Model):
             'preferred_attrs': self.preferred_attrs,
             'weekly_goals_message_response': self.weekly_goals_message_response,
             'direct_message_response': self.direct_message_response,
+            'created_time': created_at,
         }
 
     def to_frontend(self):
+        created_at = str(self.created_time)
+        num_sent_messages = len(list(self.messages_sent))
+        num_rated_messages = len(self.message_response.keys())
         return {
             'phone': self.phone,
             'time': self.time,
             'message_set': self.message_set,
             'send_message': self.send_message,
             'lang_code': self.lang_code,
+            'created_time': created_at,
+            'num_sent_messages': num_sent_messages,
+            'num_rated_messages': num_rated_messages
         }
