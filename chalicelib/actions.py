@@ -18,6 +18,34 @@ from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
 sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994',
                 integrations=[AwsLambdaIntegration()])
 
+class MessageActions:
+    def __init__(self, message_id, message_set):
+        self.id = message_id
+        self.message_set = message_set
+
+    def get_stats(self):
+        total_sent = 0
+        total_rated = 0
+        total_rating = 0
+        for user in Users.scan(Users.message_set == self.message_set):
+            if user.message_set != self.message_set:
+                continue
+            if (self.id in user.messages_sent):
+                total_sent += 1
+                for k, v in user.message_response.items():
+                    if v['message_sent'] == self.id:
+                        total_rated += 1
+                        total_rating += int(v['message'])
+                        break
+        avg_rating = 0
+        if total_rated > 1:
+            avg_rating = total_rating * 1.0 / total_rated
+        return {
+            'total_sent': total_sent,
+            'total_rated': total_rated,
+            'average_rating': round(avg_rating, 1)
+        }
+
 class UserActions:
     def __init__(self, phone, **kwargs):
         # Twilio phone numbers

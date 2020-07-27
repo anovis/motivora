@@ -1,7 +1,7 @@
 from chalicelib import app
 from chalicelib.models import Messages, Users, Invocations, DecisionTrees
 from chalice import Response
-from chalicelib.actions import UserActions
+from chalicelib.actions import UserActions, MessageActions
 from collections import defaultdict
 from datetime import datetime
 import pdb
@@ -17,6 +17,7 @@ def list_messages():
     message_set = payload['message_set']
   messages = Messages.query(message_set, Messages.id >= 0)
   message_list = [message.to_frontend() for message in messages]
+
   return {"data":message_list}
 
 # Updates a message
@@ -153,6 +154,21 @@ def get_message_history():
   m = list(user.messages_sent)
   return Response(
     body={"messages_ranked": user.message_response, "messages_sent": m},
+    status_code=200,
+    headers={'Content-Type': 'text/plain'}
+  )
+
+@app.route('/messages/get_stats', methods=['GET'], cors=True)
+def get_message_stats():
+  payload = app.current_request.json_body
+  message_set = DEFAULT_MESSAGE_SET
+  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
+    message_set = payload['message_set']
+  message = Messages.get(message_set, payload['id'])
+  stats = MessageActions(message.id, message.message_set).get_stats()
+  stats.update(message.to_frontend())
+  return Response(
+    body={"message": stats},
     status_code=200,
     headers={'Content-Type': 'text/plain'}
   )
