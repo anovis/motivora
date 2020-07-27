@@ -42,6 +42,8 @@ class Table extends Component {
 				afterSaveCell: this.onAfterSaveMessagesCell  // a hook for after saving cell
 			}
 		};
+		// This binding is necessary to make `this` work in the callback
+		this.handleRowInsertion = this.handleRowInsertion.bind(this);
 	}
 
 	componentDidMount() {
@@ -108,15 +110,16 @@ class Table extends Component {
 				console.log(error);
 			});
 	}
-	handleInsertedRow(row) {
-		console.log(row)
-	}
 	handleRowInsertion(userData) {
-		console.log(userData)
+		let vm = this;
 		axios.post(Config.api + '/user', userData)
-			.then(function (response) {console.log(response)})
+			.then(function (response) {
+				if (response.status === 200) {
+					vm.fetchData('USERS');
+				}
+			})
 			.catch(function (error) {
-				console.log(error);
+				window.alert(error)
 			});
 
 	}
@@ -146,7 +149,6 @@ class Table extends Component {
 		var col = this.state.columns;
 		const options = {
 			expandRowBgColor: 'rgb(249, 104, 104)',
-			afterInsertRow: this.handleInsertedRow,
 			onAddRow: this.handleRowInsertion
 		};
 		if (this.state.loadingData){

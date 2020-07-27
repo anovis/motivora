@@ -116,10 +116,11 @@ def post_messages():
 def post_user():
   payload = app.current_request.json_body
   print(payload)
+  phone = int(payload['phone'])
   try:
-    user = Users.get(payload['phone'])
+    user = Users.get(phone)
   except Users.DoesNotExist:
-    user = Users(payload['phone'])
+    user = Users(phone)
     user.message_set = DEFAULT_MESSAGE_SET
     user.messages_sent = []
     user.message_response = {}
@@ -152,7 +153,7 @@ def post_user():
       status_code=500,
       headers={'Content-Type': 'text/plain'}
     )
-  user = Users.get(payload['phone'])
+  user = Users.get(phone)
   return Response(
     body=user.to_frontend(),
     status_code=200,
