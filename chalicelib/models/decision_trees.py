@@ -39,6 +39,7 @@ class DecisionTrees(Model):
             'message': self.message,
             'min_response_val': self.min_response_val,
             'max_response_val': self.max_response_val,
+            'is_terminal': self.is_terminal,
             'goal': self.goal
         }
 
@@ -48,5 +49,6 @@ class DecisionTrees(Model):
             'message': self.message,
             'min_response_val': self.min_response_val,
             'max_response_val': self.max_response_val,
+            'is_terminal': self.is_terminal,
             'goal': self.goal
         }
