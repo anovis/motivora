@@ -61,10 +61,17 @@ def post_messages():
         id=current_largest_id,
         message_set=payload['data']['messageSetName'],
         attr_list=format_message_attributes_for_model(message['attributes']),
-        body=message['message'],
         total_attr=len(message['attributes']),
         seq=str(current_largest_id)
       )
+      # Add appropriate message variables depending on what was provided by the user
+      if 'message' in message:
+        new_message.body = message['message']
+      if 'message_en' in message:
+        new_message.body_en = message['message_en']
+      if 'message_es' in message:
+        new_message.body_es = message['message_es']
+
       new_message.save()
   except Exception as e:
     print(e)
