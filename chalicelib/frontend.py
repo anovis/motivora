@@ -17,8 +17,23 @@ def list_messages():
     message_set = payload['message_set']
   messages = Messages.query(message_set, Messages.id >= 0)
   message_list = [message.to_frontend() for message in messages]
-
   return {"data":message_list}
+
+@app.route('/messages/attributes', methods=['GET'], cors=True)
+def list_messages():
+  payload = app.current_request.json_body
+  message_set = DEFAULT_MESSAGE_SET
+  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
+    message_set = payload['message_set']
+  messages = Messages.query(message_set, Messages.id >= 0)
+  attributes = {}
+  for message in messages:
+    for attr_name, attr_val in message.attr_list.as_dict().items():
+      if attr_name not in attributes:
+        attributes[attr_name] = {'message_ids': []}
+      attributes[attr_name]['message_ids'].append(message.id)
+
+  return {"data":attributes}
 
 # Updates a message
 @app.route('/messages', methods=['PUT'], cors=True)
