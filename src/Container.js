@@ -67,7 +67,7 @@ class Table extends Component {
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
-				this.setState({columns:['id','message_set','body_en','body_es','total_sent','total_liked','total_disliked', 'attr_list']});
+				this.setState({columns:['id','message_set','body_en','body_es', 'attr_list']});
 				endpoint = Config.api + '/messages';
 				break;
 			default:
@@ -98,7 +98,6 @@ class Table extends Component {
 			});
 	}
 	onAfterSaveUsersCell(row, cellName, cellValue) {
-		console.log(row, cellName, cellValue)
 		let payload = {
 			phone: row.phone
 		};
@@ -109,8 +108,17 @@ class Table extends Component {
 				console.log(error);
 			});
 	}
-	afterInsertRow(row) {
+	handleInsertedRow(row) {
 		console.log(row)
+	}
+	handleRowInsertion(userData) {
+		console.log(userData)
+		axios.post(Config.api + '/user', userData)
+			.then(function (response) {console.log(response)})
+			.catch(function (error) {
+				console.log(error);
+			});
+
 	}
 
 	isExpandableRow(row) {
@@ -138,7 +146,8 @@ class Table extends Component {
 		var col = this.state.columns;
 		const options = {
 			expandRowBgColor: 'rgb(249, 104, 104)',
-			afterInsertRow: this.afterInsertRow
+			afterInsertRow: this.handleInsertedRow,
+			onAddRow: this.handleRowInsertion
 		};
 		if (this.state.loadingData){
 			return (
