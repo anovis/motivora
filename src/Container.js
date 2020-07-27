@@ -5,155 +5,155 @@ import 'react-bootstrap-table/dist/react-bootstrap-table.min.css';
 import Config from './config';
 import axios from 'axios';
 import loader from './images/ajax-loader.gif';
+import tableEditionConfig from './tableEditionConfig.js';
+console.log(tableEditionConfig)
 
 class Container extends Component {
 
-  constructor (props) {
-    super(props);
-    this.state = {};
-  }
+	constructor (props) {
+		super(props);
+		this.state = {};
+	}
 
-  render() {
-    return (
-      <div>
-        <Table activePage={this.props.activePage}/>
-      </div>
-    );
-  }
+	render() {
+		return (
+			<div>
+				<Table activePage={this.props.activePage}/>
+			</div>
+		);
+	}
 }
 
 class Table extends Component {
 
-  constructor (props) {
-    super(props)
-    this.state = {
-      tableData: [],
-      columns: ['phone','response','date'],
-    };
-    this.cellEditProp = {
-      mode: 'dbclick',
-      afterSaveCell: this.onAfterSaveCell  // a hook for after saving cell
-    };
-  }
+	constructor (props) {
+		super(props)
+		this.state = {
+			tableData: [],
+			columns: ['phone','response','date'],
+		};
+		this.cellEditProp = {
+			USERS: {
+				mode: 'dbclick',
+				afterSaveCell: this.onAfterSaveUsersCell  // a hook for after saving cell
+			},
+			MESSAGES: {
+				mode: 'dbclick',
+				afterSaveCell: this.onAfterSaveMessagesCell  // a hook for after saving cell
+			}
+		};
+	}
 
-  componentDidMount() {
-    this.fetchData(this.props.activePage);
-  }
+	componentDidMount() {
+		this.fetchData(this.props.activePage);
+	}
 
-  componentWillReceiveProps(nextProps) {
-    // Active page changing
-    if(this.props.activePage !== nextProps.activePage) {
-      this.fetchData(nextProps.activePage);
-    }
-  }
+	componentWillReceiveProps(nextProps) {
+		// Active page changing
+		if(this.props.activePage !== nextProps.activePage) {
+			this.fetchData(nextProps.activePage);
+		}
+	}
 
-  fetchData(activePage) {
-    let endpoint;
-    switch(activePage){
-      case'RESPONSES':
-        this.setState({columns:['phone','response','date']});
-        endpoint = Config.api + '/responses';
-        break;
-      case'USERS':
-        this.setState({columns:['phone','message_set','time','send_message','next_message']});
-        endpoint = Config.api + '/users';
-        break;
-      case 'MESSAGES':
-        this.setState({columns:['id','message_set','body','total_sent','total_liked','total_disliked', 'attr_list']});
-        endpoint = Config.api + '/messages';
-        break;
-      default:
-        console.error('No activePage supplied');
-    }
-    this.setState({loadingData: true});
-    axios.get(endpoint)
-      .then((response) => {
-        this.setState({
-          tableData: response.data.data,
-          loadingData: false
-        });
-      })
-      .catch((error) => {console.log(error)})
-  }
+	fetchData(activePage) {
+		let endpoint;
+		switch(activePage){
+			case'RESPONSES':
+				this.setState({columns:['phone','response','date']});
+				endpoint = Config.api + '/responses';
+				break;
+			case'USERS':
+				this.setState({columns:['phone','message_set','time','send_message','lang_code']});
+				endpoint = Config.api + '/users';
+				break;
+			case 'MESSAGES':
+				this.setState({columns:['id','message_set','body','total_sent','total_liked','total_disliked', 'attr_list']});
+				endpoint = Config.api + '/messages';
+				break;
+			default:
+				console.error('No activePage supplied');
+		}
+		this.setState({loadingData: true});
+		axios.get(endpoint)
+			.then((response) => {
+				console.log(response)
+				this.setState({
+					tableData: response.data.data,
+					loadingData: false
+				});
+			})
+			.catch((error) => {console.log(error)})
+	}
 
-  onAfterSaveCell(row, cellName, cellValue) {
-    axios.put(Config.api + '/messages', {
-      data:{
-        id: row.id,
-        message: row.body
-      }
-    })
-    .then(function (response) {})
-    .catch(function (error) {
-      console.log(error);
-    });
-  }
+	onAfterSaveMessagesCell(row, cellName, cellValue) {
+		axios.put(Config.api + '/messages', {
+			data:{
+				id: row.id,
+				message: row[cellName]
+			}
+		})
+			.then(function (response) {console.log(response)})
+			.catch(function (error) {
+				console.log(error);
+			});
+	}
+	onAfterSaveUsersCell(row, cellName, cellValue) {
+		console.log(row, cellName, cellValue)
+		let payload = {
+			phone: row.phone
+		};
+		payload[cellName] = cellValue;
+		axios.post(Config.api + '/user', payload)
+			.then(function (response) {console.log(response)})
+			.catch(function (error) {
+				console.log(error);
+			});
+	}
 
-  isExpandableRow(row) {
-    if (row.next_message) return true;
-    else return false;
-  }
+	isExpandableRow(row) {
+		if (row.next_message) return true;
+		else return false;
+	}
 
-  render() {
-    var col = this.state.columns;
-    const options = {
-      expandRowBgColor: 'rgb(249, 104, 104)'
-    };
-    if(this.state.loadingData){
-      return (
-        <div className="ajax-loader-container">
-          <img src={loader} alt="Loader"/>
-        </div>
-      );
-    }
-    else{
-      if (this.props.activePage === 'MESSAGES'){
-        return (
-          <div>
-            <BootstrapTable data={ this.state.tableData } cellEdit={ this.cellEditProp } options={ options } keyField={ col[0] } striped hover>
-              {col.map((name, idx) =>
-                <TableHeaderColumn
-                  key={idx}
-                  dataField={ name }
-                  editable={ name==="body" ? true : false }
-                  dataSort={ true }
-                  filter={ { type: 'TextFilter', delay: 1000 } }
-                >
-                  { name }
-                </TableHeaderColumn>
-              )}
-            </BootstrapTable>
-          </div>
-        );
-      }
-      else{
-        return (
-          <div>
-            <BootstrapTable data={ this.state.tableData } options={ options }  keyField={ col[0] } striped hover>
-              {col.map((name, idx) =>
-                <TableHeaderColumn
-                  key={idx}
-                  dataField={ name }
-                  dataSort={ true }
-                  filter={ { type: 'TextFilter', delay: 1000 } }
-                >
-                  { name }
-                </TableHeaderColumn>
-              )}
-             </BootstrapTable>
-          </div>
-        );
-      }
-    }
-  }
+	render() {
+		var col = this.state.columns;
+		const options = {
+			expandRowBgColor: 'rgb(249, 104, 104)'
+		};
+		if (this.state.loadingData){
+			return (
+				<div className="ajax-loader-container">
+					<img src={loader} alt="Loader"/>
+				</div>
+			);
+		} else {
+			return (
+				<div>
+					<BootstrapTable data={ this.state.tableData } cellEdit={ this.cellEditProp[this.props.activePage] } options={ options } keyField={ col[0] } striped hover>
+						{col.map((name, idx) =>
+							<TableHeaderColumn
+								key={idx}
+								dataField={ name }
+								editable={ tableEditionConfig[this.props.activePage][name] }
+								dataSort={ true }
+								filter={ { type: 'TextFilter', delay: 1000 } }
+							>
+								{ name }
+							</TableHeaderColumn>
+						)}
+					</BootstrapTable>
+				</div>
+			);
+		}
+	}
 }
 
 Container.propTypes = {
-  activePage: PropTypes.string.isRequired
+	activePage: PropTypes.string.isRequired
 }
 
 Table.propTypes = {
-  activePage: PropTypes.string.isRequired
+	activePage: PropTypes.string.isRequired
 }
 
 export default Container;
