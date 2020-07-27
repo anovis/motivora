@@ -27,12 +27,21 @@ def update_message():
   if payload is not None and 'data' in payload and 'message_set' in payload['data']:
     message_set = payload['message_set']
   message_id = int(app.current_request.json_body['data']['id'])
-  new_message = app.current_request.json_body['data']['message']
+  message_json = app.current_request.json_body['data']
   try:
     message = Messages.get(message_set, message_id)
-    message.update(actions=[
-      Messages.body.set(new_message)
-    ])
+    if 'body' in message_json:
+      message.update(actions=[
+        Messages.body.set(message_json['body'])
+      ])
+    if 'body_en' in message_json:
+      message.update(actions=[
+        Messages.body_en.set(message_json['body_en'])
+      ])
+    if 'body_es' in message_json:
+      message.update(actions=[
+        Messages.body_es.set(message_json['body_es'])
+      ])
     return Response(
       body='Success',
       status_code=200,
@@ -54,23 +63,23 @@ def post_messages():
   print(payload)
   try:
     # Create each new message
-    current_largest_id = get_current_largest_message_id(payload['data']['messageSetName'])
+    current_largest_id = get_current_largest_message_id(payload['data']['message_set'])
     for message in payload['data']['messages']:
       current_largest_id += 1
       new_message = Messages(
         id=current_largest_id,
-        message_set=payload['data']['messageSetName'],
+        message_set=payload['data']['message_set'],
         attr_list=format_message_attributes_for_model(message['attributes']),
         total_attr=len(message['attributes']),
         seq=str(current_largest_id)
       )
       # Add appropriate message variables depending on what was provided by the user
-      if 'message' in message:
-        new_message.body = message['message']
-      if 'message_en' in message:
-        new_message.body_en = message['message_en']
-      if 'message_es' in message:
-        new_message.body_es = message['message_es']
+      if 'body' in message:
+        new_message.body = message['body']
+      if 'body_en' in message:
+        new_message.body_en = message['body_en']
+      if 'body_es' in message:
+        new_message.body_es = message['body_es']
 
       new_message.save()
   except Exception as e:
