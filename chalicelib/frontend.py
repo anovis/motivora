@@ -120,10 +120,17 @@ def post_user():
     user = Users.get(payload['phone'])
   except Users.DoesNotExist:
     user = Users(payload['phone'])
+    user.message_set = DEFAULT_MESSAGE_SET
+    user.messages_sent = []
+    user.message_response = {}
+    user.weekly_goals_message_response = {}
+    user.direct_message_response = {}
+    user.send_message = False
+    user.save()
 
   try:
     if 'messageSetName' in payload:
-      user.update(actions=[Users.message_response.set(payload['messageSetName'])]) 
+      user.update(actions=[Users.message_set.set(payload['messageSetName'])]) 
   
     if 'lang_code' in payload:
       user.update(actions=[Users.lang_code.set(payload['lang_code'])]) 
@@ -144,6 +151,7 @@ def post_user():
       status_code=500,
       headers={'Content-Type': 'text/plain'}
     )
+  user = Users.get(payload['phone'])
   return Response(
     body=user.to_frontend(),
     status_code=200,
