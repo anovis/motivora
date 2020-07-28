@@ -183,6 +183,16 @@ def get_message_history():
     headers={'Content-Type': 'text/plain'}
   )
 
+@app.route('/users/direct_message_history', methods=['GET'], cors=True)
+def get_message_history():
+  payload = app.current_request.json_body
+  user = Users.get(payload['phone'])
+  return Response(
+    body={"direct_messages": user.direct_message_response},
+    status_code=200,
+    headers={'Content-Type': 'text/plain'}
+  )
+
 @app.route('/messages/get_stats', methods=['GET'], cors=True)
 def get_message_stats():
   payload = app.current_request.json_body
