@@ -183,9 +183,36 @@ def get_message_history():
   payload = app.current_request.json_body
   user = Users.get(payload['phone'])
   user_obj = UserActions(**user.to_dict())
+  all_messages = []
+  for i, daily_message_data in user.message_response.items():
+    message = Messages.get(user.message_set, int(daily_message_data["message_sent"]))
+    all_messages.append({
+      "rating": int(daily_message_data["message"]),
+      "timestamp": daily_message_data["timestamp"],
+      "data_type": "message",
+      "id": message.id,
+      "body": message.body,
+      "category": "daily",
+      "direction": "outgoing"
+    })
+  for i, direct_message_data in user.direct_message_response.items():
+    direct_message = direct_message_data
+    direct_message["category"] = "direct"
+    all_messages.append(direct_message)
+  for i, weekly_goals_data in user.weekly_goals_message_response.items():
+    for decision_tree_id in weekly_goals_data["decision_tree_ids"]:
+      decision_tree = DecisionTrees.get(decision_tree_id)
+      all_messages.append({
+        "data_type": "decision_tree",
+        "id": decision_tree_id,
+        "body": decision_tree.message,
+        "category": "weekly_goals",
+        "direction": "outgoing"
+      })
+
   m = list(user.messages_sent)
   return Response(
-    body={"messages_ranked": user.message_response, "messages_sent": m},
+    body={"data": all_messages},
     status_code=200,
     headers={'Content-Type': 'text/plain'}
   )
