@@ -164,12 +164,14 @@ class Table extends Component {
 
 				} else if (columnName === 'phone') {
 
-					return <span>{ cell } <button 
+					return <span><b>{ cell }</b> <button 
 						type="button" 
 						onClick={() => vm.openSendMessageModal(cell)}
        				>
        					<i className="glyphicon glyphicon-envelope"></i>
        				</button></span>
+				} else if (columnName === 'average_rating') {
+					return <b>{ cell }</b>
 				}
 			} else if (activePage === 'MESSAGES') {
 
