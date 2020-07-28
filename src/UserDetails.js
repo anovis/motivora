@@ -16,6 +16,7 @@ class UserDetails extends Component {
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
   		this.handleTypeMessage = this.handleTypeMessage.bind(this);
   		this.handleSendMessage = this.handleSendMessage.bind(this);
+  		this.formatTimestamp = this.formatTimestamp.bind(this);
 	}
 	componentDidMount() {
 		this.fetchMessageHistory();
@@ -74,6 +75,21 @@ class UserDetails extends Component {
 	    });
 	    event.preventDefault();
   	}
+  	formatTimestamp(date) {
+  		if (date) {
+	  		let options = {month: 'long', year: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: "America/New_York"};
+	  		return (new Date(date)).toLocaleDateString('en-US', options);
+  		}
+  	}
+  	getBadgeColor(rating) {
+  		if (rating >= 8) {
+  			return 'success';
+  		} else if (rating >= 5 ) {
+  			return 'warning';
+  		} else {
+  			return 'danger';
+  		}
+  	}
 
 	render() {
 		var messages = this.state.messages;
@@ -85,12 +101,20 @@ class UserDetails extends Component {
 			);
 		} else {
 			return (
-				<div>
-					<h2 id="page-title">Participant: +{ this.state.phone }</h2>
+				<div className="text-left">
 					<Container>
 						<Row>
-							<Col xs={8}>PLACEHOLDER</Col>
+							<Col>
+								<h2 id="page-title">Participant: +{ this.state.phone }</h2>
+							</Col>
+						</Row>
+						<hr/>
+						<Row>
 							<Col xs={4}>
+							</Col>
+							<Col xs={4}>
+							</Col>
+							<Col xs={4} style={{ height: '500px', overflowY: 'auto' }}>
 								{
 									this.state.messages.map((message, index) => 
 										<div 
@@ -98,7 +122,7 @@ class UserDetails extends Component {
 											role="alert" 
 											className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
 										>
-											<h5><i>{ message.timestamp }</i> { message.rating ? <Badge variant="secondary" className="pull-right">{ message.rating }</Badge> : null }</h5>
+											<h5><i>{ this.formatTimestamp(message.timestamp) }</i> { message.rating ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</h5>
 											<div className="alert-heading h4">
 			  									{ (message.direction === 'outgoing') ? <i className="glyphicon glyphicon-arrow-right"></i> : null } 
 			  									

@@ -144,16 +144,22 @@ class Table extends Component {
 		}
 
 	}
+  	formatTimestamp(date) {
+  		if (date) {
+	  		let options = {month: 'long', year: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: "America/New_York"};
+	  		return (new Date(date)).toLocaleDateString('en-US', options);
+  		}
+  	}
 
 	getDataFormat(activePage, columnName) {
-		let vm = this;
+		let _this = this;
 		return function(cell, row, enumObject, rowIndex) {
 			if (activePage === 'USERS') {
 
 				if (columnName === 'created_time') {
 					
 					var date = new Date(row[columnName]);
-					return date.toString();
+					return _this.formatTimestamp(date);
 
 				} else if (columnName === 'phone') {
 
