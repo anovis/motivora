@@ -3,6 +3,10 @@ import { Container, Col, Row, Badge, Form } from 'react-bootstrap';
 import Config from './config';
 import axios from 'axios';
 import loader from './images/ajax-loader.gif';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import InputRange from 'react-input-range';
+import 'react-input-range/lib/css/index.css';
 
 
 class UserDetails extends Component {
@@ -11,12 +15,31 @@ class UserDetails extends Component {
 		this.state = {
 			phone: props.match.params.phone,
 			smsBody: '',
-			messages: []
+			messages: [],
+			filters: {
+				rating: {
+					min: 0,
+					max: 10
+				},
+				categories: {
+					daily: true,
+					direct: true,
+					weekly_goals: true
+				},
+				directions: {
+					incoming: true,
+					outgoing: true
+				}
+			}
 		};
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
   		this.handleTypeMessage = this.handleTypeMessage.bind(this);
   		this.handleSendMessage = this.handleSendMessage.bind(this);
   		this.formatTimestamp = this.formatTimestamp.bind(this);
+  		this.onRatingFilter = this.onRatingFilter.bind(this);
+  		this.onCategoryFilter = this.onCategoryFilter.bind(this);
+  		this.onDirectionFilter = this.onDirectionFilter.bind(this);
+  		this.filterMessages = this.filterMessages.bind(this);
 	}
 	componentDidMount() {
 		this.fetchMessageHistory();
@@ -90,6 +113,46 @@ class UserDetails extends Component {
   			return 'danger';
   		}
   	}
+  	onCategoryFilter(event) {
+	    let target = event.target;
+	    let value = target.value;
+	    let name = target.name;
+
+  		let filters = this.state.filters;
+  		filters.categories[name] = (value == 'false');
+  		this.setState({filters: filters});
+  	}
+
+  	onDirectionFilter(event) {
+	    const target = event.target;
+	    const value = target.value;
+	    const name = target.name;
+  		let filters = this.state.filters;
+  		filters.directions[name] = (value == 'false');
+  		this.setState({filters: filters});
+  	}
+
+  	onRatingFilter(range) {
+  		let _this = this;
+  		let filters = this.state.filters;
+  		filters.rating = range;
+  		this.setState({filters: filters});
+  	}
+  	filterMessages() {
+  		let _this = this;
+  		return this.state.messages.filter(message => {
+  			if ((message.rating < _this.state.filters.rating.min) || (message.rating > _this.state.filters.rating.max)) {
+  				return false;
+  			}
+  			if (_this.state.filters.categories[message.category] === false) {
+  				return false;
+  			}
+  			if (_this.state.filters.directions[message.direction] === false) {
+  				return false;
+  			}
+  			return true;
+  		})
+  	}
 
 	render() {
 		var messages = this.state.messages;
@@ -101,32 +164,86 @@ class UserDetails extends Component {
 			);
 		} else {
 			return (
-				<div className="text-left">
+				<div className="text-left" style={{ padding: '20px'}}>
 					<Container>
 						<Row>
-							<Col>
-								<h2 id="page-title">Participant: +{ this.state.phone }</h2>
-							</Col>
-						</Row>
-						<hr/>
-						<Row>
 							<Col xs={4}>
-							</Col>
-							<Col xs={4}>
+								<b>Participant: +{ this.state.phone }</b>
+				    			<hr/>
+								<Form>
+									<Form.Group>
+				    					<Form.Label>Filter by rating:</Form.Label>
+				    					<InputRange
+        									maxValue={10}
+        									minValue={0}
+        									allowSameValues={true}
+        									value={this.state.filters.rating}
+        									onChange={ this.onRatingFilter } 
+        								/>
+				    				</Form.Group>
+				    				<hr/>
+									<Form.Group>
+				    					<Form.Label>Filter by category:</Form.Label>
+										<Form.Check
+											required
+        									checked={this.state.filters.categories.daily}
+        									value={this.state.filters.categories.daily}
+											name="daily"
+											label="Daily message"
+											onChange={ this.onCategoryFilter }
+										/>
+										<Form.Check
+											required
+        									checked={this.state.filters.categories.direct}
+        									value={this.state.filters.categories.direct}
+											name="direct"
+											label="Direct message"
+											onChange={ this.onCategoryFilter }
+										/>
+										<Form.Check
+											required
+        									checked={this.state.filters.categories.weekly_goals}
+        									value={this.state.filters.categories.weekly_goals}
+											name="weekly_goals"
+											label="Weekly goals"
+											onChange={ this.onCategoryFilter }
+										/>
+          							</Form.Group>
+				    				<hr/>
+									<Form.Group>
+				    					<Form.Label>Filter by direction:</Form.Label>
+										<Form.Check
+											required
+											name="outgoing"
+											label="Sent by Motivora"
+											onChange={ this.onDirectionFilter }
+        									checked={this.state.filters.directions.outgoing}
+        									value={this.state.filters.directions.outgoing}
+										/>
+										<Form.Check
+											required
+											name="incoming"
+											label="Sent by participant"
+											onChange={ this.onDirectionFilter }
+        									checked={this.state.filters.directions.incoming}
+        									value={this.state.filters.directions.incoming}
+										/>
+          							</Form.Group>
+								</Form>
 							</Col>
 							<Col xs={4} style={{ height: '500px', overflowY: 'auto' }}>
 								{
-									this.state.messages.map((message, index) => 
+									this.filterMessages().map((message, index) => 
 										<div 
 											key={index}
 											role="alert" 
 											className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
 										>
-											<h5><i>{ this.formatTimestamp(message.timestamp) }</i> { message.rating ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</h5>
+											<b><i>{ this.formatTimestamp(message.timestamp) }</i> { message.rating ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
 											<div className="alert-heading h4">
-			  									{ (message.direction === 'outgoing') ? <i className="glyphicon glyphicon-arrow-right"></i> : null } 
+			  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 
 			  									
-			  									{ (message.direction !== 'outgoing') ? <i className="glyphicon glyphicon-arrow-left"></i> : null } 
+			  									{ (message.direction !== 'outgoing') ? <FontAwesomeIcon icon={faArrowLeft} size="xs"/>  : null } 
 			  								</div>
 											<p>
 												{ message.body || message.message }
@@ -134,6 +251,8 @@ class UserDetails extends Component {
 										</div>
 									)
 								}
+							</Col>
+							<Col xs={4}>
 								<div>
 									<Form>
 				          				<Form.Group controlId="messageBody">
@@ -148,7 +267,7 @@ class UserDetails extends Component {
 				  						</Form.Group>
 									</Form>
 									<button type="button" className="btn btn-primary" onClick={this.handleSendMessage}>
-            							Send message
+            							Send message to participant
           							</button>
 								</div>
 							</Col>

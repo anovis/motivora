@@ -32,7 +32,7 @@ class App extends Component {
 			<Router>
 			<div className="App">
 				<Navbar bg="primary" variant="dark">
-					<Navbar.Brand href="#home">Motivora</Navbar.Brand>
+					<Navbar.Brand href="/">Motivora</Navbar.Brand>
 					<Nav className="mr-auto">
 						<Nav.Link href="/users">Participants</Nav.Link>
 						<Nav.Link href="/messages">Messages</Nav.Link>
@@ -43,19 +43,19 @@ class App extends Component {
 				<Switch>
 					<Route path="/users">
 						<div>
-							<h2 id="page-title">All participants</h2>
+							<h4 id="page-title">All participants</h4>
 							<Container activePage="USERS"/>
 						</div>
 					</Route>
 					<Route path="/messages">
 						<div>
-							<h2 id="page-title">All messages</h2>
+							<h4 id="page-title">All messages</h4>
 							<Container activePage="MESSAGES"/>
 						</div>
 					</Route>
 					<Route path="/add-message-set">
 						<div>
-							<h2 id="page-title">Add Message Set</h2>
+							<h4 id="page-title">Add Message Set</h4>
 							<MessageSetForm/>
 						</div>
 					</Route>
