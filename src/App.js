@@ -26,7 +26,7 @@ class App extends Component {
       case 'USERS':
         return(
           <div>
-            <h2 id="page-title">All users</h2>
+            <h2 id="page-title">All participants</h2>
             <Container activePage={this.state.activePage}/>
           </div>
         );
@@ -48,7 +48,7 @@ class App extends Component {
         <Navbar bg="primary" variant="dark">
           <Navbar.Brand href="#home">Motivora</Navbar.Brand>
           <Nav className="mr-auto">
-            <Nav.Link href="#users" onClick={() => { this.setState({activePage: 'USERS'}) }}>Users</Nav.Link>
+            <Nav.Link href="#users" onClick={() => { this.setState({activePage: 'USERS'}) }}>Participants</Nav.Link>
             <Nav.Link href="#messages" onClick={() => { this.setState({activePage: 'MESSAGES'}) }}>Messages</Nav.Link>
             <Button href="#add-message-set" onClick={() => { this.setState({activePage: 'ADD_MESSAGE'})  }}>Add Message Set</Button>
             <AmplifySignOut />
