@@ -58,6 +58,10 @@ def update_message():
       message.update(actions=[
         Messages.body_es.set(message_json['body_es'])
       ])
+    if 'is_active' in message_json:
+      message.update(actions=[
+        Messages.is_active.set(message_json['is_active'])
+      ])
     return Response(
       body='Success',
       status_code=200,
@@ -96,6 +100,8 @@ def post_messages():
         new_message.body_en = message['body_en']
       if 'body_es' in message:
         new_message.body_es = message['body_es']
+      if 'is_active' in message_json:
+        new_message.is_active = message['is_active']
 
       new_message.save()
   except Exception as e:

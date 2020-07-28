@@ -265,7 +265,7 @@ class UserActions:
         messages_scored = defaultdict(int)
         all_msgs_og = Messages.query(user.message_set, Messages.id > 0)
         all_msgs = [message.to_frontend() for message in all_msgs_og]
-        all_msgs_filtered = filter(lambda msg: msg['id'] not in user.messages_sent, all_msgs)
+        all_msgs_filtered = filter(lambda msg: msg['id'] not in user.messages_sent and msg['is_active'], all_msgs)
         # Iterate through each potential message
         for msg in all_msgs_filtered:
             message = Messages.get(user.message_set, msg['id'])

@@ -1,5 +1,5 @@
 from pynamodb.models import Model
-from pynamodb.attributes import UnicodeAttribute, NumberAttribute, MapAttribute
+from pynamodb.attributes import BooleanAttribute, UnicodeAttribute, NumberAttribute, MapAttribute
 
 class Messages(Model):
     class Meta:
@@ -17,6 +17,7 @@ class Messages(Model):
     total_liked = NumberAttribute(default=0)
     total_resp = NumberAttribute(default=0)
     total_sent = NumberAttribute(default=0)
+    is_active  = BooleanAttribute(default=True)
 
     def to_json(self):
         return self.to_dict()
@@ -34,7 +35,8 @@ class Messages(Model):
             'total_disliked': self.total_disliked,
             'total_liked': self.total_liked,
             'total_resp': self.total_resp,
-            'total_sent': self.total_sent
+            'total_sent': self.total_sent,
+            'is_active': self.is_active
         }
 
     def to_frontend(self):
@@ -49,4 +51,5 @@ class Messages(Model):
             'body': self.body,
             'body_en': self.body_en,
             'body_es': self.body_es,
+            'is_active': self.is_active
         }
