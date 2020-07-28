@@ -71,7 +71,7 @@ class Table extends Component {
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
-				this.setState({columns:['id','message_set','body_en','body_es', 'attr_list']});
+				this.setState({columns:['id','message_set','body_en','body_es', 'is_active', 'attr_list']});
 				endpoint = Config.api + '/messages';
 				break;
 			default:
@@ -89,12 +89,13 @@ class Table extends Component {
 	}
 
 	onAfterSaveMessagesCell(row, cellName, cellValue) {
-		axios.put(Config.api + '/messages', {
+		let payload = {
 			data:{
 				id: row.id,
-				message: row[cellName]
 			}
-		})
+		}
+		payload['data'][cellName] = row[cellName];
+		axios.put(Config.api + '/messages', payload)
 			.then(function (response) {console.log('onAfterSaveMessagesCell', response)})
 			.catch(function (error) {
 				console.log(error);
@@ -169,6 +170,11 @@ class Table extends Component {
        				>
        					<i className="glyphicon glyphicon-envelope"></i>
        				</button></span>
+				}
+			} else if (activePage === 'MESSAGES') {
+
+				if ((columnName === 'body_en') || (columnName === 'body_es')) {
+					return <p style={ {whiteSpace: 'pre-wrap'}}>{ cell }</p>
 				}
 			}
 			return cell;

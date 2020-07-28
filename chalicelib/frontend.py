@@ -44,6 +44,7 @@ def update_message():
     message_set = payload['message_set']
   message_id = int(app.current_request.json_body['data']['id'])
   message_json = app.current_request.json_body['data']
+  print(message_json)
   try:
     message = Messages.get(message_set, message_id)
     if 'body' in message_json:
@@ -59,8 +60,9 @@ def update_message():
         Messages.body_es.set(message_json['body_es'])
       ])
     if 'is_active' in message_json:
+      isActive = (message_json['is_active'] == 'true')
       message.update(actions=[
-        Messages.is_active.set(message_json['is_active'])
+        Messages.is_active.set(isActive)
       ])
     return Response(
       body='Success',
@@ -101,7 +103,7 @@ def post_messages():
       if 'body_es' in message:
         new_message.body_es = message['body_es']
       if 'is_active' in message_json:
-        new_message.is_active = message['is_active']
+        new_message.is_active = (message['is_active'] == 'true')
 
       new_message.save()
   except Exception as e:
@@ -121,7 +123,6 @@ def post_messages():
 @app.route('/user', methods=['POST'], cors=True)
 def post_user():
   payload = app.current_request.json_body
-  print(payload)
   phone = int(payload['phone'])
   try:
     user = Users.get(phone)

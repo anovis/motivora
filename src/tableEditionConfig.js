@@ -4,6 +4,7 @@ const config = {
 		message_set: false,
 		body_en: { type: 'textarea'},
 		body_es: { type: 'textarea'},
+		is_active: { type: 'checkbox', options: { values: 'true:false' }} ,
 		attr_list: false
 	},
 	USERS: {
