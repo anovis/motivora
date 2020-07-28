@@ -6,6 +6,7 @@ import Config from './config';
 import axios from 'axios';
 import loader from './images/ajax-loader.gif';
 import tableEditionConfig from './tableEditionConfig.js';
+import SendMessageModal from './SendMessageModal.js';
 
 
 class Container extends Component {
@@ -31,6 +32,7 @@ class Table extends Component {
 		this.state = {
 			tableData: [],
 			columns: ['phone','response','date'],
+			showSendMessageModal: false
 		};
 		this.cellEditProp = {
 			USERS: {
@@ -78,7 +80,6 @@ class Table extends Component {
 		this.setState({loadingData: true});
 		axios.get(endpoint)
 			.then((response) => {
-				console.log(response)
 				this.setState({
 					tableData: response.data.data,
 					loadingData: false
@@ -94,7 +95,7 @@ class Table extends Component {
 				message: row[cellName]
 			}
 		})
-			.then(function (response) {console.log(response)})
+			.then(function (response) {console.log('onAfterSaveMessagesCell', response)})
 			.catch(function (error) {
 				console.log(error);
 			});
@@ -105,23 +106,22 @@ class Table extends Component {
 		};
 		payload[cellName] = cellValue;
 		axios.post(Config.api + '/user', payload)
-			.then(function (response) {console.log(response)})
+			.then(function (response) {console.log('onAfterSaveUsersCell', response)})
 			.catch(function (error) {
 				console.log(error);
 			});
 	}
 	handleRowInsertion(userData) {
-		let vm = this;
+		const _this = this;
 		axios.post(Config.api + '/user', userData)
 			.then(function (response) {
 				if (response.status === 200) {
-					vm.fetchData('USERS');
+					_this.fetchData('USERS');
 				}
 			})
 			.catch(function (error) {
 				window.alert(error)
 			});
-
 	}
 
 	isExpandableRow(row) {
@@ -144,6 +144,36 @@ class Table extends Component {
 		}
 
 	}
+	openSendMessageModal(phoneNumber) {
+		this.setState({
+			showSendMessageModal: true,
+			selectedPhoneNumber: phoneNumber
+		});
+	}
+
+	getDataFormat(activePage, columnName) {
+		let vm = this;
+		return function(cell, row, enumObject, rowIndex) {
+			if (activePage === 'USERS') {
+
+				if (columnName === 'created_time') {
+					
+					var date = new Date(row[columnName]);
+					return date.toString();
+
+				} else if (columnName === 'phone') {
+
+					return <span>{ cell } <button 
+						type="button" 
+						onClick={() => vm.openSendMessageModal(cell)}
+       				>
+       					<i className="glyphicon glyphicon-envelope"></i>
+       				</button></span>
+				}
+			}
+			return cell;
+		}
+	}
 
 	render() {
 		var col = this.state.columns;
@@ -160,6 +190,11 @@ class Table extends Component {
 		} else {
 			return (
 				<div>
+					<SendMessageModal 
+						show={this.state.showSendMessageModal} 
+						phone={this.state.selectedPhoneNumber}
+						onClose={ () => { this.setState({showSendMessageModal: false}) } }
+					/>
 					<BootstrapTable 
 						data={ this.state.tableData } 
 						cellEdit={ this.cellEditProp[this.props.activePage] } 
@@ -178,6 +213,7 @@ class Table extends Component {
 								dataSort={ true }
 								filter={ { type: 'TextFilter', delay: 1000 } }
 								keyField={ this.getKeyField() }
+								dataFormat={ this.getDataFormat(this.props.activePage, name).bind(this) }
 							>
 								{ name }
 							</TableHeaderColumn>
