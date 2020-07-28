@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import App from './App';
 import 'bootstrap/dist/css/bootstrap.css';
 import './index.css';
-import Amplify, { Auth } from 'aws-amplify';
+import Amplify from 'aws-amplify';
 
 Amplify.configure({
     Auth: {

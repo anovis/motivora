@@ -17,6 +17,7 @@
     "react": "^16.8.3",
     "react-bootstrap": "^1.0.0-beta.5",
     "react-bootstrap-table": "^4.3.1",
+    "react-bootstrap4-modal": "^1.7.5",
     "react-dom": "^16.8.3",
     "twilio": "^3.3.0"
   },
