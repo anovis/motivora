@@ -6,7 +6,7 @@ import Config from './config';
 import axios from 'axios';
 import loader from './images/ajax-loader.gif';
 import tableEditionConfig from './tableEditionConfig.js';
-import SendMessageModal from './SendMessageModal.js';
+import { Link } from "react-router-dom";
 
 
 class Container extends Component {
@@ -31,8 +31,7 @@ class Table extends Component {
 		super(props)
 		this.state = {
 			tableData: [],
-			columns: ['phone','response','date'],
-			showSendMessageModal: false
+			columns: ['phone','response','date']
 		};
 		this.cellEditProp = {
 			USERS: {
@@ -145,12 +144,6 @@ class Table extends Component {
 		}
 
 	}
-	openSendMessageModal(phoneNumber) {
-		this.setState({
-			showSendMessageModal: true,
-			selectedPhoneNumber: phoneNumber
-		});
-	}
 
 	getDataFormat(activePage, columnName) {
 		let vm = this;
@@ -164,12 +157,8 @@ class Table extends Component {
 
 				} else if (columnName === 'phone') {
 
-					return <span><b>{ cell }</b> <button 
-						type="button" 
-						onClick={() => vm.openSendMessageModal(cell)}
-       				>
-       					<i className="glyphicon glyphicon-envelope"></i>
-       				</button></span>
+					return <Link to={`/user-details/${cell}`}>+{ cell }</Link>
+
 				} else if (columnName === 'average_rating') {
 					return <b>{ cell }</b>
 				}
@@ -198,11 +187,6 @@ class Table extends Component {
 		} else {
 			return (
 				<div>
-					<SendMessageModal 
-						show={this.state.showSendMessageModal} 
-						phone={this.state.selectedPhoneNumber}
-						onClose={ () => { this.setState({showSendMessageModal: false}) } }
-					/>
 					<BootstrapTable 
 						data={ this.state.tableData } 
 						cellEdit={ this.cellEditProp[this.props.activePage] } 

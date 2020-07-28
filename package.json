@@ -19,6 +19,7 @@
     "react-bootstrap-table": "^4.3.1",
     "react-bootstrap4-modal": "^1.7.5",
     "react-dom": "^16.8.3",
+    "react-router-dom": "^5.2.0",
     "twilio": "^3.3.0"
   },
   "devDependencies": {

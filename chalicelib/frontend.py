@@ -180,8 +180,9 @@ def list_users():
 
 @app.route('/users/message_history', methods=['GET'], cors=True)
 def get_message_history():
-  payload = app.current_request.json_body
-  user = Users.get(payload['phone'])
+  phone = int(app.current_request.query_params.get('phone'))
+  user = Users.get(phone)
+
   user_obj = UserActions(**user.to_dict())
   all_messages = []
   for i, daily_message_data in user.message_response.items():
@@ -267,7 +268,7 @@ def get_ranked_attrs():
 def send_direct_message_to_user():
   print("send_message")
   payload = app.current_request.json_body
-  phone_number = payload['phone_number']
+  phone_number = int(payload['phone_number'])
   message      = payload['message']
   user = Users.get(phone_number)
   user_obj = UserActions(**user.to_dict())
