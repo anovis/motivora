@@ -65,6 +65,10 @@ class Users(Model):
         created_at = str(self.created_time)
         num_sent_messages = len(list(self.messages_sent))
         num_rated_messages = len(self.message_response.keys())
+        total_rating = 0
+        for i, response_data in self.message_response.items():
+            total_rating += int(response_data['message'])
+        avg_rating = total_rating * 1.0 / num_rated_messages
         return {
             'phone': self.phone,
             'time': self.time,
@@ -73,5 +77,6 @@ class Users(Model):
             'lang_code': self.lang_code,
             'created_time': created_at,
             'num_sent_messages': num_sent_messages,
-            'num_rated_messages': num_rated_messages
+            'num_rated_messages': num_rated_messages,
+            'average_rating': round(avg_rating, 1)
         }
