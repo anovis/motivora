@@ -20,7 +20,7 @@ def handle_twilio():
         # TODO only EBNHC for now
         message_set = "EBNHC"
         try:
-          user = Users.get(phone)
+          user = Users.get(int(phone))
           user_class = UserActions(phone, message_set=user.message_set, **parsed_request)
           user_class.handle_message()
         except Users.DoesNotExist:
