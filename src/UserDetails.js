@@ -16,6 +16,7 @@ class UserDetails extends Component {
 			phone: props.match.params.phone,
 			smsBody: '',
 			messages: [],
+			ranked_attrs: {},
 			filters: {
 				rating: {
 					min: 0,
@@ -33,6 +34,7 @@ class UserDetails extends Component {
 			}
 		};
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
+		this.fetchRankedAttrs = this.fetchRankedAttrs.bind(this);
   		this.handleTypeMessage = this.handleTypeMessage.bind(this);
   		this.handleSendMessage = this.handleSendMessage.bind(this);
   		this.formatTimestamp = this.formatTimestamp.bind(this);
@@ -40,9 +42,11 @@ class UserDetails extends Component {
   		this.onCategoryFilter = this.onCategoryFilter.bind(this);
   		this.onDirectionFilter = this.onDirectionFilter.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
+  		this.roundNumber = this.roundNumber.bind(this);
 	}
 	componentDidMount() {
 		this.fetchMessageHistory();
+		this.fetchRankedAttrs();
 	}
 	fetchMessageHistory() {
 		let endpoint = Config.api + '/users/message_history';
@@ -55,6 +59,20 @@ class UserDetails extends Component {
 				this.setState({
 					messages: response.data.data,
 					loadingData: false
+				});
+			})
+			.catch((error) => {console.log(error)})
+	}
+	fetchRankedAttrs() {
+		let endpoint = Config.api + '/users/ranked_attrs';
+		let params = {
+			phone: this.state.phone
+		}
+		axios.get(endpoint, {params: params})
+			.then((response) => {
+				console.log(response)
+				this.setState({
+					ranked_attrs: response.data.data
 				});
 			})
 			.catch((error) => {console.log(error)})
@@ -153,7 +171,13 @@ class UserDetails extends Component {
   			return true;
   		})
   	}
-
+  	roundNumber(number) {
+  		if (number) {
+			var rounded = Math.round(number * 10) / 10;
+			var fixed = rounded.toFixed(1);
+			return parseFloat(number.toFixed(2))
+  		}
+  	}
 	render() {
 		var messages = this.state.messages;
 		if (this.state.loadingData){
@@ -170,7 +194,56 @@ class UserDetails extends Component {
 							<Col xs={4}>
 								<b>Participant: +{ this.state.phone }</b>
 				    			<hr/>
-								<Form>
+								<b>Ratings:</b>
+								<ul>
+									{
+										Object.keys(this.state.ranked_attrs).map((key, index) => 
+											<li><b>{ key }</b>: { this.roundNumber(this.state.ranked_attrs[key]) }</li>
+										)
+									}
+								</ul>
+				    			<hr/>
+								<div>
+									<Form>
+				          				<Form.Group controlId="messageBody">
+				    						<Form.Label>Please enter your message here</Form.Label>
+				    						<Form.Control 
+				    							as="textarea" 
+				    							rows="4"
+				    							name="smsBody"
+				    							value={this.state.smsBody}
+				    							onChange={this.handleTypeMessage}
+				    						/>
+				  						</Form.Group>
+									</Form>
+									<button type="button" className="btn btn-primary" onClick={this.handleSendMessage}>
+            							Send message to participant
+          							</button>
+								</div>
+								
+							</Col>
+							<Col xs={4} style={{ height: '500px', overflowY: 'auto' }}>
+								{
+									this.filterMessages().map((message, index) => 
+										<div 
+											key={index}
+											role="alert" 
+											className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
+										>
+											<b><i>{ this.formatTimestamp(message.timestamp) }</i> { message.rating ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
+											<div className="alert-heading h4">
+			  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 
+			  									
+			  									{ (message.direction !== 'outgoing') ? <FontAwesomeIcon icon={faArrowLeft} size="xs"/>  : null } 
+			  								</div>
+											<p>
+												{ message.body || message.message }
+											</p>
+										</div>
+									)
+								}
+							</Col>
+							<Col xs={4}><Form>
 									<Form.Group>
 				    					<Form.Label>Filter by rating:</Form.Label>
 				    					<InputRange
@@ -230,46 +303,7 @@ class UserDetails extends Component {
 										/>
           							</Form.Group>
 								</Form>
-							</Col>
-							<Col xs={4} style={{ height: '500px', overflowY: 'auto' }}>
-								{
-									this.filterMessages().map((message, index) => 
-										<div 
-											key={index}
-											role="alert" 
-											className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
-										>
-											<b><i>{ this.formatTimestamp(message.timestamp) }</i> { message.rating ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
-											<div className="alert-heading h4">
-			  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 
-			  									
-			  									{ (message.direction !== 'outgoing') ? <FontAwesomeIcon icon={faArrowLeft} size="xs"/>  : null } 
-			  								</div>
-											<p>
-												{ message.body || message.message }
-											</p>
-										</div>
-									)
-								}
-							</Col>
-							<Col xs={4}>
-								<div>
-									<Form>
-				          				<Form.Group controlId="messageBody">
-				    						<Form.Label>Please enter your message here</Form.Label>
-				    						<Form.Control 
-				    							as="textarea" 
-				    							rows="4"
-				    							name="smsBody"
-				    							value={this.state.smsBody}
-				    							onChange={this.handleTypeMessage}
-				    						/>
-				  						</Form.Group>
-									</Form>
-									<button type="button" className="btn btn-primary" onClick={this.handleSendMessage}>
-            							Send message to participant
-          							</button>
-								</div>
+
 							</Col>
 						</Row>
 					</Container>
