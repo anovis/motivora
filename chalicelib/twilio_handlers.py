@@ -1,6 +1,6 @@
 from chalicelib import app
 from chalice import Response
-from chalicelib.models import Messages
+from chalicelib.models import Messages, Users
 from chalicelib.actions import UserActions
 from urllib.parse import parse_qs
 import sentry_sdk
