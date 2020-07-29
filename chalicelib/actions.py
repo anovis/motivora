@@ -567,7 +567,7 @@ class UserActions:
                 rating_data = user.message_response[j]
                 if sent_at[0:10] <= rating_data['timestamp'][0:10]:
                     action = "APPEND"
-                    if (sent_at[0:10] == rating_data['timestamp'][0:10]):
+                    if (sent_at[0:10] == rating_data['timestamp'][0:10] and rating_data['message_sent'] == row['msg_id']):
                         action = "REPLACE"
                     
                     insert_id = j
@@ -582,8 +582,9 @@ class UserActions:
                                 'message_sent': int(row['msg_id'])
                             }
                             # Move previous message to new slot
-                            new_id = str(int(k) + 1)
-                            new_message_responses[new_id] = user.message_response[k]
+                            if action == "APPEND":
+                                new_id = str(int(k) + 1)
+                                new_message_responses[new_id] = user.message_response[k]
                         elif k > insert_id:
                             new_id = k
                             if action == "APPEND":
@@ -607,6 +608,7 @@ class UserActions:
             # Summarize changes
             print("sent_at: %s, eval: %s | id = %s, action=%s"%(sent_at, rating_data['timestamp'], insert_id, action))
             print(new_message_responses)
+            print(user.messages_sent)
         
             # Make the user update
             user.update(
