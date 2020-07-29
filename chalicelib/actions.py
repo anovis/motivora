@@ -485,7 +485,7 @@ class UserActions:
             try:
                 next_choice = int(self.message_received)
             except ValueError:
-                #self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
+                self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
                 print("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
                 return
             decision_tree = None
@@ -497,7 +497,7 @@ class UserActions:
                         decision_tree = d
                         break
             if decision_tree is None:
-                #self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
+                self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
                 print("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
                 return
             message = decision_tree.message
@@ -506,7 +506,7 @@ class UserActions:
             u.weekly_goals_message_response[cur_key]['status'] = 'complete'
         u.save()
         print(message)
-        #self.send_goal_setting_sms(message)
+        self.send_goal_setting_sms(message)
 
     # The handle_message function specifically handles daily motivational text messages
     def handle_message(self):
