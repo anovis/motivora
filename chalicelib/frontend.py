@@ -245,8 +245,8 @@ def get_message_stats():
 
 @app.route('/users/attrs', methods=['GET'], cors=True)
 def get_ranked_attrs():
-  payload = app.current_request.json_body
-  user = Users.get(payload['phone'])
+  phone = int(app.current_request.query_params.get('phone'))
+  user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
   try:
     ranked_attrs = user_obj.get_scored_attributes(user_obj, user)
