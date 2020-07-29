@@ -243,7 +243,7 @@ def get_message_stats():
     headers={'Content-Type': 'text/plain'}
   )
 
-@app.route('/users/ranked_attrs', methods=['GET'], cors=True)
+@app.route('/users/attrs', methods=['GET'], cors=True)
 def get_ranked_attrs():
   payload = app.current_request.json_body
   user = Users.get(payload['phone'])
@@ -258,7 +258,7 @@ def get_ranked_attrs():
       headers={'Content-Type': 'text/plain'}
     )
   return Response(
-    body={"data": ranked_attrs},
+    body={"data": {"ranked_attrs": ranked_attrs, "preferred_attrs": list(user.preferred_attrs)}},
     status_code=200,
     headers={'Content-Type': 'text/plain'}
   )

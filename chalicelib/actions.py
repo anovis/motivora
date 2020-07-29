@@ -72,6 +72,7 @@ class UserActions:
         self.historical_message_discount_factor = 0.1 # Determines how quickly older ratings are down-weighted
         self.unranked_attr_boost = 0.1 # Additional score boost for messages with attrs that have not yet been ranked
         self.prob_of_selection_on_iteration = 0. # Minimal boost for top messages
+        self.preferred_attr_boost = 0.5 # Constant score boost for preferred categories
 
     def is_user(self):
         try:
@@ -389,7 +390,7 @@ class UserActions:
         # Give a boost to preferred_attributes
         for attr, score_hash in attribute_scores.items():
             if attr in user.preferred_attrs:
-                normalized_attribute_scores[attr] += normalized_attribute_scores["WEIGHTED MESSAGE"]
+                normalized_attribute_scores[attr] += self.preferred_attr_boost
         # Compute overall word scores for each word
         #normalized_token_scores = {}
         #for token, score_hash in token_scores.items():
