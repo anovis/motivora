@@ -200,7 +200,7 @@ class UserDetails extends Component {
 								<ul>
 									{
 										this.state.preferred_attrs.map((attr, index) => 
-											<li><b>{ attr }</b></li>
+											<li key={ index }><b>{ attr }</b></li>
 										)
 									}
 								</ul>
@@ -209,7 +209,7 @@ class UserDetails extends Component {
 								<ul>
 									{
 										Object.keys(this.state.ranked_attrs).map((key, index) => 
-											<li><b>{ key }</b>: { this.roundNumber(this.state.ranked_attrs[key]) }</li>
+											<li key={ index }><b>{ key }</b>: <Badge variant={ this.getBadgeColor(this.roundNumber(this.state.ranked_attrs[key])) }>{ this.roundNumber(this.state.ranked_attrs[key]) }</Badge></li>
 										)
 									}
 								</ul>
@@ -241,7 +241,7 @@ class UserDetails extends Component {
 											role="alert" 
 											className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
 										>
-											<b><i>{ this.formatTimestamp(message.timestamp) }</i> { message.rating ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
+											<b><i>{ this.formatTimestamp(message.timestamp) }</i> { (message.rating != null) ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
 											<div className="alert-heading h4">
 			  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 
 			  									

@@ -9,7 +9,7 @@ import tableEditionConfig from './tableEditionConfig.js';
 import { Link } from "react-router-dom";
 
 
-class Container extends Component {
+class PageContainer extends Component {
 
 	constructor (props) {
 		super(props);
@@ -223,7 +223,7 @@ class Table extends Component {
 	}
 }
 
-Container.propTypes = {
+PageContainer.propTypes = {
 	activePage: PropTypes.string.isRequired
 }
 
@@ -231,4 +231,4 @@ Table.propTypes = {
 	activePage: PropTypes.string.isRequired
 }
 
-export default Container;
+export default PageContainer;
