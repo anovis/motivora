@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import PageContainer from './PageContainer';
 import UserDetails from './UserDetails';
 import MessageSetForm from './MessageSetForm';
-import { CSVReader } from 'react-papaparse';
-import { Container, Col, Row } from 'react-bootstrap';
 import { 
 	Navbar, 
 	Nav, 
@@ -28,21 +26,6 @@ class App extends Component {
 			activePage: 'USERS'
 		}
 	}
-	handleOnDropCsvFile(data) {
-		console.log('---------------------------')
-		console.log(data)
-		console.log('---------------------------')
-	}
-
-	handleOnErrorCsvFile(err, file, inputElem, reason) {
-		console.log(err)
-	}
-
-	handleOnRemoveCsvFile(data) {
-		console.log('---------------------------')
-		console.log(data)
-		console.log('---------------------------')
-	}
 
 	render() {
 		return (
@@ -57,24 +40,6 @@ class App extends Component {
 						<AmplifySignOut />
 					</Nav>
 				</Navbar>
-				<Container style={{ padding: '20px' }}>
-					<Row>
-						<Col xs={4}>
-							<CSVReader
-								onDrop={this.handleOnDropCsvFile}
-								onError={this.handleOnErrorCsvFile}
-								addRemoveButton
-								onRemoveFile={this.handleOnRemoveCsvFile}
-								config={{
-									header: true,
-								}}
-							>
-								<span>Drop CSV file here or click to add message ratings.</span>
-							</CSVReader>
-						</Col>
-					</Row>
-				</Container>
-				<hr/>
 				<Switch>
 					<Route path="/users">
 						<div>

@@ -192,12 +192,15 @@ class UserDetails extends Component {
   			if (_this.state.filters.directions[message.direction] === false) {
   				return false;
   			}
+  			let hasAttr = false;
   			for (let i = 0; i < (message.attrs || []).length; i++) {
   				let attr = (message.attrs || [])[i];
-	  			if (_this.state.filters.attributes[attr] === false) {
-	  				return false;
+	  			if (_this.state.filters.attributes[attr] === true) {
+	  				hasAttr = true;
+	  				break;
 	  			}
   			}
+  			if (hasAttr === false) return false;
   			return true;
   		})
   	}

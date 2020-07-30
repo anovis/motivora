@@ -7,6 +7,8 @@ import axios from 'axios';
 import loader from './images/ajax-loader.gif';
 import tableEditionConfig from './tableEditionConfig.js';
 import { Link } from "react-router-dom";
+import { CSVReader } from 'react-papaparse';
+import { Container, Col, Row } from 'react-bootstrap';
 
 
 class PageContainer extends Component {
@@ -19,6 +21,26 @@ class PageContainer extends Component {
 	render() {
 		return (
 			<div>
+				<hr/>
+				<Container style={{ padding: '20px' }}>
+					<Row>
+						<Col xs={4}>
+							<p>Expected headers: phone, message_id, rating</p>
+							<CSVReader
+								onDrop={this.handleOnDropCsvFile}
+								onError={this.handleOnErrorCsvFile}
+								addRemoveButton
+								onRemoveFile={this.handleOnRemoveCsvFile}
+								config={{
+									header: true,
+								}}
+							>
+								<span>Drop CSV file here or click to add message ratings.</span>
+							</CSVReader>
+						</Col>
+					</Row>
+				</Container>
+				<hr/>
 				<Table activePage={this.props.activePage}/>
 			</div>
 		);
@@ -176,6 +198,54 @@ class Table extends Component {
 			}
 			return cell;
 		}
+	}
+
+	handleOnDropCsvFile(data) {
+		console.log('---------------------------')
+		console.log(data)
+		console.log('---------------------------')
+		let ratings = [];
+		for (let i = 0; i < data.length; i++) {
+			let row = data[i].data || {};
+			if (!('phone' in row) || !('message_id' in row) || !('rating' in row)) {
+				window.alert(`Missing mandatory header for element ${i} `);
+				return
+			}
+			let isNewPhone = true;
+			for (let j = 0; j < ratings.length; j++) {
+				let rating = ratings[j];
+				if (rating.phone == row.phone) {
+					rating.message_ratings.push({
+						sent_at: new Date(),
+						msg_id: row.message_id,
+    					rating: row.rating
+    				});
+					isNewPhone = false;
+					break;
+				}
+			}
+			if (isNewPhone === true) {
+				ratings.push({
+					phone: row.phone,
+					message_ratings: [{
+						sent_at: new Date(),
+						msg_id: row.message_id,
+    					rating: row.rating
+    				}]
+				})
+			}
+		}
+		console.log(ratings)
+	}
+
+	handleOnErrorCsvFile(err, file, inputElem, reason) {
+		window.alert(err);
+	}
+
+	handleOnRemoveCsvFile(data) {
+		console.log('---------------------------')
+		console.log(data)
+		console.log('---------------------------')
 	}
 
 	render() {
