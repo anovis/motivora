@@ -180,19 +180,22 @@ def list_users():
 
 @app.route('/users/message_history', methods=['GET'], cors=True)
 def get_message_history():
-  phone = int(app.current_request.query_params.get('phone'))
+  payload = app.current_request.json_body
+  phone = int(payload['phone'])
   user = Users.get(phone)
 
   user_obj = UserActions(**user.to_dict())
   all_messages = []
   for i, daily_message_data in user.message_response.items():
     message = Messages.get(user.message_set, int(daily_message_data["message_sent"]))
+    attrs = list(message.attr_list.as_dict().keys())
     all_messages.append({
       "rating": int(daily_message_data["message"]),
       "timestamp": daily_message_data["timestamp"],
       "data_type": "message",
       "id": message.id,
       "body": message.body,
+      "attrs": attrs,
       "category": "daily",
       "direction": "outgoing"
     })
@@ -229,7 +232,7 @@ def get_message_history():
   )
 
 @app.route('/messages/get_stats', methods=['GET'], cors=True)
-def get_message_stats():
+def direct_message_stats():
   payload = app.current_request.json_body
   message_set = DEFAULT_MESSAGE_SET
   if payload is not None and 'data' in payload and 'message_set' in payload['data']:
