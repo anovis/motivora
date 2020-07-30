@@ -20,6 +20,7 @@ class UserDetails extends Component {
 			ranked_attrs: {},
 			preferred_attrs: [],
 			filters: {
+				search: '',
 				rating: {
 					min: 0,
 					max: 10
@@ -45,6 +46,7 @@ class UserDetails extends Component {
   		this.onCategoryFilter = this.onCategoryFilter.bind(this);
   		this.onDirectionFilter = this.onDirectionFilter.bind(this);
   		this.onAttributeFilter = this.onAttributeFilter.bind(this);
+  		this.onSearch = this.onSearch.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
   		this.roundNumber = this.roundNumber.bind(this);
 	}
@@ -156,6 +158,15 @@ class UserDetails extends Component {
   		filters.categories[name] = (value == 'false');
   		this.setState({filters: filters});
   	}
+  	onSearch(event) {
+	    let target = event.target;
+	    let value = target.value;
+	    let name = target.name;
+
+  		let filters = this.state.filters;
+  		filters.search = value;
+  		this.setState({filters: filters});
+  	}
 
   	onDirectionFilter(event) {
 	    const target = event.target;
@@ -201,6 +212,12 @@ class UserDetails extends Component {
 	  			}
   			}
   			if (hasAttr === false) return false;
+  			if (message.message && !message.message.includes(_this.state.filters.search)) {
+  				return false;
+  			}
+  			if (message.body && !message.body.includes(_this.state.filters.search)) {
+  				return false;
+  			}
   			return true;
   		})
   	}
@@ -304,6 +321,16 @@ class UserDetails extends Component {
         									onChange={ this.onRatingFilter } 
         								/>
 				    				</Form.Group>
+				    				<hr/>
+									<Form.Group>
+				    					<Form.Label>Search in messages:</Form.Label>
+										<Form.Control 
+											type="text" 
+											name="search" 
+											value={this.state.filters.search} 
+											onChange={this.onSearch} 
+										/>
+				    					</Form.Group>
 				    				<hr/>
 									<Form.Group>
 				    					<Form.Label>Filter by category:</Form.Label>
