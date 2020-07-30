@@ -17,6 +17,7 @@ class UserDetails extends Component {
 			smsBody: '',
 			messages: [],
 			ranked_attrs: {},
+			preferred_attrs: [],
 			filters: {
 				rating: {
 					min: 0,
@@ -34,7 +35,7 @@ class UserDetails extends Component {
 			}
 		};
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
-		this.fetchRankedAttrs = this.fetchRankedAttrs.bind(this);
+		this.fetchAttrs = this.fetchAttrs.bind(this);
   		this.handleTypeMessage = this.handleTypeMessage.bind(this);
   		this.handleSendMessage = this.handleSendMessage.bind(this);
   		this.formatTimestamp = this.formatTimestamp.bind(this);
@@ -46,7 +47,7 @@ class UserDetails extends Component {
 	}
 	componentDidMount() {
 		this.fetchMessageHistory();
-		this.fetchRankedAttrs();
+		this.fetchAttrs();
 	}
 	fetchMessageHistory() {
 		let endpoint = Config.api + '/users/message_history';
@@ -63,8 +64,8 @@ class UserDetails extends Component {
 			})
 			.catch((error) => {console.log(error)})
 	}
-	fetchRankedAttrs() {
-		let endpoint = Config.api + '/users/ranked_attrs';
+	fetchAttrs() {
+		let endpoint = Config.api + '/users/attrs';
 		let params = {
 			phone: this.state.phone
 		}
@@ -72,7 +73,8 @@ class UserDetails extends Component {
 			.then((response) => {
 				console.log(response)
 				this.setState({
-					ranked_attrs: response.data.data
+					ranked_attrs: response.data.data.ranked_attrs,
+					preferred_attrs: response.data.data.preferred_attrs,
 				});
 			})
 			.catch((error) => {console.log(error)})
@@ -193,6 +195,15 @@ class UserDetails extends Component {
 						<Row>
 							<Col xs={4}>
 								<b>Participant: +{ this.state.phone }</b>
+				    			<hr/>
+								<b>Preferred attributes:</b>
+								<ul>
+									{
+										this.state.preferred_attrs.map((attr, index) => 
+											<li><b>{ attr }</b></li>
+										)
+									}
+								</ul>
 				    			<hr/>
 								<b>Ratings:</b>
 								<ul>
