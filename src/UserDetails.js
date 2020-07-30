@@ -16,6 +16,7 @@ class UserDetails extends Component {
 			phone: props.match.params.phone,
 			smsBody: '',
 			messages: [],
+			attrs: [],
 			ranked_attrs: {},
 			preferred_attrs: [],
 			filters: {
@@ -31,7 +32,8 @@ class UserDetails extends Component {
 				directions: {
 					incoming: true,
 					outgoing: true
-				}
+				},
+				attributes: {}
 			}
 		};
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
@@ -42,6 +44,7 @@ class UserDetails extends Component {
   		this.onRatingFilter = this.onRatingFilter.bind(this);
   		this.onCategoryFilter = this.onCategoryFilter.bind(this);
   		this.onDirectionFilter = this.onDirectionFilter.bind(this);
+  		this.onAttributeFilter = this.onAttributeFilter.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
   		this.roundNumber = this.roundNumber.bind(this);
 	}
@@ -57,9 +60,20 @@ class UserDetails extends Component {
 		this.setState({loadingData: true});
 		axios.get(endpoint, {params: params})
 			.then((response) => {
+				let attrs = [];
+				response.data.data.map(message => {
+					attrs = attrs.concat(message.attrs).motivoraUnique()
+				});
+				let filters = this.state.filters;
+				attrs.map(attr => {
+					filters.attributes[attr] = true;
+				})
+				console.log(filters)
 				this.setState({
 					messages: response.data.data,
-					loadingData: false
+					attrs: attrs,
+					loadingData: false,
+					filters: filters
 				});
 			})
 			.catch((error) => {console.log(error)})
@@ -151,6 +165,14 @@ class UserDetails extends Component {
   		filters.directions[name] = (value == 'false');
   		this.setState({filters: filters});
   	}
+  	onAttributeFilter(event) {
+	    const target = event.target;
+	    const value = target.value;
+	    const name = target.name;
+  		let filters = this.state.filters;
+  		filters.attributes[name] = (value == 'false');
+  		this.setState({filters: filters});
+  	}
 
   	onRatingFilter(range) {
   		let _this = this;
@@ -169,6 +191,12 @@ class UserDetails extends Component {
   			}
   			if (_this.state.filters.directions[message.direction] === false) {
   				return false;
+  			}
+  			for (let i = 0; i < (message.attrs || []).length; i++) {
+  				let attr = (message.attrs || [])[i];
+	  			if (_this.state.filters.attributes[attr] === false) {
+	  				return false;
+	  			}
   			}
   			return true;
   		})
@@ -233,26 +261,34 @@ class UserDetails extends Component {
 								</div>
 								
 							</Col>
-							<Col xs={4} style={{ height: '500px', overflowY: 'auto' }}>
-								{
-									this.filterMessages().map((message, index) => 
-										<div 
-											key={index}
-											role="alert" 
-											className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
-										>
-											<b><i>{ this.formatTimestamp(message.timestamp) }</i> { (message.rating != null) ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
-											<div className="alert-heading h4">
-			  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 
-			  									
-			  									{ (message.direction !== 'outgoing') ? <FontAwesomeIcon icon={faArrowLeft} size="xs"/>  : null } 
-			  								</div>
-											<p>
-												{ message.body || message.message }
-											</p>
-										</div>
-									)
-								}
+							<Col xs={4}>
+								<h4>{ (this.filterMessages() || []).length } messages displayed</h4>
+								<div style={{ height: '500px', overflowY: 'auto' }}>
+									{
+										this.filterMessages().map((message, index) => 
+											<div 
+												key={index}
+												role="alert" 
+												className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
+											>
+												<b><i>{ this.formatTimestamp(message.timestamp) }</i> { (message.rating != null) ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
+												<span>
+				  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 
+				  									
+				  									{ (message.direction !== 'outgoing') ? <FontAwesomeIcon icon={faArrowLeft} size="xs"/>  : null } 
+				  								</span>
+				  								<div>
+					  								{
+					  									(message.attrs || []).map((attr, j) => <Badge key={j} variant="secondary">{ attr }</Badge>)
+					  								}
+				  								</div>
+												<p>
+													{ message.body || message.message }
+												</p>
+											</div>
+										)
+									}
+								</div>
 							</Col>
 							<Col xs={4}><Form>
 									<Form.Group>
@@ -313,6 +349,24 @@ class UserDetails extends Component {
         									value={this.state.filters.directions.incoming}
 										/>
           							</Form.Group>
+				    				<hr/>
+									<Form.Group>
+				    					<Form.Label>Filter by attribute:</Form.Label>
+				    					{
+				    						this.state.attrs.map((attr, index) => 
+				    							<Form.Check
+				    								key={ index }
+													required
+													name={ attr }
+													label={ attr }
+													onChange={ this.onAttributeFilter }
+		        									checked={this.state.filters.attributes[attr]}
+		        									value={this.state.filters.attributes[attr]}
+												/>
+											)
+				    					}
+										
+          							</Form.Group>
 								</Form>
 
 							</Col>
@@ -324,5 +378,16 @@ class UserDetails extends Component {
 		
 	}
 }
+Array.prototype.motivoraUnique = function() {
+    var a = this.concat();
+    for(var i=0; i<a.length; ++i) {
+        for(var j=i+1; j<a.length; ++j) {
+            if(a[i] === a[j])
+                a.splice(j--, 1);
+        }
+    }
+
+    return a;
+};
 
 export default UserDetails;

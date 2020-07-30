@@ -181,7 +181,7 @@ def list_users():
 @app.route('/users/message_history', methods=['GET'], cors=True)
 def get_message_history():
   payload = app.current_request.json_body
-  phone = int(payload['phone'])
+  phone = int(app.current_request.query_params.get('phone'))
   user = Users.get(phone)
 
   user_obj = UserActions(**user.to_dict())
