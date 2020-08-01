@@ -310,7 +310,8 @@ class UserDetails extends Component {
 									}
 								</div>
 							</Col>
-							<Col xs={4}><Form>
+							<Col xs={4}>
+								<Form>
 									<Form.Group>
 				    					<Form.Label>Filter by rating:</Form.Label>
 				    					<InputRange
@@ -403,7 +404,7 @@ class UserDetails extends Component {
 						</Row>
 					</Container>
 				</div>
-		)
+			)
 		}
 		
 	}

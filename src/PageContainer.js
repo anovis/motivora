@@ -17,6 +17,53 @@ class PageContainer extends Component {
 		super(props);
 		this.state = {};
 	}
+	handleOnDropCsvFile(data) {
+		let ratings = [];
+		for (let i = 0; i < data.length; i++) {
+			let row = data[i].data || {};
+			if (!('phone' in row) || !('message_id' in row) || !('rating' in row)) {
+				window.alert(`Missing mandatory header for element ${i} `);
+				return
+			}
+			let isNewPhone = true;
+			for (let j = 0; j < ratings.length; j++) {
+				let rating = ratings[j];
+				if (rating.phone == row.phone) {
+					rating.message_ratings.push({
+						sent_at: new Date(),
+						msg_id: parseInt(row.message_id),
+    					rating: parseInt(row.rating)
+    				});
+					isNewPhone = false;
+					break;
+				}
+			}
+			if (isNewPhone === true) {
+				if (row.phone) {
+					ratings.push({
+						phone: row.phone,
+						message_ratings: [{
+							sent_at: new Date(),
+							msg_id: parseInt(row.message_id),
+	    					rating: parseInt(row.rating)
+	    				}]
+					});
+				}
+			}
+		}
+		console.log(ratings)
+	}
+
+	handleOnErrorCsvFile(err, file, inputElem, reason) {
+		window.alert(err);
+	}
+
+	handleOnRemoveCsvFile(data) {
+		console.log('---------------------------')
+		console.log(data)
+		console.log('---------------------------')
+	}
+
 
 	render() {
 		return (
@@ -198,54 +245,6 @@ class Table extends Component {
 			}
 			return cell;
 		}
-	}
-
-	handleOnDropCsvFile(data) {
-		console.log('---------------------------')
-		console.log(data)
-		console.log('---------------------------')
-		let ratings = [];
-		for (let i = 0; i < data.length; i++) {
-			let row = data[i].data || {};
-			if (!('phone' in row) || !('message_id' in row) || !('rating' in row)) {
-				window.alert(`Missing mandatory header for element ${i} `);
-				return
-			}
-			let isNewPhone = true;
-			for (let j = 0; j < ratings.length; j++) {
-				let rating = ratings[j];
-				if (rating.phone == row.phone) {
-					rating.message_ratings.push({
-						sent_at: new Date(),
-						msg_id: row.message_id,
-    					rating: row.rating
-    				});
-					isNewPhone = false;
-					break;
-				}
-			}
-			if (isNewPhone === true) {
-				ratings.push({
-					phone: row.phone,
-					message_ratings: [{
-						sent_at: new Date(),
-						msg_id: row.message_id,
-    					rating: row.rating
-    				}]
-				})
-			}
-		}
-		console.log(ratings)
-	}
-
-	handleOnErrorCsvFile(err, file, inputElem, reason) {
-		window.alert(err);
-	}
-
-	handleOnRemoveCsvFile(data) {
-		console.log('---------------------------')
-		console.log(data)
-		console.log('---------------------------')
 	}
 
 	render() {
