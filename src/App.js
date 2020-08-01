@@ -3,6 +3,7 @@ import PageContainer from './PageContainer';
 import UserDetails from './UserDetails';
 import MessageDetails from './MessageDetails';
 import MessageSetForm from './MessageSetForm';
+import CsvUploads from './CsvUploads';
 import { 
 	Navbar, 
 	Nav, 
@@ -37,7 +38,7 @@ class App extends Component {
 					<Nav className="mr-auto">
 						<Nav.Link href="/users">Participants</Nav.Link>
 						<Nav.Link href="/messages">Messages</Nav.Link>
-						<Button href="/add-message-set">Add Message Set</Button>
+						<Nav.Link href="/uploads">Uploads</Nav.Link>
 						<AmplifySignOut />
 					</Nav>
 				</Navbar>
@@ -54,6 +55,7 @@ class App extends Component {
 							<PageContainer activePage="MESSAGES"/>
 						</div>
 					</Route>
+					<Route path="/uploads" component={CsvUploads}/> 
 					<Route path="/add-message-set">
 						<div>
 							<h4 id="page-title">Add Message Set</h4>

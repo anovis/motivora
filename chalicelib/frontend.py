@@ -233,15 +233,15 @@ def get_message_history():
 
 @app.route('/messages/get_stats', methods=['GET'], cors=True)
 def direct_message_stats():
-  payload = app.current_request.json_body
-  message_set = DEFAULT_MESSAGE_SET
-  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
-    message_set = payload['message_set']
-  message = Messages.get(message_set, payload['id'])
+  message_set = app.current_request.query_params.get('phone')
+  if message_set is None:
+    message_set = DEFAULT_MESSAGE_SET
+  message_id = int(app.current_request.query_params.get('id'))
+  message = Messages.get(message_set, message_id)
   stats = MessageActions(message.id, message.message_set).get_stats()
   stats.update(message.to_frontend())
   return Response(
-    body={"message": stats},
+    body=stats,
     status_code=200,
     headers={'Content-Type': 'text/plain'}
   )

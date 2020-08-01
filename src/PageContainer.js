@@ -7,8 +7,7 @@ import axios from 'axios';
 import loader from './images/ajax-loader.gif';
 import tableEditionConfig from './tableEditionConfig.js';
 import { Link } from "react-router-dom";
-import { CSVReader } from 'react-papaparse';
-import { Container, Col, Row } from 'react-bootstrap';
+import MessageDetails from './MessageDetails';
 
 
 class PageContainer extends Component {
@@ -17,76 +16,11 @@ class PageContainer extends Component {
 		super(props);
 		this.state = {};
 	}
-	handleOnDropCsvFile(data) {
-		let ratings = [];
-		for (let i = 0; i < data.length; i++) {
-			let row = data[i].data || {};
-			if (!('phone' in row) || !('message_id' in row) || !('rating' in row)) {
-				window.alert(`Missing mandatory header for element ${i} `);
-				return
-			}
-			let isNewPhone = true;
-			for (let j = 0; j < ratings.length; j++) {
-				let rating = ratings[j];
-				if (rating.phone == row.phone) {
-					rating.message_ratings.push({
-						sent_at: new Date(),
-						msg_id: parseInt(row.message_id),
-    					rating: parseInt(row.rating)
-    				});
-					isNewPhone = false;
-					break;
-				}
-			}
-			if (isNewPhone === true) {
-				if (row.phone) {
-					ratings.push({
-						phone: row.phone,
-						message_ratings: [{
-							sent_at: new Date(),
-							msg_id: parseInt(row.message_id),
-	    					rating: parseInt(row.rating)
-	    				}]
-					});
-				}
-			}
-		}
-		console.log(ratings)
-	}
-
-	handleOnErrorCsvFile(err, file, inputElem, reason) {
-		window.alert(err);
-	}
-
-	handleOnRemoveCsvFile(data) {
-		console.log('---------------------------')
-		console.log(data)
-		console.log('---------------------------')
-	}
 
 
 	render() {
 		return (
 			<div>
-				<hr/>
-				<Container style={{ paddingBottom: '20px' }}>
-					<Row>
-						<Col xs={4}>
-							<p>Expected headers: phone, message_id, rating</p>
-							<CSVReader
-								onDrop={this.handleOnDropCsvFile}
-								onError={this.handleOnErrorCsvFile}
-								addRemoveButton
-								onRemoveFile={this.handleOnRemoveCsvFile}
-								config={{
-									header: true,
-								}}
-							>
-								<span>Drop CSV file here or click to add message ratings.</span>
-							</CSVReader>
-						</Col>
-					</Row>
-				</Container>
 				<hr/>
 				<Table activePage={this.props.activePage}/>
 			</div>
@@ -100,7 +34,8 @@ class Table extends Component {
 		super(props)
 		this.state = {
 			tableData: [],
-			columns: ['phone','response','date']
+			columns: ['phone','response','date'],
+			expanding: []
 		};
 		this.cellEditProp = {
 			USERS: {
@@ -114,6 +49,10 @@ class Table extends Component {
 		};
 		// This binding is necessary to make `this` work in the callback
 		this.handleRowInsertion = this.handleRowInsertion.bind(this);
+		this.isExpandableRow = this.isExpandableRow.bind(this);
+		this.expandRow = this.expandRow.bind(this);
+		this.expandComponent = this.expandComponent.bind(this);
+		
 	}
 
 	componentDidMount() {
@@ -153,7 +92,12 @@ class Table extends Component {
 					loadingData: false
 				});
 			})
-			.catch((error) => {console.log(error)})
+			.catch((error) => {
+				window.alert(error)
+				this.setState({
+					loadingData: false,
+				});
+			})
 	}
 
 	onAfterSaveMessagesCell(row, cellName, cellValue) {
@@ -193,10 +137,6 @@ class Table extends Component {
 			});
 	}
 
-	isExpandableRow(row) {
-		if (row.next_message) return true;
-		else return false;
-	}
 
 	hasInsertRow() {
 		if (this.props.activePage === 'USERS') {
@@ -219,6 +159,30 @@ class Table extends Component {
 	  		return (new Date(date)).toLocaleDateString('en-US', options);
   		}
   	}
+	
+	isExpandableRow(row) {
+		if (this.props.activePage === 'MESSAGES') {
+			return true;
+		} else {
+			return false;
+		}
+
+	}
+  	expandRow(rowId) {
+  		let _this = this;
+  		return function(event) {
+  			if (_this.state.expanding.indexOf(rowId) > -1) {
+  				_this.setState({expanding: []});
+  			} else {
+  				_this.setState({expanding: [rowId]});
+  			}
+  			event.preventDefault();
+  		}
+  	}
+	expandComponent(row) {
+  		let _this = this;
+		return ((_this.state.expanding.indexOf(row.id) > -1) ? <MessageDetails message={ row } /> : null)
+	}
 
 	getDataFormat(activePage, columnName) {
 		let _this = this;
@@ -247,7 +211,7 @@ class Table extends Component {
 
 				} else if (columnName === 'id') {
 
-					return <Link to={`/message-details/${cell}`}>#{ cell } Click to see details</Link>;
+					return <a href="#" onClick={ this.expandRow(cell) }>#{ cell } Click to see details</a>;
 
 				}
 			}
@@ -258,8 +222,9 @@ class Table extends Component {
 	render() {
 		var col = this.state.columns;
 		const options = {
-			expandRowBgColor: 'rgb(249, 104, 104)',
-			onAddRow: this.handleRowInsertion
+			expandRowBgColor: '#ffffff',
+			onAddRow: this.handleRowInsertion,
+			expanding: this.state.expanding
 		};
 		if (this.state.loadingData){
 			return (
@@ -279,6 +244,8 @@ class Table extends Component {
 						exportCSV={ true }
 						striped 
 						hover
+						expandableRow={ this.isExpandableRow }
+        				expandComponent={ this.expandComponent }
 					>
 						{col.map((name, idx) =>
 							<TableHeaderColumn

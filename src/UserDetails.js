@@ -70,7 +70,6 @@ class UserDetails extends Component {
 				attrs.map(attr => {
 					filters.attributes[attr] = true;
 				})
-				console.log(filters)
 				this.setState({
 					messages: response.data.data,
 					attrs: attrs,
@@ -78,7 +77,12 @@ class UserDetails extends Component {
 					filters: filters
 				});
 			})
-			.catch((error) => {console.log(error)})
+			.catch((error) => {
+				window.alert(error)
+				this.setState({
+					loadingData: false,
+				});
+			})
 	}
 	fetchAttrs() {
 		let endpoint = Config.api + '/users/attrs';
