@@ -69,7 +69,7 @@ class PageContainer extends Component {
 		return (
 			<div>
 				<hr/>
-				<Container style={{ padding: '20px' }}>
+				<Container style={{ paddingBottom: '20px' }}>
 					<Row>
 						<Col xs={4}>
 							<p>Expected headers: phone, message_id, rating</p>
@@ -232,15 +232,23 @@ class Table extends Component {
 
 				} else if (columnName === 'phone') {
 
-					return <Link to={`/user-details/${cell}`}>+{ cell }</Link>
+					return <Link to={`/user-details/${cell}`}>+{ cell }</Link>;
 
 				} else if (columnName === 'average_rating') {
-					return <b>{ cell }</b>
+					
+					return <b>{ cell }</b>;
+
 				}
 			} else if (activePage === 'MESSAGES') {
 
 				if ((columnName === 'body_en') || (columnName === 'body_es')) {
-					return <p style={ {whiteSpace: 'pre-wrap'}}>{ cell }</p>
+					
+					return <p style={ {whiteSpace: 'pre-wrap'}}>{ cell }</p>;
+
+				} else if (columnName === 'id') {
+
+					return <Link to={`/message-details/${cell}`}>#{ cell } Click to see details</Link>;
+
 				}
 			}
 			return cell;

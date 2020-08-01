@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import PageContainer from './PageContainer';
 import UserDetails from './UserDetails';
+import MessageDetails from './MessageDetails';
 import MessageSetForm from './MessageSetForm';
 import { 
 	Navbar, 
@@ -60,6 +61,7 @@ class App extends Component {
 						</div>
 					</Route>
 					<Route path="/user-details/:phone" component={UserDetails}/> 
+					<Route path="/message-details/:id" component={MessageDetails}/> 
 				</Switch>
 			</div>
 			</Router>
