@@ -198,7 +198,7 @@ class UserDetails extends Component {
   	filterMessages() {
   		let _this = this;
   		return this.state.messages.filter(message => {
-  			if ((message.rating < _this.state.filters.rating.min) || (message.rating > _this.state.filters.rating.max)) {
+  			if (message.rating && ((message.rating < _this.state.filters.rating.min) || (message.rating > _this.state.filters.rating.max))) {
   				return false;
   			}
   			if (_this.state.filters.categories[message.category] === false) {
@@ -207,15 +207,17 @@ class UserDetails extends Component {
   			if (_this.state.filters.directions[message.direction] === false) {
   				return false;
   			}
-  			let hasAttr = false;
-  			for (let i = 0; i < (message.attrs || []).length; i++) {
-  				let attr = (message.attrs || [])[i];
-	  			if (_this.state.filters.attributes[attr] === true) {
-	  				hasAttr = true;
-	  				break;
+  			if (message.attrs) {
+	  			let hasAttr = false;
+	  			for (let i = 0; i < (message.attrs || []).length; i++) {
+	  				let attr = (message.attrs || [])[i];
+		  			if (_this.state.filters.attributes[attr] === true) {
+		  				hasAttr = true;
+		  				break;
+		  			}
 	  			}
+	  			if (hasAttr === false) return false;
   			}
-  			if (hasAttr === false) return false;
   			if (message.message && !message.message.includes(_this.state.filters.search)) {
   				return false;
   			}
