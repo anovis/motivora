@@ -18,7 +18,6 @@ class MessageDetails extends Component {
 	}
 
 	componentWillReceiveProps(nextProps) {
-		console.log(nextProps)
 		if (nextProps.message) {
 			this.fetchData(nextProps.message);
 		}
