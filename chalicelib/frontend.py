@@ -26,6 +26,7 @@ def list_messages():
   if payload is not None and 'data' in payload and 'message_set' in payload['data']:
     message_set = payload['message_set']
   messages = Messages.query(message_set, Messages.id >= 0)
+  users    = Users.query(message_set, Messages.id >= 0)
   attributes = {}
   for message in messages:
     for attr_name, attr_val in message.attr_list.as_dict().items():
@@ -82,30 +83,33 @@ def update_message():
 @app.route('/messages', methods=['POST'], cors=True)
 def post_messages():
   payload = app.current_request.json_body
+  message_set = payload['data']['message_set']
+  messages = Messages.query(message_set, Messages.id >= 0)
   print(payload)
   try:
     # Create each new message
-    current_largest_id = get_current_largest_message_id(payload['data']['message_set'])
-    for message in payload['data']['messages']:
-      current_largest_id += 1
-      new_message = Messages(
-        id=current_largest_id,
-        message_set=payload['data']['message_set'],
-        attr_list=format_message_attributes_for_model(message['attributes']),
-        total_attr=len(message['attributes']),
-        seq=str(current_largest_id)
-      )
+    for m in payload['data']['messages']:
+      id = m['id']
+      try:
+        message = [elem for elem in messages if elem.id == id][0]
+      except IndexError:
+        message = Messages(
+          id=id,
+          message_set=message_set,
+          attr_list=format_message_attributes_for_model(m['attributes']),
+          total_attr=len(m['attributes'])
+        )
       # Add appropriate message variables depending on what was provided by the user
-      if 'body' in message:
-        new_message.body = message['body']
-      if 'body_en' in message:
-        new_message.body_en = message['body_en']
-      if 'body_es' in message:
-        new_message.body_es = message['body_es']
-      if 'is_active' in message_json:
-        new_message.is_active = (message['is_active'] == 'true')
+      if 'body' in m:
+        message.body = m['body']
+      if 'body_en' in m:
+        message.body_en = m['body_en']
+      if 'body_es' in m:
+        message.body_es = m['body_es']
+      if 'is_active' in m:
+        message.is_active = (m['is_active'] == 'true')
 
-      new_message.save()
+      message.save()
   except Exception as e:
     print(e)
     return Response(
