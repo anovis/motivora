@@ -8,7 +8,7 @@ class Messages(Model):
     id = NumberAttribute(range_key=True)
     message_set = UnicodeAttribute(default='EBNHC',hash_key=True)
     attr_list = MapAttribute()
-    body = UnicodeAttribute()
+    body = UnicodeAttribute(null=True)
     body_en = UnicodeAttribute(null=True)
     body_es = UnicodeAttribute(null=True)
     seq = UnicodeAttribute(null=True)

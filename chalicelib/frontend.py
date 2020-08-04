@@ -83,16 +83,20 @@ def update_message():
 @app.route('/messages', methods=['POST'], cors=True)
 def post_messages():
   payload = app.current_request.json_body
-  message_set = payload['data']['message_set']
-  messages = Messages.query(message_set, Messages.id >= 0)
   print(payload)
+  message_sets = set(elem['message_set'] for elem in payload['data']['messages'])
+  messages = []
+  for message_set in list(message_sets):
+    for m in Messages.query(message_set, Messages.id >= 0):
+      messages.append(m)
   try:
-    # Create each new message
+  # Create each new message
     for m in payload['data']['messages']:
       id = m['id']
-      try:
-        message = [elem for elem in messages if elem.id == id][0]
-      except IndexError:
+      matching_messages = [elem for elem in messages if elem.id == id and elem.message_set == m['message_set']]
+      if len(matching_messages) > 0:
+        message = matching_messages[0]
+      else:
         message = Messages(
           id=id,
           message_set=message_set,
@@ -108,7 +112,6 @@ def post_messages():
         message.body_es = m['body_es']
       if 'is_active' in m:
         message.is_active = (m['is_active'] == 'true')
-
       message.save()
   except Exception as e:
     print(e)
