@@ -553,24 +553,34 @@ class UserActions:
     #   'msg_id': message_being_rated,
     #   'rating': rating (int between 0 and 10)
     #  }, ... ]
-    #
-    # Note that only 1 rated message can be considered per calendar day.
     def update_message_ratings(self, update_arr):
-        user = Users.get(self.phone)
+        user_phones = set(row['phone'] for row in update_arr)
+        users = []
+        for user in Users.batch_get(list(user_phones)):
+            users.append(user)
         for row in update_arr:
+            user = [u for u in users if u.phone == row['phone']][0]
             sent_at = row['sent_at'][0:19]
             if len(sent_at) < 10:
                 print("Could not process sent_at value in row: %s"%(row))
                 continue
             new_message_responses = {}
             found = False
+            # Test if we should be appending or replacing this rating
+            action ="APPEND"
+            sent_at_update_val = sent_at
             for j in sorted(user.message_response.keys(), key=lambda x: int(x)):
                 rating_data = user.message_response[j]
-                if sent_at[0:10] <= rating_data['timestamp'][0:10]:
-                    action = "APPEND"
-                    if (sent_at[0:10] == rating_data['timestamp'][0:10] and rating_data['message_sent'] == row['msg_id']):
-                        action = "REPLACE"
-                    
+                if rating_data['message_sent'] == row['msg_id']:
+                    action = "REPLACE"
+                    found = True
+                    if 'timestamp' in rating_data:
+                        sent_at_update_val = rating_data['timestamp']
+            # Find the correct position to insert the rating
+            for j in sorted(user.message_response.keys(), key=lambda x: int(x)):
+                rating_data = user.message_response[j]
+                if ((action == "APPEND" and sent_at_update_val <= rating_data['timestamp']) or
+                    (action == "REPLACE" and rating_data['message_sent'] == row['msg_id'])):            
                     insert_id = j
                     for k in sorted(user.message_response.keys(), key=lambda x: int(x)):
                         if k < insert_id:
@@ -579,8 +589,8 @@ class UserActions:
                             # Insert current message
                             new_message_responses[k] = {
                                 'message': str(row['rating']),
-                                'timestamp': sent_at,
-                                'message_sent': int(row['msg_id'])
+                                'message_sent': int(row['msg_id']),
+                                'timestamp': sent_at_update_val
                             }
                             # Move previous message to new slot
                             if action == "APPEND":
@@ -593,6 +603,7 @@ class UserActions:
                             new_message_responses[new_id] = user.message_response[k]
                     found = True
                     break
+            # If we didn't find the correct position, append to the end
             if not found:
                 action = "APPEND"
                 insert_id = '0'
@@ -606,11 +617,6 @@ class UserActions:
                                 'message_sent': int(row['msg_id'])
                             }
         
-            # Summarize changes
-            print("sent_at: %s, eval: %s | id = %s, action=%s"%(sent_at, rating_data['timestamp'], insert_id, action))
-            print(new_message_responses)
-            print(user.messages_sent)
-        
             # Make the user update
             user.update(
                     actions=[
@@ -618,6 +624,11 @@ class UserActions:
                         Users.messages_sent.add(int(row['msg_id'])),
                     ]
             )
+            
+            # Summarize changes
+            print("sent_at: %s, eval: %s | id = %s, action=%s"%(sent_at, sent_at_update_val, insert_id, action))
+            print(new_message_responses)
+            print(user.messages_sent)
 
     def log(self, msg):
       print()

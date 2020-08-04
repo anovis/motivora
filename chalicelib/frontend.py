@@ -299,7 +299,7 @@ def send_direct_message_to_user():
   print("add_message_rating")
   payload = app.current_request.json_body
   update_arr   = payload['message_ratings']
-  phone        = payload['phone']
+  phone        = payload['message_ratings'][0]['phone']
   user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
   try:
