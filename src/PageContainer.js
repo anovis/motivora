@@ -8,13 +8,23 @@ import loader from './images/ajax-loader.gif';
 import tableEditionConfig from './tableEditionConfig.js';
 import { Link } from "react-router-dom";
 import MessageDetails from './MessageDetails';
+import { Form, Container, Col, Row } from 'react-bootstrap';
 
 
 class PageContainer extends Component {
 
 	constructor (props) {
 		super(props);
-		this.state = {};
+		this.state = {
+			messageSet: 'EBNHC'
+		};
+		this.handleMessageSetChange = this.handleMessageSetChange.bind(this);
+	}
+	handleMessageSetChange(event) {
+    	const target = event.target;
+    	const value = target.value;
+    	const name = target.name;
+    	this.setState({messageSet: value})
 	}
 
 
@@ -22,7 +32,23 @@ class PageContainer extends Component {
 		return (
 			<div>
 				<hr/>
-				<Table activePage={this.props.activePage}/>
+				<Container>
+					<Row>
+						<Col xs={{ span: 4, offset: 4 }}>
+							<Form>
+			  					<Form.Group>
+			    					<Form.Label>Study</Form.Label>
+									<Form.Control as="select" onChange={this.handleMessageSetChange}>
+			  							<option>EBNHC</option>
+			  							<option>Text4Health</option>
+			  						</Form.Control>
+			  					</Form.Group>
+			  				</Form>
+			  			</Col>
+			  		</Row>
+				</Container>
+				<hr/>
+				<Table activePage={this.props.activePage} messageSet={this.state.messageSet}/>
 			</div>
 		);
 	}
@@ -56,17 +82,16 @@ class Table extends Component {
 	}
 
 	componentDidMount() {
-		this.fetchData(this.props.activePage);
+		this.fetchData(this.props.activePage, this.props.messageSet);
 	}
 
 	componentWillReceiveProps(nextProps) {
-		// Active page changing
-		if(this.props.activePage !== nextProps.activePage) {
-			this.fetchData(nextProps.activePage);
+		if ((this.props.activePage !== nextProps.activePage) || (this.props.messageSet !== nextProps.messageSet)) {
+			this.fetchData(nextProps.activePage, nextProps.messageSet);
 		}
 	}
 
-	fetchData(activePage) {
+	fetchData(activePage, messageSet) {
 		let endpoint;
 		switch(activePage){
 			case'RESPONSES':
@@ -85,7 +110,11 @@ class Table extends Component {
 				console.error('No activePage supplied');
 		}
 		this.setState({loadingData: true});
-		axios.get(endpoint)
+		let params = {
+			message_set: messageSet
+		}
+		console.log(params)
+		axios.get(endpoint, {params: params})
 			.then((response) => {
 				this.setState({
 					tableData: response.data.data,

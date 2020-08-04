@@ -11,10 +11,10 @@ DEFAULT_MESSAGE_SET = "EBNHC"
 # Returns all messages
 @app.route('/messages', methods=['GET'], cors=True)
 def list_messages():
-  payload = app.current_request.json_body
-  message_set = DEFAULT_MESSAGE_SET
-  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
-    message_set = payload['message_set']
+  # In use in the interface
+  message_set = app.current_request.query_params.get('message_set')
+  if message_set is None:
+    message_set = DEFAULT_MESSAGE_SET
   messages = Messages.query(message_set, Messages.id >= 0)
   message_list = [message.to_frontend() for message in messages]
   return {"data":message_list}
@@ -84,14 +84,14 @@ def update_message():
 def post_messages():
   payload = app.current_request.json_body
   print(payload)
-  message_sets = set(elem['message_set'] for elem in payload['data']['messages'])
+  message_sets = set(elem['message_set'] for elem in payload['messages'])
   messages = []
   for message_set in list(message_sets):
     for m in Messages.query(message_set, Messages.id >= 0):
       messages.append(m)
   try:
   # Create each new message
-    for m in payload['data']['messages']:
+    for m in payload['messages']:
       id = m['id']
       matching_messages = [elem for elem in messages if elem.id == id and elem.message_set == m['message_set']]
       if len(matching_messages) > 0:
@@ -112,7 +112,8 @@ def post_messages():
         message.body_es = m['body_es']
       if 'is_active' in m:
         message.is_active = (m['is_active'] == 'true')
-      message.save()
+      #message.save()
+      #TO Jessica: Uncomment here when you feel comfortable
   except Exception as e:
     print(e)
     return Response(
@@ -177,16 +178,17 @@ def post_user():
 # Returns all users
 @app.route('/users', methods=['GET'], cors=True)
 def list_users():
-  payload = app.current_request.json_body
-  message_set = DEFAULT_MESSAGE_SET
-  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
-    message_set = payload['message_set']
+  # In use in the interface
+  message_set = app.current_request.query_params.get('message_set')
+  if message_set is None:
+    message_set = DEFAULT_MESSAGE_SET
   users = Users.scan(Users.message_set == message_set)
   user_list = [user.to_frontend() for user in users]
   return {"data": user_list}
 
 @app.route('/users/message_history', methods=['GET'], cors=True)
 def get_message_history():
+  # In use in the interface
   payload = app.current_request.json_body
   phone = int(app.current_request.query_params.get('phone'))
   user = Users.get(phone)
@@ -240,6 +242,7 @@ def get_message_history():
 
 @app.route('/messages/get_stats', methods=['GET'], cors=True)
 def direct_message_stats():
+  # In use in the interface
   message_set = app.current_request.query_params.get('phone')
   if message_set is None:
     message_set = DEFAULT_MESSAGE_SET
@@ -276,6 +279,7 @@ def get_ranked_attrs():
 # Sends a direct message to a user
 @app.route('/users/send_message', methods=['POST'], cors=True)
 def send_direct_message_to_user():
+  # In use in the interface
   print("send_message")
   payload = app.current_request.json_body
   phone_number = int(payload['phone_number'])
@@ -298,15 +302,20 @@ def send_direct_message_to_user():
   )
 
 @app.route('/users/add_message_rating', methods=['POST'], cors=True)
-def send_direct_message_to_user():
+def add_message_rating():
+  # In use in the interface
   print("add_message_rating")
   payload = app.current_request.json_body
   update_arr   = payload['message_ratings']
-  phone        = payload['message_ratings'][0]['phone']
+  print(update_arr)
+  phone        = int(payload['message_ratings'][0]['phone'])
+  print(phone)
   user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
   try:
-    user_obj.update_message_ratings(update_arr)
+    #user_obj.update_message_ratings(update_arr)
+    #To Jessica: Uncomment this when you are confident with the implementation
+    print("temp")
   except Exception as e:
     print(e)
     return Response(
