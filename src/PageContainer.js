@@ -8,7 +8,7 @@ import loader from './images/ajax-loader.gif';
 import tableEditionConfig from './tableEditionConfig.js';
 import { Link } from "react-router-dom";
 import MessageDetails from './MessageDetails';
-import { Form, Container, Col, Row } from 'react-bootstrap';
+import { Form, Container, Col, Row, Badge } from 'react-bootstrap';
 
 
 class PageContainer extends Component {
@@ -241,6 +241,25 @@ class Table extends Component {
 				} else if (columnName === 'id') {
 
 					return <a href="#" onClick={ this.expandRow(cell) }>#{ cell } Click to see details</a>;
+
+				} else if (columnName === 'attr_list') {
+					if (cell) {
+						try {
+							cell = cell.replace(/\'/g, '"');
+							cell = cell.replace(/True/g, 'true');
+							cell = cell.replace(/False/g, 'false');
+							let attrsDict = JSON.parse(cell)
+							return (
+								<div style={ {whiteSpace: 'pre-wrap'}}>
+									{ Object.keys(attrsDict).map((attr, index) => (attrsDict[attr] === true) ? <span><Badge key={ index} variant="primary">{ attr }</Badge>{ ' '}</span> : null) }
+								</div>
+							);
+
+						} catch (e) {
+							console.log(e)
+							return 'Error while parsing the cell data'
+						}
+					}
 
 				}
 			}
