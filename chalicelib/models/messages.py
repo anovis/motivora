@@ -13,11 +13,27 @@ class Messages(Model):
     body_es = UnicodeAttribute(null=True)
     seq = UnicodeAttribute(null=True)
     total_attr = NumberAttribute()
+    total_sent = NumberAttribute(default=0)
+    total_rated = NumberAttribute(default=0)
+    average_rating = NumberAttribute(default=0)
+    is_active  = BooleanAttribute(default=True)
+
+    # TO BE DEPRECATED
     total_disliked = NumberAttribute(default=0)
     total_liked = NumberAttribute(default=0)
     total_resp = NumberAttribute(default=0)
-    total_sent = NumberAttribute(default=0)
-    is_active  = BooleanAttribute(default=True)
+
+    rating_0 = NumberAttribute(default=0)
+    rating_1 = NumberAttribute(default=0)
+    rating_2 = NumberAttribute(default=0)
+    rating_3 = NumberAttribute(default=0)
+    rating_4 = NumberAttribute(default=0)
+    rating_5 = NumberAttribute(default=0)
+    rating_6 = NumberAttribute(default=0)
+    rating_7 = NumberAttribute(default=0)
+    rating_8 = NumberAttribute(default=0)
+    rating_9 = NumberAttribute(default=0)
+    rating_10 = NumberAttribute(default=0)
 
     def to_json(self):
         return self.to_dict()
@@ -36,7 +52,21 @@ class Messages(Model):
             'total_liked': self.total_liked,
             'total_resp': self.total_resp,
             'total_sent': self.total_sent,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'total_sent': self.total_sent,
+            'total_rated': self.total_rated,
+            'average_rating': self.average_rating,
+            'rating_0': self.rating_0,
+            'rating_1': self.rating_1,
+            'rating_2': self.rating_2,
+            'rating_3': self.rating_3,
+            'rating_4': self.rating_4,
+            'rating_5': self.rating_5,
+            'rating_6': self.rating_6,
+            'rating_7': self.rating_7,
+            'rating_8': self.rating_8,
+            'rating_9': self.rating_9,
+            'rating_10': self.rating_10,
         }
 
     def to_frontend(self):
@@ -51,5 +81,19 @@ class Messages(Model):
             'body': self.body,
             'body_en': self.body_en,
             'body_es': self.body_es,
-            'is_active': self.is_active
+            'is_active': self.is_active,
+            'total_sent': self.total_sent,
+            'total_rated': self.total_rated,
+            'average_rating': self.average_rating,
+            'rating_0': self.rating_0,
+            'rating_1': self.rating_1,
+            'rating_2': self.rating_2,
+            'rating_3': self.rating_3,
+            'rating_4': self.rating_4,
+            'rating_5': self.rating_5,
+            'rating_6': self.rating_6,
+            'rating_7': self.rating_7,
+            'rating_8': self.rating_8,
+            'rating_9': self.rating_9,
+            'rating_10': self.rating_10,
         }

@@ -11,6 +11,14 @@ sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994'
                 integrations=[AwsLambdaIntegration()])
 
 @app.schedule(Rate(1, unit=Rate.HOURS))
+def calculate_stats(event):
+    message_sets = ["EBNHC", "Text4Health"]
+    for message_set in message_sets:
+        print("Computing updated stats for message set: %s"%(message_set))
+        MessageActions().get_all_messages_with_stats(message_set)
+    print("Completed update")
+
+@app.schedule(Rate(1, unit=Rate.HOURS))
 def every_hour(event):
     hour = datetime.now().hour
     user_list = Users.time_index.query(hour, Users.send_message == True)

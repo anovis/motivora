@@ -19,32 +19,77 @@ sentry_sdk.init(dsn='https://dc96193451634aeca124f20398991f16@sentry.io/1446994'
                 integrations=[AwsLambdaIntegration()])
 
 class MessageActions:
-    def __init__(self, message_id, message_set):
-        self.id = message_id
-        self.message_set = message_set
+    def __init__(self):
+        self.init = True
 
-    def get_stats(self):
+    def get_stats(self, message, users=None):
+        if users is None:
+            users = Users.scan(Users.message_set == message.message_set)
         total_sent = 0
         total_rated = 0
         total_rating = 0
-        for user in Users.scan(Users.message_set == self.message_set):
-            if user.message_set != self.message_set:
+        ratings = {
+            'rating_0': 0,
+            'rating_1': 0,
+            'rating_2': 0,
+            'rating_3': 0,
+            'rating_4': 0,
+            'rating_5': 0,
+            'rating_6': 0,
+            'rating_7': 0,
+            'rating_8': 0,
+            'rating_9': 0,
+            'rating_10': 0,
+        }
+        for user in users:
+            if user.message_set != message.message_set:
                 continue
-            if (self.id in user.messages_sent):
+            if (message.id in user.messages_sent):
                 total_sent += 1
                 for k, v in user.message_response.items():
-                    if v['message_sent'] == self.id:
+                    if v['message_sent'] == message.id:
                         total_rated += 1
                         total_rating += int(v['message'])
+                        rating_key = "rating_%s"%(v['message'])
+                        ratings[rating_key] += 1
                         break
         avg_rating = 0
-        if total_rated > 1:
+        if total_rated >= 1:
             avg_rating = total_rating * 1.0 / total_rated
+
+        message.update(actions=[
+            Messages.total_sent.set(total_sent),
+            Messages.total_rated.set(total_rated),
+            Messages.average_rating.set(round(avg_rating, 1)),
+            Messages.rating_0.set(ratings['rating_0']),
+            Messages.rating_1.set(ratings['rating_1']),
+            Messages.rating_2.set(ratings['rating_2']),
+            Messages.rating_3.set(ratings['rating_3']),
+            Messages.rating_4.set(ratings['rating_4']),
+            Messages.rating_5.set(ratings['rating_5']),
+            Messages.rating_6.set(ratings['rating_6']),
+            Messages.rating_7.set(ratings['rating_7']),
+            Messages.rating_8.set(ratings['rating_8']),
+            Messages.rating_9.set(ratings['rating_9']),
+            Messages.rating_10.set(ratings['rating_10'])
+        ])
         return {
             'total_sent': total_sent,
             'total_rated': total_rated,
-            'average_rating': round(avg_rating, 1)
+            'average_rating': round(avg_rating, 1),
+            **ratings
         }
+
+    def get_all_messages_with_stats(self, message_set):
+        users = []
+        for user in Users.scan(Users.message_set == message_set):
+            users.append(user)
+        messages = []
+        for message in Messages.query(message_set, Messages.id >= 0):
+            stats = self.get_stats(message, users)
+            print("[%s] %s"%(message.id, stats))
+            messages.append({**message.to_frontend(), **stats})
+        return messages
 
 class UserActions:
     def __init__(self, phone, **kwargs):
