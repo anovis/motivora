@@ -12,10 +12,9 @@ DEFAULT_MESSAGE_SET = "EBNHC"
 @app.route('/messages', methods=['GET'], cors=True)
 def list_messages():
   # In use in the interface
-  payload = app.current_request.json_body
-  message_set = DEFAULT_MESSAGE_SET
-  if payload is not None and 'data' in payload and 'message_set' in payload['data']:
-    message_set = payload['message_set']
+  message_set = app.current_request.query_params.get('message_set')
+  if message_set is None:
+    message_set = DEFAULT_MESSAGE_SET
   messages = Messages.query(message_set, Messages.id >= 0)
   message_list = [message.to_frontend() for message in messages]
   return {"data":message_list}
