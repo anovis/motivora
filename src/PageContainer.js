@@ -103,7 +103,7 @@ class Table extends Component {
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
-				this.setState({columns:['id','message_set','body_en','body_es', 'is_active', 'attr_list']});
+				this.setState({columns:['id','message_set','body_en','body_es', 'is_active', 'total_sent', 'total_rated', 'average_rating', 'attr_list']});
 				endpoint = Config.api + '/messages';
 				break;
 			default:
