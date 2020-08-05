@@ -624,7 +624,7 @@ class UserActions:
                         Users.messages_sent.add(int(row['msg_id'])),
                     ]
             )
-            
+
             # Summarize changes
             print("sent_at: %s, eval: %s | id = %s, action=%s"%(sent_at, sent_at_update_val, insert_id, action))
             print(new_message_responses)

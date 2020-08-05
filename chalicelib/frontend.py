@@ -92,7 +92,7 @@ def post_messages():
   try:
   # Create each new message
     for m in payload['messages']:
-      id = m['id']
+      id = int(m['id'])
       matching_messages = [elem for elem in messages if elem.id == id and elem.message_set == m['message_set']]
       if len(matching_messages) > 0:
         message = matching_messages[0]
@@ -112,8 +112,7 @@ def post_messages():
         message.body_es = m['body_es']
       if 'is_active' in m:
         message.is_active = (m['is_active'] == 'true')
-      #message.save()
-      #TO Jessica: Uncomment here when you feel comfortable
+      message.save()
   except Exception as e:
     print(e)
     return Response(
@@ -243,9 +242,7 @@ def get_message_history():
 @app.route('/messages/get_stats', methods=['GET'], cors=True)
 def direct_message_stats():
   # In use in the interface
-  message_set = app.current_request.query_params.get('phone')
-  if message_set is None:
-    message_set = DEFAULT_MESSAGE_SET
+  message_set = app.current_request.query_params.get('message_set')
   message_id = int(app.current_request.query_params.get('id'))
   message = Messages.get(message_set, message_id)
   stats = MessageActions(message.id, message.message_set).get_stats()
@@ -313,9 +310,7 @@ def add_message_rating():
   user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
   try:
-    #user_obj.update_message_ratings(update_arr)
-    #To Jessica: Uncomment this when you are confident with the implementation
-    print("temp")
+    user_obj.update_message_ratings(update_arr)
   except Exception as e:
     print(e)
     return Response(
