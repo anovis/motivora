@@ -94,13 +94,14 @@ def post_messages():
     for m in payload['messages']:
       id = int(m['id'])
       matching_messages = [elem for elem in messages if elem.id == id and elem.message_set == m['message_set']]
+      attributes = format_message_attributes_for_model(m['attributes'])
       if len(matching_messages) > 0:
         message = matching_messages[0]
       else:
         message = Messages(
           id=id,
           message_set=message_set,
-          attr_list=format_message_attributes_for_model(m['attributes']),
+          attr_list=attributes,
           total_attr=len(m['attributes'])
         )
       # Add appropriate message variables depending on what was provided by the user
@@ -112,6 +113,8 @@ def post_messages():
         message.body_es = m['body_es']
       if 'is_active' in m:
         message.is_active = (m['is_active'] == 'true')
+      if 'attributes' in m:
+        message.attr_list = attributes
       message.save()
   except Exception as e:
     print(e)
