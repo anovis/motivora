@@ -5,6 +5,8 @@ import loader from './images/ajax-loader.gif';
 import { CSVReader } from 'react-papaparse';
 import { Form, Container, Col, Row, Button } from 'react-bootstrap';
 import {BootstrapTable, TableHeaderColumn} from 'react-bootstrap-table';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 
 class CsvUploads extends Component {
@@ -85,7 +87,7 @@ class CsvUploads extends Component {
 		this.setState({
 			type: 'messages',
 			tableData: messages,
-			columns: ['message_set', 'id', 'is_active', 'body_en', 'body_es', 'attributes']
+			columns: ['uploaded', 'message_set', 'id', 'is_active', 'body_en', 'body_es', 'attributes']
 		});
 	}
 
@@ -105,20 +107,40 @@ class CsvUploads extends Component {
     	const name = target.name;
     	this.setState({type: value})
 	}
-	upload(event) {
-		console.log('upload')
-
+	async upload(event) {
 		if (this.state.type === 'message_ratings') {
 			
 			this.uploadMessageRatings();
 
 		} else if (this.state.type === 'messages') {
-			
-			this.uploadMessages();
+			const CHUNK_SIZE = 50;
+			//1) split the messages into chunks and make sure to make a copy of that (not a reference)
+			let chunks = JSON.parse(JSON.stringify(_chunkArray(this.state.tableData, CHUNK_SIZE)));
+			for (let i = 0; i < chunks.length; i++) {
+				let chunk = chunks[i];
+				let _this = this;
+				await this.uploadMessages(chunk)
+					.then(function() {
+						//Remove uploaded messages from the tableData
+						for (let j = 0; j < chunk.length; j++) {
+							let message = chunk[j];
+							let index = i * CHUNK_SIZE + j;
+							_this.state.tableData[index].uploaded = true;
+						}
+					})
+					.catch(error => {
+	        			window.alert(error);
+						for (let j = 0; j < chunk.length; j++) {
+							let message = chunk[j];
+							let index = i * CHUNK_SIZE + j;
+							_this.state.tableData[index].uploaded = false;
+						}
+						
+					})
+				this.setState({tableData: this.state.tableData});
+			}
 
 		}
-		event.preventDefault();
-
 	}
 
 	uploadMessageRatings() {
@@ -140,23 +162,24 @@ class CsvUploads extends Component {
 	    });
 	}
 	
-	uploadMessages() {
-		console.log('uploadMessages')
+	uploadMessages(messages) {
+		return new Promise(function(resolve, reject) {
+		    const _this = this;
+		    axios.post(Config.api + '/messages', {
+		        messages: messages
+		    })
+		    .then(response => {
+		    	if (response && response.status === 200) {
+		        	resolve(true);
+		    	} else {
+		        	reject('An error occured on the server. Please contact the admin');
+		    	}
+		    })
+		    .catch(error => {
+		        reject(error);
+		    });
+		})
 
-	    const _this = this;
-	    axios.post(Config.api + '/messages', {
-	        messages: this.state.tableData
-	    })
-	    .then(response => {
-	    	if (response && response.status === 200) {
-	        	window.alert('Messages added successfully')
-	    	} else {
-	        	window.alert('An error occured on the server. Please contact the admin');
-	    	}
-	    })
-	    .catch(error => {
-	        window.alert('An error occured on the server. Please contact the admin');
-	    });
 
 	}
 
@@ -164,7 +187,25 @@ class CsvUploads extends Component {
 		if (this.state.type === 'message_ratings') {
 			return 'Expected headers: phone, message_id, rating'
 		} else if (this.state.type === 'messages') {
-			return 'Expected headers: message_set, id, is_active, body_en, body_es, {any attribute}'
+			return 'Expected headers: message_set, id, is_active, body_en, body_es (AND any column other than the previous ones is considered to be an attribute - put 1 if attribute if present or 0 if not)'
+		}
+	}
+	getDataFormat(columnName) {
+		return function(cell, row, enumObject, rowIndex) {
+			if (columnName === 'uploaded') {
+				if (cell === true) {
+					
+					return <FontAwesomeIcon icon={faCheck} size="xl" style={{ color: 'green' }}/>;
+
+				} else if (cell === true) {
+
+					return <FontAwesomeIcon icon={faTimes} size="xl" style={{ color: 'red' }}/>;
+					
+				} else {
+					return cell;
+				}
+			}
+			return cell;
 		}
 	}
 	render() {
@@ -225,6 +266,7 @@ class CsvUploads extends Component {
 										dataField={ name }
 										dataSort={ true }
 										filter={ { type: 'TextFilter', delay: 1000 } }
+										dataFormat={ this.getDataFormat(name).bind(this) }
 									>
 										{ name }
 									</TableHeaderColumn>
@@ -239,5 +281,13 @@ class CsvUploads extends Component {
 		)
 	}
 }
-
+function _chunkArray(arr, chunkSize) {
+	var result = [];
+	if (arr && Array.isArray(arr)) {
+		for (var i = 0; i < arr.length; i += chunkSize) {
+	  		result.push(arr.slice(i, i + chunkSize));
+		}
+	}
+	return result;
+}
 export default CsvUploads;

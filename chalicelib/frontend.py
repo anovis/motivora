@@ -83,7 +83,6 @@ def update_message():
 @app.route('/messages', methods=['POST'], cors=True)
 def post_messages():
   payload = app.current_request.json_body
-  print(payload)
   message_sets = set(elem['message_set'] for elem in payload['messages'])
   messages = []
   for message_set in list(message_sets):
