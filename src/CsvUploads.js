@@ -15,7 +15,8 @@ class CsvUploads extends Component {
 		this.state = {
 			type: 'message_ratings',
 			tableData: [],
-			columns: []
+			columns: [],
+			uploading: false
 		}
 		this.handleOnDropCsvFile = this.handleOnDropCsvFile.bind(this);
 		this.handleOnDropMessageRatingsCsvFile = this.handleOnDropMessageRatingsCsvFile.bind(this);
@@ -108,6 +109,7 @@ class CsvUploads extends Component {
     	this.setState({type: value})
 	}
 	async upload(event) {
+		this.setState({uploading: true});
 		if (this.state.type === 'message_ratings') {
 			
 			this.uploadMessageRatings();
@@ -139,8 +141,8 @@ class CsvUploads extends Component {
 					})
 				this.setState({tableData: this.state.tableData});
 			}
-
 		}
+		this.setState({uploading: false});
 	}
 
 	uploadMessageRatings() {
@@ -212,7 +214,7 @@ class CsvUploads extends Component {
 		var columns = this.state.columns || [];
 		return (
 			<div>
-				<Container style={{ paddingBottom: '20px' }}>
+				<Container style={{ paddingTop: '20px' }}>
 					<Row>
 
 						<Col xs={4}>
@@ -233,10 +235,22 @@ class CsvUploads extends Component {
 			  							:
 			  						null
 			  					}
+			  					{
+			  						(this.state.uploading)
+			  							?
+			  						<div className="ajax-loader-container">
+										<img src={loader} alt="Loader"/>
+									</div>
+										:
+									null
+			  					}
 			  				</Form>
 						</Col>
 						<Col xs={8}>
-							<p>{ this.getWarning() }</p>
+							<div 
+								role="alert" 
+								className="alert alert-warning"
+							>{ this.getWarning() }</div>
 							<CSVReader
 								onDrop={this.handleOnDropCsvFile}
 								onError={this.handleOnErrorCsvFile}
