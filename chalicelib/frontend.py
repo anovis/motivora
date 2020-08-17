@@ -162,6 +162,10 @@ def post_user():
       sendMessage = (payload['send_message'] == 'true');
       user.update(actions=[Users.send_message.set(sendMessage)]) 
 
+    if 'is_real_user' in payload:
+      sendMessage = (payload['is_real_user'] == 'true');
+      user.update(actions=[Users.is_real_user.set(sendMessage)]) 
+
   except Exception as e:
     print(e)
     return Response(
@@ -261,7 +265,7 @@ def get_ranked_attrs():
   user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
   try:
-    ranked_attrs = user_obj.get_scored_attributes(user_obj, user)
+    ranked_attrs = user_obj.get_scored_attributes_for_frontend(user_obj, user)
   except Exception as e:
     print(e)
     return Response(

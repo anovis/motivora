@@ -2,7 +2,7 @@ from chalicelib import app
 from chalice import Rate
 from datetime import datetime
 from chalicelib.models import Users, Invocations
-from chalicelib.actions import UserActions
+from chalicelib.actions import UserActions, MessageActions
 
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration

@@ -32,6 +32,7 @@ class Users(Model):
     attr_scores       = JSONAttribute(null=True)
     preferred_attrs   = UnicodeSetAttribute(default=[])
     created_time      = UTCDateTimeAttribute(default=datetime.now(), null=False)
+    is_real_user      = BooleanAttribute(default=True)
 
     # Message response fields
     message_response  = JSONAttribute(default={}, null=True)
@@ -59,6 +60,7 @@ class Users(Model):
             'weekly_goals_message_response': self.weekly_goals_message_response,
             'direct_message_response': self.direct_message_response,
             'created_time': created_at,
+            'is_real_user': is_real_user
         }
 
     def to_frontend(self):
@@ -78,5 +80,6 @@ class Users(Model):
             'created_time': created_at,
             'num_sent_messages': num_sent_messages,
             'num_rated_messages': num_rated_messages,
-            'average_rating': round(avg_rating, 1)
+            'average_rating': round(avg_rating, 1),
+            'is_real_user': is_real_user
         }

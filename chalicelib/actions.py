@@ -83,7 +83,8 @@ class MessageActions:
     def get_all_messages_with_stats(self, message_set):
         users = []
         for user in Users.scan(Users.message_set == message_set):
-            users.append(user)
+            if user.is_real_user:
+                users.append(user)
         messages = []
         for message in Messages.query(message_set, Messages.id >= 0):
             stats = self.get_stats(message, users)
@@ -443,6 +444,43 @@ class UserActions:
         #    normalized_token_scores[token]['average_score'] = token_scores[token]['absolute_score'] / token_scores[token]['absolute_count']
         #    normalized_token_scores[token]['rareness']      = token_scores[token]['absolute_count'] / len(rated_responses)
         return normalized_attribute_scores#, normalized_token_scores, rareness_scores
+
+    # Returns a dictionary of attributes with unweighted scores for the frontend
+    def get_scored_attributes_for_frontend(self, user_obj, user):
+        # Compute an average score per category the message has associated with it
+        attribute_scores = {}
+        #token_scores = {}
+        #rareness_scores = {}
+        rated_responses = [*user.message_response.keys()]
+        rating_total = 0
+        for msg_sent_idx in rated_responses:
+            msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
+            message = Messages.get(user.message_set, msg_idx)
+            message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            rating_total += message_score
+            attributes = message.attr_list.as_dict()
+            top_ten_idx = max([int(x) for x in user.message_response.keys()]) - 10
+            if (int(msg_sent_idx) > top_ten_idx):
+                attributes["RECENT MESSAGE"] = True
+            for attr, boolean in attributes.items():
+                if not boolean: continue
+                if attr not in attribute_scores:
+                    attribute_scores[attr] = {
+                        'absolute_score': message_score,
+                        'absolute_count': 1
+                    }
+                else:
+                    attribute_scores[attr]['absolute_score'] += message_score
+                    attribute_scores[attr]['absolute_count'] += 1
+        #print(attribute_scores)
+        # Compute final scores for each attribute
+        final_attr_scores = {}
+        for attr, score_hash in attribute_scores.items():
+            final_score = round(attribute_scores[attr]['absolute_score'] / attribute_scores[attr]['absolute_count'], 1)
+            final_attr_scores[attr] = final_score
+        final_attr_scores['MESSAGE'] = round(rating_total / len(rated_responses), 1)
+
+        return final_attr_scores
 
 
     def get_message_score_for_idx(self, message_response, msg_idx):
