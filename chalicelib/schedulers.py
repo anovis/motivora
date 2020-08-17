@@ -20,7 +20,8 @@ def calculate_stats(event):
 
 @app.schedule(Rate(1, unit=Rate.HOURS))
 def every_hour(event):
-    hour = datetime.now().hour
+    # Convert the UTC time to the ET time that is stored in the database
+    hour = get_et_hour()
     user_list = Users.time_index.query(hour, Users.send_message == True)
     print("Fetching users with send_message True and with hour: " + str(hour))
     # Iterate through users for this time
@@ -35,6 +36,12 @@ def every_minute(event):
     for phone_number in phone_numbers:
         user = Users.get(phone_number)
         process_message(user)
+
+def get_et_hour():
+    hour = datetime.now().hour - 4
+    if hour < 0:
+        hour += 24
+    return hour
 
 def process_message(user):
     user_obj = UserActions(**user.to_dict())

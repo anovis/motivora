@@ -10,7 +10,6 @@ import pdb
 import string
 #import nltk
 #from nltk.corpus import stopwords
-#from chalicelib.actions import UserActions
 
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
