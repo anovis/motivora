@@ -70,6 +70,7 @@ class UserDetails extends Component {
 				attrs.map(attr => {
 					filters.attributes[attr] = true;
 				})
+				attrs = attrs.filter(attr => !!attr);
 				this.setState({
 					messages: response.data.data,
 					attrs: attrs,
@@ -145,7 +146,7 @@ class UserDetails extends Component {
   		}
   	}
   	getBadgeColor(rating) {
-  		if (rating >= 8) {
+  		if (rating >= 7) {
   			return 'success';
   		} else if (rating >= 5 ) {
   			return 'warning';
@@ -234,6 +235,11 @@ class UserDetails extends Component {
 			return parseFloat(number.toFixed(2))
   		}
   	}
+  	getDetailledRankings() {
+  		return Object.keys(this.state.ranked_attrs).filter(attr => {
+  			return !['MESSAGE', 'RECENT MESSAGE'].includes(attr);
+  		});
+  	}
 	render() {
 		var messages = this.state.messages;
 		if (this.state.loadingData){
@@ -259,10 +265,20 @@ class UserDetails extends Component {
 									}
 								</ul>
 				    			<hr/>
-								<b>Ratings:</b>
+								<b>Overall ratings:</b>
+								<ul>
+									<li>
+										<b>All messages</b>: <Badge variant={ this.getBadgeColor(this.roundNumber(this.state.ranked_attrs['MESSAGE'])) }>{ this.roundNumber(this.state.ranked_attrs['MESSAGE']) }</Badge>
+									</li>
+									<li>
+										<b>Most recent messages</b>: <Badge variant={ this.getBadgeColor(this.roundNumber(this.state.ranked_attrs['RECENT MESSAGE'])) }>{ this.roundNumber(this.state.ranked_attrs['RECENT MESSAGE']) }</Badge>
+									</li>
+								</ul>
+				    			<hr/>
+								<b>Average ratings by attributes:</b>
 								<ul>
 									{
-										Object.keys(this.state.ranked_attrs).map((key, index) => 
+										this.getDetailledRankings().map((key, index) => 
 											<li key={ index }><b>{ key }</b>: <Badge variant={ this.getBadgeColor(this.roundNumber(this.state.ranked_attrs[key])) }>{ this.roundNumber(this.state.ranked_attrs[key]) }</Badge></li>
 										)
 									}
@@ -362,7 +378,7 @@ class UserDetails extends Component {
         									checked={this.state.filters.categories.weekly_goals}
         									value={this.state.filters.categories.weekly_goals}
 											name="weekly_goals"
-											label="Weekly goals"
+											label="Weekly goals & Progress"
 											onChange={ this.onCategoryFilter }
 										/>
           							</Form.Group>
