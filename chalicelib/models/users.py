@@ -60,7 +60,7 @@ class Users(Model):
             'weekly_goals_message_response': self.weekly_goals_message_response,
             'direct_message_response': self.direct_message_response,
             'created_time': created_at,
-            'is_real_user': is_real_user
+            'is_real_user': self.is_real_user
         }
 
     def to_frontend(self):
@@ -81,5 +81,5 @@ class Users(Model):
             'num_sent_messages': num_sent_messages,
             'num_rated_messages': num_rated_messages,
             'average_rating': round(avg_rating, 1),
-            'is_real_user': is_real_user
+            'is_real_user': self.is_real_user
         }
