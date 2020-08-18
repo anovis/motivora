@@ -109,7 +109,7 @@ class UserDetails extends Component {
 		} else if (message.category === 'weekly_goals') {
 			return 'warning';
 		} else if (message.category === 'weekly_progress') {
-			return 'default';
+			return 'secondary';
 		}
 	}
 	getTextDirection(message) {
