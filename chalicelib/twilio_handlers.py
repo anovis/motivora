@@ -69,12 +69,11 @@ def handle_goal_setting_response():
 
         parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
         phone = parsed_request.get('From')
-        #phone = "18479270519"
-        #parsed_request = {'From': '18479270519', 'Body': '1'}
+        
         user_class = UserActions(phone, **parsed_request)
 
         if user_class.is_user():
-          user_class.handle_goal_setting_message()
+          user_class.handle_weekly_message(**parsed_request.get('Body','').lower())
 
         return Response(
           body='',
