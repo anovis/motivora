@@ -28,7 +28,8 @@ class UserDetails extends Component {
 				categories: {
 					daily: true,
 					direct: true,
-					weekly_goals: true
+					weekly_goals: true,
+					weekly_progress: true
 				},
 				directions: {
 					incoming: true,
@@ -107,6 +108,8 @@ class UserDetails extends Component {
 			return 'primary';
 		} else if (message.category === 'weekly_goals') {
 			return 'warning';
+		} else if (message.category === 'weekly_progress') {
+			return 'default';
 		}
 	}
 	getTextDirection(message) {
@@ -158,7 +161,7 @@ class UserDetails extends Component {
 	    let target = event.target;
 	    let value = target.value;
 	    let name = target.name;
-
+	    console.log(event)
   		let filters = this.state.filters;
   		filters.categories[name] = (value == 'false');
   		this.setState({filters: filters});
@@ -208,7 +211,7 @@ class UserDetails extends Component {
   			if (_this.state.filters.directions[message.direction] === false) {
   				return false;
   			}
-  			if (message.attrs) {
+  			if (message.attrs && message.attrs.length > 0) {
 	  			let hasAttr = false;
 	  			for (let i = 0; i < (message.attrs || []).length; i++) {
 	  				let attr = (message.attrs || [])[i];
@@ -222,7 +225,7 @@ class UserDetails extends Component {
   			if (message.message && !message.message.includes(_this.state.filters.search)) {
   				return false;
   			}
-  			if (message.body && !message.body.includes(_this.state.filters.search)) {
+  			if (message.body && !message.body.toString().includes(_this.state.filters.search)) {
   				return false;
   			}
   			return true;
@@ -378,7 +381,15 @@ class UserDetails extends Component {
         									checked={this.state.filters.categories.weekly_goals}
         									value={this.state.filters.categories.weekly_goals}
 											name="weekly_goals"
-											label="Weekly goals & Progress"
+											label="Weekly goals"
+											onChange={ this.onCategoryFilter }
+										/>
+										<Form.Check
+											required
+        									checked={this.state.filters.categories.weekly_progress}
+        									value={this.state.filters.categories.weekly_progress}
+											name="weekly_progress"
+											label="Weekly Progress"
 											onChange={ this.onCategoryFilter }
 										/>
           							</Form.Group>
