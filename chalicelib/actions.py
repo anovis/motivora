@@ -580,7 +580,7 @@ class UserActions:
         })
         u.save()
         print(message)
-        #self.send_goal_setting_sms(message)
+        self.send_goal_setting_sms(message)
 
 
     def initiate_progress_message(self, u):
@@ -616,7 +616,7 @@ class UserActions:
         })
         u.save()
         print(message)
-        #self.send_goal_setting_sms(message)
+        self.send_goal_setting_sms(message)
 
 
     def get_first_decision_tree(self, type, prev_goal_hash):
@@ -639,18 +639,18 @@ class UserActions:
             return default_decision_tree
 
 
-    def handle_weekly_message(self, val):
+    def handle_weekly_message(self):
         u = Users.get(self.phone)
         if (len(u.weekly_goals_message_response.keys()) == 0):
             self.initiate_goal_setting_message(u)
             return
 
         # Exclude non-numeric responses
-        response_val = val
+        response_val = self.message_received
         try:
             response_val = int(response_val.strip())
         except ValueError:
-            #self.send_goal_setting_sms(self.decision_tree_mistake_text)
+            self.send_goal_setting_sms(self.decision_tree_mistake_text)
             print(self.decision_tree_mistake_text)
             return
 
@@ -713,7 +713,7 @@ class UserActions:
 
         # If no trees were matched, this was an invalid input
         if len(matched_trees) == 0:
-            #self.send_goal_setting_sms(self.decision_tree_mistake_text)
+            self.send_goal_setting_sms(self.decision_tree_mistake_text)
             print(self.decision_tree_mistake_text)
             return
 
@@ -772,7 +772,7 @@ class UserActions:
 
         u.save()
         print(message)
-        #self.send_goal_setting_sms(message)
+        self.send_goal_setting_sms(message)
         
 
     # The handle_message function specifically handles daily motivational text messages
