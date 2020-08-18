@@ -218,16 +218,36 @@ def get_message_history():
     direct_message["category"] = "direct"
     all_messages.append(direct_message)
   for i, weekly_goals_data in user.weekly_goals_message_response.items():
-    for decision_tree_id in weekly_goals_data["decision_tree_ids"]:
-      decision_tree = DecisionTrees.get(decision_tree_id)
+    for message in weekly_goals_data["responses"]:
       all_messages.append({
+        "timestamp": message['timestamp'],
         "data_type": "decision_tree",
-        "id": decision_tree_id,
-        "body": decision_tree.message,
+        "body": message['message'],
+        "attrs": [],
         "category": "weekly_goals",
-        "direction": "outgoing"
+        "direction": message['direction']
       })
+      if 'decision_tree_id' in message:
+        all_messages[-1]['id'] = message['decision_tree_id']
 
+  for i, weekly_goals_data in user.weekly_progress_message_response.items():
+    for message in weekly_goals_data["responses"]:
+      all_messages.append({
+        "timestamp": message['timestamp'],
+        "data_type": "decision_tree",
+        "body": message['message'],
+        "attrs": [],
+        "category": "weekly_progress",
+        "direction": message['direction']
+      })
+      if 'decision_tree_id' in message:
+        all_messages[-1]['id'] = message['decision_tree_id']
+      if 'enabler' in message:
+        all_messages[-1]['enabler'] = message['enabler']
+      if 'barrier' in message:
+        all_messages[-1]['barrier'] = message['barrier']
+
+  print(all_messages)
   m = list(user.messages_sent)
   return Response(
     body={"data": all_messages},

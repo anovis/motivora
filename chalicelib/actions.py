@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import random
 from heapq import nlargest
 import pdb
+import re
 
 import string
 #import nltk
@@ -100,7 +101,7 @@ class UserActions:
 
         # Reminder message config
         self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
-        self.decision_tree_mistake_text = " is not a valid answer. Please try again."
+        self.decision_tree_mistake_text = "I'm sorry. I didn't understand that. Can you re-send your response to the last question with a whole number? If you want to start over, please respond with 9."
         self.days_before_rating_reminder = 3
 
         self.phone = int(phone)
@@ -547,49 +548,232 @@ class UserActions:
     def handle_direct_message(self):
         self.save_direct_message('incoming', self.message_received)
 
-    def handle_goal_setting_message(self):
-        u = Users.get(self.phone)
-        cur_key = '-1'
-        print(u.weekly_goals_message_response.keys())
+    def initiate_goal_setting_message(self, u):
+        past_key = None
+        new_key = 0
+        prev_goal_hash = {
+            'goal_type': None,
+            'goal_subtype': None,
+            'goal_amount': None,
+        }
         if (len(u.weekly_goals_message_response.keys()) > 0):
-            cur_key = sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1]
-        if cur_key not in u.weekly_goals_message_response.keys() or u.weekly_goals_message_response[cur_key]['status'] == 'complete':
-            cur_key = str(int(cur_key) + 1)
-            decision_tree = DecisionTrees.get(200000)
-            u.weekly_goals_message_response[cur_key] = {
-                'goal': self.message_received,
-                'status': 'ongoing',
-                'decision_tree_ids': []
-            }
-            message = decision_tree.message.replace("[ENTER GOAL]", u.weekly_goals_message_response[cur_key]['goal'], 1)
-        else:
-            last_decision_tree_id = u.weekly_goals_message_response[cur_key]['decision_tree_ids'][-1]
-            decision_trees = DecisionTrees.parent_id_index.query(last_decision_tree_id)
-            try:
-                next_choice = int(self.message_received)
-            except ValueError:
-                self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
-                print("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
-                return
-            decision_tree = None
-            for d in decision_trees:
-                print("%s, %s, %s"%(d.min_response_val, d.max_response_val, next_choice))
-                if (d.min_response_val <= next_choice and d.max_response_val >= next_choice):
-                    print("%s, %s"%(d.goal, u.weekly_goals_message_response[cur_key]['goal']))
-                    if (d.goal is None or d.goal.lower() == u.weekly_goals_message_response[cur_key]['goal']):
-                        decision_tree = d
-                        break
-            if decision_tree is None:
-                self.send_goal_setting_sms("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
-                print("'%s'%s"%(self.message_received,self.decision_tree_mistake_text))
-                return
-            message = decision_tree.message
-        u.weekly_goals_message_response[cur_key]['decision_tree_ids'].append(decision_tree.id)
-        if decision_tree.is_terminal:
-            u.weekly_goals_message_response[cur_key]['status'] = 'complete'
+            past_key = str(sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1])
+            new_key = int(past_key) + 1
+            prev_goal_hash = u.weekly_goals_message_response[past_key]
+        decision_tree = self.get_first_decision_tree("goals", prev_goal_hash)
+        u.weekly_goals_message_response[new_key] = {
+            'goal_type': prev_goal_hash['goal_type'],
+            'goal_subtype': prev_goal_hash['goal_subtype'],
+            'goal_amount': prev_goal_hash['goal_amount'],
+            'goal_recommendation': None,
+            'status': 'ongoing',
+            'responses': []
+        }
+        message = decision_tree.message
+        if prev_goal_hash['goal_amount'] is not None:
+            message = decision_tree.message.replace("[GOAL AMOUNT]", str(prev_goal_hash['goal_amount']), 1)
+        u.weekly_goals_message_response[new_key]['responses'].append({
+            'direction': 'outgoing',
+            'message': message,
+            'timestamp': str(datetime.now()),
+            'decision_tree_id': decision_tree.id
+        })
         u.save()
         print(message)
-        self.send_goal_setting_sms(message)
+        #self.send_goal_setting_sms(message)
+
+
+    def initiate_progress_message(self, u):
+        new_key = 0
+        prev_goal_hash = {
+            'goal_type': None,
+            'goal_subtype': None,
+            'goal_amount': None,
+        }
+        if (len(u.weekly_goals_message_response.keys()) > 0):
+            new_key = str(sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1])
+            prev_goal_hash = u.weekly_goals_message_response[new_key]
+        decision_tree = self.get_first_decision_tree("progress", prev_goal_hash)
+        u.weekly_progress_message_response[new_key] = {
+            'goal_type': prev_goal_hash['goal_type'],
+            'goal_subtype': prev_goal_hash['goal_subtype'],
+            'goal_amount': prev_goal_hash['goal_amount'],
+            'enabler': None,
+            'barrier': None,
+            'status': 'ongoing',
+            'decision_tree_ids': [],
+            'responses': []
+        }
+        message = decision_tree.message
+        if prev_goal_hash['goal_amount'] is not None and prev_goal_hash['goal_subtype'] is not None:
+            goal_description = str(prev_goal_hash['goal_amount']) + " " + prev_goal_hash['goal_subtype']
+            message = decision_tree.message.replace("[ENTER GOAL]", goal_description, 1)
+        u.weekly_progress_message_response[new_key]['responses'].append({
+            'direction': 'outgoing',
+            'message': message,
+            'timestamp': str(datetime.now()),
+            'decision_tree_id': decision_tree.id,
+        })
+        u.save()
+        print(message)
+        #self.send_goal_setting_sms(message)
+
+
+    def get_first_decision_tree(self, type, prev_goal_hash):
+        default_decision_tree = None
+        matched_type_decision_tree = None
+        matched_subtype_decision_tree = None
+        for decision_tree in DecisionTrees.query(type, DecisionTrees.is_root == True):
+            if (decision_tree.goal_type == prev_goal_hash['goal_type']):
+                matched_type_decision_tree = decision_tree
+            if (decision_tree.goal_subtype == prev_goal_hash['goal_subtype']):
+                matched_subtype_decision_tree = decision_tree
+            if (decision_tree.goal_type is None and decision_tree.goal_subtype is None):
+                default_decision_tree = decision_tree
+
+        if matched_subtype_decision_tree is not None:
+            return matched_subtype_decision_tree
+        elif matched_type_decision_tree is not None:
+            return matched_type_decision_tree
+        else:
+            return default_decision_tree
+
+
+    def handle_weekly_message(self, val):
+        u = Users.get(self.phone)
+        if (len(u.weekly_goals_message_response.keys()) == 0):
+            self.initiate_goal_setting_message(u)
+            return
+
+        # Exclude non-numeric responses
+        response_val = val
+        try:
+            response_val = int(response_val.strip())
+        except ValueError:
+            #self.send_goal_setting_sms(self.decision_tree_mistake_text)
+            print(self.decision_tree_mistake_text)
+            return
+
+        # Identify what type of message we should be sending
+        cur_key = sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1]
+        cur_progress_key = -1
+        if (len(u.weekly_progress_message_response.keys()) > 0):
+            cur_progress_key = sorted(u.weekly_progress_message_response.keys(), key=lambda x: int(x))[-1]
+        latest_goal_message = u.weekly_goals_message_response[cur_key]
+        type = "goals"
+        last_decision_tree_id = None
+        if (cur_key == cur_progress_key):
+            latest_progress_message = u.weekly_progress_message_response[cur_key]
+            if (latest_progress_message['status'] == 'complete'):
+                self.initiate_goal_setting_message(u)
+                return
+            else:
+                last_decision_tree_id = latest_progress_message['responses'][-1]['decision_tree_id']
+                type = "progress"
+        else:
+            if (latest_goal_message['status'] == 'complete'):
+                self.initiate_progress_message(u)
+                return
+            else:
+                last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
+                type = "goals"
+
+        # Iterate over all decision trees to find the right match
+        last_decision_tree = DecisionTrees.get(type, last_decision_tree_id)
+        decision_trees = DecisionTrees.query(type, DecisionTrees.id > 0)
+        criteria_met = 0
+        matched_trees = {}
+        for decision_tree in decision_trees:
+            if decision_tree.parent_ids is not None:
+                criteria_met += 1
+                if last_decision_tree.id not in decision_tree.parent_ids:
+                    continue
+
+            if decision_tree.min_response_val is not None:
+                criteria_met += 1
+                if response_val < decision_tree.min_response_val or response_val > decision_tree.max_response_val:
+                    continue
+
+            if decision_tree.goal_type is not None:
+                criteria_met += 1
+                if latest_goal_message['goal_type'] != decision_tree.goal_type:
+                    continue
+
+            if decision_tree.goal_subtype is not None:
+                criteria_met += 1
+                if latest_goal_message['goal_subtype'] != decision_tree.goal_subtype:
+                    continue  
+
+            if decision_tree.min_goal_amount is not None:
+                criteria_met += 1
+                if latest_goal_message['goal_amount'] < decision_tree.min_goal_amount or response_val > decision_tree.max_goal_amount:
+                    continue
+
+            matched_trees[str(criteria_met)] = decision_tree
+
+        # If no trees were matched, this was an invalid input
+        if len(matched_trees) == 0:
+            #self.send_goal_setting_sms(self.decision_tree_mistake_text)
+            print(self.decision_tree_mistake_text)
+            return
+
+        # Otherwise, we can move forward
+        decision_tree_criteria_met = sorted(matched_trees.keys(), key=lambda x: int(x))[-1]
+        decision_tree = matched_trees[decision_tree_criteria_met]
+
+        # First, record the incoming message
+        incoming_message = {
+            'direction': 'incoming',
+            'message': response_val,
+            'timestamp': str(datetime.now()),
+        }
+        if (type == "goals"):
+            u.weekly_goals_message_response[cur_key]['responses'].append(incoming_message)
+        else:
+            u.weekly_progress_message_response[cur_key]['responses'].append(incoming_message)
+
+        # Then compute the outgoing message
+        message = decision_tree.message
+        if latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT PLUS" in message:
+            m = re.search("\[GOAL AMOUNT PLUS (.*)\]", message)
+            recommended_goal_amount = int(m.group(1)) + latest_goal_message['goal_amount']
+            message = message[:m.start()] + str(recommended_goal_amount) + message[m.end():]
+            u.weekly_goals_message_response[cur_key]['goal_recommendation'] = recommended_goal_amount
+
+        # Save the outgoing message to the responses hash
+        update_hash = u.weekly_goals_message_response[cur_key]
+        if type == 'progress':
+            update_hash = u.weekly_progress_message_response[cur_key]
+        update_hash['responses'].append({
+            'direction': 'outgoing',
+            'message': message,
+            'timestamp': str(datetime.now()),
+            'decision_tree_id': decision_tree.id,
+        })
+
+        # Record additional properties, based on the decision tree
+        if decision_tree.is_terminal:
+            update_hash['status'] = 'complete'
+        if decision_tree.set_goal_type is not None:
+            update_hash['goal_type'] = decision_tree.set_goal_type
+        if decision_tree.set_goal_subtype is not None:
+            update_hash['goal_subtype'] = decision_tree.set_goal_subtype
+        if decision_tree.set_goal_amount is not None: # Only happens in the goals type
+            if decision_tree.set_goal_amount == "RECOMMENDATION":
+                update_hash['goal_amount'] = u.weekly_goals_message_response[cur_key]['goal_recommendation']
+            else:
+                update_hash['goal_amount'] = response_val
+        if decision_tree.set_enabler is not None:  # Only happens in the progress type
+            update_hash['enabler'] = decision_tree.set_enabler
+            update_hash['responses'][-1]['enabler'] = decision_tree.set_enabler 
+        if decision_tree.set_barrier is not None: # Only happens in the progress type
+            update_hash['barrier'] = decision_tree.set_barrier
+            update_hash['responses'][-1]['barrier'] = decision_tree.set_barrier
+
+        u.save()
+        print(message)
+        #self.send_goal_setting_sms(message)
+        
 
     # The handle_message function specifically handles daily motivational text messages
     def handle_message(self):
@@ -620,7 +804,11 @@ class UserActions:
                     return False
             # Create a new response entry
             new_dict = u.message_response
-            new_dict[len(new_dict)]= {'message': self.message_received, "timestamp": str(datetime.now()), "message_sent": u.prev_message}
+            new_dict[len(new_dict)]= {
+                'message': self.message_received,
+                'timestamp': str(datetime.now()),
+                'message_sent': u.prev_message
+            }
             u.update(actions=[
                Users.message_response.set(new_dict)
             ])

@@ -37,11 +37,40 @@ def every_minute(event):
         user = Users.get(phone_number)
         process_message(user)
 
+@app.schedule(Rate(1, unit=Rate.HOURS))
+def send_weekly_messages(event):
+    # Convert the UTC time to the ET time that is stored in the database
+    goal_message_sent_day_of_week = 0
+    progress_message_sent_day_of_week = 3
+    cur_day_of_week = datetime.today().weekday()
+    hours = get_weekly_message_hour()
+    for hour in hours:
+        user_list = Users.time_index.query(hour, Users.send_message == True)
+        print("Fetching users with send_message True and with hour: " + str(hour))
+        # Iterate through users for this time
+        for user in user_list:
+            if user.message_set != "Text4Health":
+                continue
+            user_obj = UserActions(**user.to_dict())
+            if cur_day_of_week == goal_message_sent_day_of_week:
+                user_obj.initiate_goal_setting_message(user)
+            if cur_day_of_week == progress_message_sent_day_of_week:
+                user_obj.initiate_progress_message(user)
+
 def get_et_hour():
     hour = datetime.now().hour - 4
     if hour < 0:
         hour += 24
     return hour
+
+def get_weekly_message_hour():
+    hour = get_et_hour()
+    if hour < 13:
+        return [hour - 2]
+    elif hour >= 13 and hour <= 18:
+        return [hour + 2, hour - 2]
+    else:
+        return [hour + 2]
 
 def process_message(user):
     user_obj = UserActions(**user.to_dict())

@@ -38,6 +38,7 @@ class Users(Model):
     message_response  = JSONAttribute(default={}, null=True)
     weekly_goals_message_response  = JSONAttribute(default={}, null=True)
     direct_message_response  = JSONAttribute(default={}, null=True)
+    weekly_progress_message_response  = JSONAttribute(default={}, null=True)
 
     # Indices
     time_index        = TimeIndex()
@@ -58,6 +59,7 @@ class Users(Model):
             'attr_scores': self.attr_scores,
             'preferred_attrs': self.preferred_attrs,
             'weekly_goals_message_response': self.weekly_goals_message_response,
+            'weekly_progress_message_response': self.weekly_progress_message_response,
             'direct_message_response': self.direct_message_response,
             'created_time': created_at,
             'is_real_user': self.is_real_user
