@@ -7,6 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import InputRange from 'react-input-range';
 import 'react-input-range/lib/css/index.css';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 class UserDetails extends Component {
@@ -37,7 +39,9 @@ class UserDetails extends Component {
 				},
 				attributes: {},
 				enablers: {},
-				barriers: {}
+				barriers: {},
+				startDate: _getLastWeek(),
+				endDate: new Date()
 			},
 			enablers: [],
 			barriers: []
@@ -53,6 +57,7 @@ class UserDetails extends Component {
   		this.onAttributeFilter = this.onAttributeFilter.bind(this);
   		this.onEnablerFilter = this.onEnablerFilter.bind(this);
   		this.onBarrierFilter = this.onBarrierFilter.bind(this);
+  		this.onDateFilterChange = this.onDateFilterChange.bind(this);
   		this.onSearch = this.onSearch.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
   		this.roundNumber = this.roundNumber.bind(this);
@@ -232,12 +237,22 @@ class UserDetails extends Component {
   		this.setState({filters: filters});
   	}
 
+
   	onRatingFilter(range) {
   		let _this = this;
   		let filters = this.state.filters;
   		filters.rating = range;
   		this.setState({filters: filters});
   	}
+  	
+  	onDateFilterChange(dates) {
+		const [start, end] = dates;
+  		let filters = this.state.filters;
+  		filters.startDate = start;
+  		filters.endDate = end;
+  		this.setState({filters: filters});
+  	}
+
   	filterMessages() {
   		let _this = this;
   		return this.state.messages.filter(message => {
@@ -272,6 +287,10 @@ class UserDetails extends Component {
   			}
   			if (message.body && !message.body.toString().includes(_this.state.filters.search)) {
   				return false;
+  			}
+  			if (message.timestamp) {
+  				let date = new Date(message.timestamp);
+  				return (date <= this.state.filters.endDate) && (date >= this.state.filters.startDate);
   			}
   			return true;
   		})
@@ -353,7 +372,7 @@ class UserDetails extends Component {
 							</Col>
 							<Col xs={4}>
 								<h4>{ (this.filterMessages() || []).length } messages displayed</h4>
-								<div style={{ height: '700px', overflowY: 'auto' }}>
+								<div style={{ maxHeight: '1000px', overflowY: 'auto' }}>
 									{
 										this.filterMessages().map((message, index) => 
 											<div 
@@ -396,6 +415,16 @@ class UserDetails extends Component {
 							</Col>
 							<Col xs={4}>
 								<Form>
+									<div style={{marginBottom: '10px'}}>
+										<DatePicker
+											selected={this.state.filters.startDate}
+											onChange={this.onDateFilterChange}
+											startDate={this.state.filters.startDate}
+											endDate={this.state.filters.endDate}
+											selectsRange
+											inline
+										/>
+									</div>
 									<Form.Group>
 				    					<Form.Label>Filter by rating:</Form.Label>
 				    					<InputRange
@@ -546,5 +575,10 @@ Array.prototype.motivoraUnique = function() {
 
     return a;
 };
+function _getLastWeek() {
+	var today = new Date();
+	var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+	return lastWeek;
+}
 
 export default UserDetails;
