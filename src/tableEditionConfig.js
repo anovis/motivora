@@ -16,7 +16,8 @@ const config = {
 		lang_code: { type: 'select', options: { values: ['en', 'es'] } },
 		num_sent_messages: false,
 		num_rated_messages: false,
-		average_rating: false
+		average_rating: false,
+		is_real_user: { type: 'checkbox', options: { values: 'true:false' }} 
 	}
 
 }

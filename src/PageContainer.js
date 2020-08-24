@@ -9,6 +9,8 @@ import tableEditionConfig from './tableEditionConfig.js';
 import { Link } from "react-router-dom";
 import MessageDetails from './MessageDetails';
 import { Form, Container, Col, Row, Badge } from 'react-bootstrap';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faCheck, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 
 class PageContainer extends Component {
@@ -99,7 +101,7 @@ class Table extends Component {
 				endpoint = Config.api + '/responses';
 				break;
 			case'USERS':
-				this.setState({columns:['created_time', 'phone','message_set','average_rating', 'time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages']});
+				this.setState({columns:['created_time', 'phone','message_set','average_rating', 'time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages', 'is_real_user']});
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
@@ -231,6 +233,18 @@ class Table extends Component {
 					
 					return <b>{ cell }</b>;
 
+				} else if ((columnName === 'send_message') || (columnName === 'is_real_user')) {
+					if (cell == true) {
+						
+						return <FontAwesomeIcon icon={faCheck} size="xl" style={{ color: 'green' }}/>;
+
+					} else if (cell == false) {
+
+						return <FontAwesomeIcon icon={faTimes} size="xl" style={{ color: 'red' }}/>;
+						
+					} else {
+						return cell;
+					}
 				}
 			} else if (activePage === 'MESSAGES') {
 
