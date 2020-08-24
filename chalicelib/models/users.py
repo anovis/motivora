@@ -72,7 +72,9 @@ class Users(Model):
         total_rating = 0
         for i, response_data in self.message_response.items():
             total_rating += int(response_data['message'])
-        avg_rating = total_rating * 1.0 / num_rated_messages
+        avg_rating = None
+        if num_rated_messages > 0:
+            avg_rating = round(total_rating * 1.0 / num_rated_messages, 1)
         return {
             'phone': self.phone,
             'time': self.time,
@@ -82,6 +84,6 @@ class Users(Model):
             'created_time': created_at,
             'num_sent_messages': num_sent_messages,
             'num_rated_messages': num_rated_messages,
-            'average_rating': round(avg_rating, 1),
+            'average_rating': avg_rating,
             'is_real_user': self.is_real_user
         }
