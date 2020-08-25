@@ -7,6 +7,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
 import InputRange from 'react-input-range';
 import 'react-input-range/lib/css/index.css';
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 
 class UserDetails extends Component {
@@ -35,8 +37,14 @@ class UserDetails extends Component {
 					incoming: true,
 					outgoing: true
 				},
-				attributes: {}
-			}
+				attributes: {},
+				enablers: {},
+				barriers: {},
+				startDate: _getLastWeek(),
+				endDate: new Date()
+			},
+			enablers: [],
+			barriers: []
 		};
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
 		this.fetchAttrs = this.fetchAttrs.bind(this);
@@ -47,6 +55,9 @@ class UserDetails extends Component {
   		this.onCategoryFilter = this.onCategoryFilter.bind(this);
   		this.onDirectionFilter = this.onDirectionFilter.bind(this);
   		this.onAttributeFilter = this.onAttributeFilter.bind(this);
+  		this.onEnablerFilter = this.onEnablerFilter.bind(this);
+  		this.onBarrierFilter = this.onBarrierFilter.bind(this);
+  		this.onDateFilterChange = this.onDateFilterChange.bind(this);
   		this.onSearch = this.onSearch.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
   		this.roundNumber = this.roundNumber.bind(this);
@@ -64,17 +75,36 @@ class UserDetails extends Component {
 		axios.get(endpoint, {params: params})
 			.then((response) => {
 				let attrs = [];
+				let enablers = this.state.enablers || [];
+				let barriers = this.state.barriers || [];
 				response.data.data.map(message => {
-					attrs = attrs.concat(message.attrs).motivoraUnique()
+					if (message.attrs) {
+						attrs = attrs.concat(message.attrs).motivoraUnique();
+					}
+					if (message.barrier) {
+						barriers.push(message.barrier);
+						barriers = barriers.motivoraUnique();
+					}
+					if (message.enabler) {
+						enablers.push(message.enabler);
+						enablers = enablers.motivoraUnique();
+					}
 				});
 				let filters = this.state.filters;
 				attrs.map(attr => {
 					filters.attributes[attr] = true;
-				})
-				attrs = attrs.filter(attr => !!attr);
+				});
+				enablers.map(val => {
+					filters.enablers[val] = true;
+				});
+				barriers.map(val => {
+					filters.barriers[val] = true;
+				});
 				this.setState({
 					messages: response.data.data,
 					attrs: attrs,
+					enablers: enablers,
+					barriers: barriers,
 					loadingData: false,
 					filters: filters
 				});
@@ -93,7 +123,6 @@ class UserDetails extends Component {
 		}
 		axios.get(endpoint, {params: params})
 			.then((response) => {
-				console.log(response)
 				this.setState({
 					ranked_attrs: response.data.data.ranked_attrs,
 					preferred_attrs: response.data.data.preferred_attrs,
@@ -161,7 +190,6 @@ class UserDetails extends Component {
 	    let target = event.target;
 	    let value = target.value;
 	    let name = target.name;
-	    console.log(event)
   		let filters = this.state.filters;
   		filters.categories[name] = (value == 'false');
   		this.setState({filters: filters});
@@ -192,6 +220,23 @@ class UserDetails extends Component {
   		filters.attributes[name] = (value == 'false');
   		this.setState({filters: filters});
   	}
+  	onEnablerFilter(event) {
+	    const target = event.target;
+	    const value = target.value;
+	    const name = target.name;
+  		let filters = this.state.filters;
+  		filters.enablers[name] = (value == 'false');
+  		this.setState({filters: filters});
+  	}
+  	onBarrierFilter(event) {
+	    const target = event.target;
+	    const value = target.value;
+	    const name = target.name;
+  		let filters = this.state.filters;
+  		filters.barriers[name] = (value == 'false');
+  		this.setState({filters: filters});
+  	}
+
 
   	onRatingFilter(range) {
   		let _this = this;
@@ -199,6 +244,15 @@ class UserDetails extends Component {
   		filters.rating = range;
   		this.setState({filters: filters});
   	}
+  	
+  	onDateFilterChange(dates) {
+		const [start, end] = dates;
+  		let filters = this.state.filters;
+  		filters.startDate = start;
+  		filters.endDate = end;
+  		this.setState({filters: filters});
+  	}
+
   	filterMessages() {
   		let _this = this;
   		return this.state.messages.filter(message => {
@@ -209,6 +263,12 @@ class UserDetails extends Component {
   				return false;
   			}
   			if (_this.state.filters.directions[message.direction] === false) {
+  				return false;
+  			}
+  			if (_this.state.filters.enablers[message.enabler] === false) {
+  				return false;
+  			}
+  			if (_this.state.filters.barriers[message.barrier] === false) {
   				return false;
   			}
   			if (message.attrs && message.attrs.length > 0) {
@@ -227,6 +287,10 @@ class UserDetails extends Component {
   			}
   			if (message.body && !message.body.toString().includes(_this.state.filters.search)) {
   				return false;
+  			}
+  			if (message.timestamp) {
+  				let date = new Date(message.timestamp);
+  				return (date <= this.state.filters.endDate) && (date >= this.state.filters.startDate);
   			}
   			return true;
   		})
@@ -308,7 +372,7 @@ class UserDetails extends Component {
 							</Col>
 							<Col xs={4}>
 								<h4>{ (this.filterMessages() || []).length } messages displayed</h4>
-								<div style={{ height: '500px', overflowY: 'auto' }}>
+								<div style={{ maxHeight: '1000px', overflowY: 'auto' }}>
 									{
 										this.filterMessages().map((message, index) => 
 											<div 
@@ -327,6 +391,20 @@ class UserDetails extends Component {
 					  									(message.attrs || []).map((attr, j) => <Badge key={j} variant="secondary">{ attr }</Badge>)
 					  								}
 				  								</div>
+				  								{
+				  									message.barrier 
+				  										?
+				  									<Badge variant="danger">Barrier: { message.barrier }</Badge>
+				  										:
+				  									null
+				  								}
+				  								{
+				  									message.enabler 
+				  										?
+				  									<Badge variant="success">Enabler: { message.enabler }</Badge>
+				  										:
+				  									null
+				  								}
 												<p>
 													{ message.body || message.message }
 												</p>
@@ -337,6 +415,16 @@ class UserDetails extends Component {
 							</Col>
 							<Col xs={4}>
 								<Form>
+									<div style={{marginBottom: '10px'}}>
+										<DatePicker
+											selected={this.state.filters.startDate}
+											onChange={this.onDateFilterChange}
+											startDate={this.state.filters.startDate}
+											endDate={this.state.filters.endDate}
+											selectsRange
+											inline
+										/>
+									</div>
 									<Form.Group>
 				    					<Form.Label>Filter by rating:</Form.Label>
 				    					<InputRange
@@ -431,6 +519,40 @@ class UserDetails extends Component {
 				    					}
 										
           							</Form.Group>
+				    				<hr/>
+									<Form.Group>
+				    					<Form.Label>Filter by enabler:</Form.Label>
+				    					{
+				    						this.state.enablers.map((val, index) => 
+				    							<Form.Check
+				    								key={ index }
+													required
+													name={ val }
+													label={ val }
+													onChange={ this.onEnablerFilter }
+		        									checked={this.state.filters.enablers[val]}
+		        									value={this.state.filters.enablers[val]}
+												/>
+											)
+				    					}
+          							</Form.Group>
+				    				<hr/>
+									<Form.Group>
+				    					<Form.Label>Filter by barrier:</Form.Label>
+				    					{
+				    						this.state.barriers.map((val, index) => 
+				    							<Form.Check
+				    								key={ index }
+													required
+													name={ val }
+													label={ val }
+													onChange={ this.onBarrierFilter }
+		        									checked={this.state.filters.barriers[val]}
+		        									value={this.state.filters.barriers[val]}
+												/>
+											)
+				    					}
+          							</Form.Group>
 								</Form>
 
 							</Col>
@@ -453,5 +575,10 @@ Array.prototype.motivoraUnique = function() {
 
     return a;
 };
+function _getLastWeek() {
+	var today = new Date();
+	var lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+	return lastWeek;
+}
 
 export default UserDetails;

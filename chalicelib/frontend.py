@@ -45,7 +45,6 @@ def update_message():
     message_set = payload['message_set']
   message_id = int(app.current_request.json_body['data']['id'])
   message_json = app.current_request.json_body['data']
-  print(message_json)
   try:
     message = Messages.get(message_set, message_id)
     if 'body' in message_json:
@@ -247,7 +246,6 @@ def get_message_history():
       if 'barrier' in message:
         all_messages[-1]['barrier'] = message['barrier']
 
-  print(all_messages)
   m = list(user.messages_sent)
   return Response(
     body={"data": all_messages},
@@ -330,9 +328,7 @@ def add_message_rating():
   print("add_message_rating")
   payload = app.current_request.json_body
   update_arr   = payload['message_ratings']
-  print(update_arr)
   phone        = int(payload['message_ratings'][0]['phone'])
-  print(phone)
   user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
   try:

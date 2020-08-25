@@ -195,11 +195,11 @@ class CsvUploads extends Component {
 	getDataFormat(columnName) {
 		return function(cell, row, enumObject, rowIndex) {
 			if (columnName === 'uploaded') {
-				if (cell === true) {
+				if (cell == true) {
 					
 					return <FontAwesomeIcon icon={faCheck} size="xl" style={{ color: 'green' }}/>;
 
-				} else if (cell === true) {
+				} else if (cell == false) {
 
 					return <FontAwesomeIcon icon={faTimes} size="xl" style={{ color: 'red' }}/>;
 					
