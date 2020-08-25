@@ -17,6 +17,7 @@ const config = {
 		num_sent_messages: false,
 		num_rated_messages: false,
 		average_rating: false,
+		preferred_attrs: { type: 'textarea'},
 		is_real_user: { type: 'checkbox', options: { values: 'true:false' }} 
 	}
 

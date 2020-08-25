@@ -101,7 +101,7 @@ class Table extends Component {
 				endpoint = Config.api + '/responses';
 				break;
 			case'USERS':
-				this.setState({columns:['created_time', 'phone','message_set','average_rating', 'time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages', 'is_real_user']});
+				this.setState({columns:['created_time', 'phone','message_set','average_rating', 'time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages', 'is_real_user', 'preferred_attrs']});
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
@@ -115,7 +115,6 @@ class Table extends Component {
 		let params = {
 			message_set: messageSet
 		}
-		console.log(params)
 		axios.get(endpoint, {params: params})
 			.then((response) => {
 				this.setState({
@@ -148,7 +147,11 @@ class Table extends Component {
 		let payload = {
 			phone: row.phone
 		};
-		payload[cellName] = cellValue;
+		if ((cellName === 'preferred_attrs') && cellValue) {
+			payload[cellName] = cellValue.split(",");
+		} else {
+			payload[cellName] = cellValue;
+		}
 		axios.post(Config.api + '/user', payload)
 			.then(function (response) {console.log('onAfterSaveUsersCell', response)})
 			.catch(function (error) {
@@ -157,6 +160,9 @@ class Table extends Component {
 	}
 	handleRowInsertion(userData) {
 		const _this = this;
+		if (userData.preferred_attrs) {
+			userData.preferred_attrs = userData.preferred_attrs.split(",");
+		}
 		axios.post(Config.api + '/user', userData)
 			.then(function (response) {
 				if (response.status === 200) {
@@ -236,15 +242,27 @@ class Table extends Component {
 				} else if ((columnName === 'send_message') || (columnName === 'is_real_user')) {
 					if (cell == true) {
 						
-						return <FontAwesomeIcon icon={faCheck} size="xl" style={{ color: 'green' }}/>;
+						return <FontAwesomeIcon icon={faCheck} size="lg" style={{ color: 'green' }}/>;
 
 					} else if (cell == false) {
 
-						return <FontAwesomeIcon icon={faTimes} size="xl" style={{ color: 'red' }}/>;
+						return <FontAwesomeIcon icon={faTimes} size="lg" style={{ color: 'red' }}/>;
 						
 					} else {
 						return cell;
 					}
+				} else if (columnName === 'preferred_attrs') {
+					if (cell) {
+						if (!Array.isArray(cell)) {
+							cell = cell.split(",");
+						}
+						return (
+							<div style={ {whiteSpace: 'pre-wrap'}}>
+								{ cell.map((attr, index) => <span><Badge key={ index} variant="primary">{ attr }</Badge>{ ' '}</span>) }
+							</div>
+						)
+					}
+
 				}
 			} else if (activePage === 'MESSAGES') {
 

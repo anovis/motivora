@@ -197,11 +197,11 @@ class CsvUploads extends Component {
 			if (columnName === 'uploaded') {
 				if (cell == true) {
 					
-					return <FontAwesomeIcon icon={faCheck} size="xl" style={{ color: 'green' }}/>;
+					return <FontAwesomeIcon icon={faCheck} size="lg" style={{ color: 'green' }}/>;
 
 				} else if (cell == false) {
 
-					return <FontAwesomeIcon icon={faTimes} size="xl" style={{ color: 'red' }}/>;
+					return <FontAwesomeIcon icon={faTimes} size="lg" style={{ color: 'red' }}/>;
 					
 				} else {
 					return cell;
