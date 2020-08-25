@@ -82,6 +82,7 @@ class Users(Model):
             'send_message': self.send_message,
             'lang_code': self.lang_code,
             'created_time': created_at,
+            'preferred_attrs': list(self.preferred_attrs),
             'num_sent_messages': num_sent_messages,
             'num_rated_messages': num_rated_messages,
             'average_rating': avg_rating,
