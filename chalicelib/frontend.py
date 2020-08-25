@@ -88,40 +88,39 @@ def post_messages():
   for message_set in list(message_sets):
     for m in Messages.query(message_set, Messages.id >= 0):
       messages.append(m)
-  try:
   # Create each new message
-    for m in payload['messages']:
-      id = int(m['id'])
-      matching_messages = [elem for elem in messages if elem.id == id and elem.message_set == m['message_set']]
-      attributes = format_message_attributes_for_model(m['attributes'])
-      if len(matching_messages) > 0:
-        message = matching_messages[0]
-      else:
-        message = Messages(
-          id=id,
-          message_set=message_set,
-          attr_list=attributes,
-          total_attr=len(m['attributes'])
-        )
-      # Add appropriate message variables depending on what was provided by the user
-      if 'body' in m:
-        message.body = m['body']
-      if 'body_en' in m:
-        message.body_en = m['body_en']
-      if 'body_es' in m:
-        message.body_es = m['body_es']
-      if 'is_active' in m:
-        message.is_active = (m['is_active'] == 'true')
-      if 'attributes' in m:
-        message.attr_list = attributes
-      message.save()
-  except Exception as e:
-    print(e)
-    return Response(
-      body=e.print_stack(),
-      status_code=500,
-      headers={'Content-Type': 'text/plain'}
-    )
+  for m in payload['messages']:
+    id = int(m['id'])
+    matching_messages = [elem for elem in messages if elem.id == id and elem.message_set == m['message_set']]
+    attributes = format_message_attributes_for_model(m['attributes'])
+    if len(matching_messages) > 0:
+      message = matching_messages[0]
+    else:
+      message = Messages(
+        id=id,
+        message_set=message_set,
+        attr_list=attributes,
+        total_attr=len(m['attributes'])
+      )
+    # Add appropriate message variables depending on what was provided by the user
+    if 'body' in m:
+      message.body = m['body']
+    if 'body_en' in m:
+      message.body_en = m['body_en']
+    if 'body_es' in m:
+      message.body_es = m['body_es']
+    if 'is_active' in m:
+      message.is_active = (m['is_active'] == 'true')
+    if 'attributes' in m:
+      message.attr_list = attributes
+    message.save()
+  #except Exception as e:
+  #  print(e)
+  #  return Response(
+  #    body=e.print_stack(),
+  #    status_code=500,
+  #    headers={'Content-Type': 'text/plain'}
+  #  )
   return Response(
     body='Success',
     status_code=200,
