@@ -118,7 +118,7 @@ def post_messages():
   except Exception as e:
     print(e)
     return Response(
-      body='Something went wrong while trying to add your messages.',
+      body=e.print_stack(),
       status_code=500,
       headers={'Content-Type': 'text/plain'}
     )
