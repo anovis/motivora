@@ -503,6 +503,23 @@ class UserDetails extends Component {
           							</Form.Group>
 				    				<hr/>
 									<Form.Group>
+				    					<Form.Label>Filter by barrier:</Form.Label>
+				    					{
+				    						this.state.barriers.map((val, index) => 
+				    							<Form.Check
+				    								key={ index }
+													required
+													name={ val }
+													label={ val }
+													onChange={ this.onBarrierFilter }
+		        									checked={this.state.filters.barriers[val]}
+		        									value={this.state.filters.barriers[val]}
+												/>
+											)
+				    					}
+          							</Form.Group>
+				    				<hr/>
+									<Form.Group>
 				    					<Form.Label>Filter by attribute:</Form.Label>
 				    					{
 				    						this.state.attrs.map((attr, index) => 
@@ -532,23 +549,6 @@ class UserDetails extends Component {
 													onChange={ this.onEnablerFilter }
 		        									checked={this.state.filters.enablers[val]}
 		        									value={this.state.filters.enablers[val]}
-												/>
-											)
-				    					}
-          							</Form.Group>
-				    				<hr/>
-									<Form.Group>
-				    					<Form.Label>Filter by barrier:</Form.Label>
-				    					{
-				    						this.state.barriers.map((val, index) => 
-				    							<Form.Check
-				    								key={ index }
-													required
-													name={ val }
-													label={ val }
-													onChange={ this.onBarrierFilter }
-		        									checked={this.state.filters.barriers[val]}
-		        									value={this.state.filters.barriers[val]}
 												/>
 											)
 				    					}
