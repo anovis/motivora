@@ -474,8 +474,12 @@ class UserActions:
                     attribute_scores[attr]['absolute_count'] += 1
         #print(attribute_scores)
         # Compute final scores for each attribute
+        filtered_attrs = ['MESSAGE', 'RECENT MESSAGE', 'Activity', 'Directive', 'Diet', 'Self-care', 'Social', 'Positive Psychology',
+            'Positive psychology', 'Overall diet', 'Diet: Fruit/Veg', 'Fat/Chol', 'Physical Activity', 'Activity', 'Sedentary Time']
         final_attr_scores = {}
         for attr, score_hash in attribute_scores.items():
+            if attr not in filtered_attrs:
+                continue
             final_score = round(attribute_scores[attr]['absolute_score'] / attribute_scores[attr]['absolute_count'], 1)
             final_attr_scores[attr] = final_score
         final_attr_scores['MESSAGE'] = round(rating_total / len(rated_responses), 1)
