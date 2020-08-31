@@ -47,18 +47,22 @@ class CsvUploads extends Component {
 		let fields = ['phone', 'msg_id', 'rating']
 		for (let i = 0; i < data.length; i++) {
 			let row = data[i].data || {};
+			let isFormatCorrect = true;
 			for (let j = 0; j < fields.length; j++) {
 				if (!(fields[j] in row)) {
-					window.alert(`Missing mandatory header ${fields[j]} for element ${i} `);
-					return;
+					window.alert(`[Warning] Missing mandatory header ${fields[j]} for element ${i} `);
+					isFormatCorrect = false;
+					break;
 				}
 			}
-			let elm = {};
-			for (let j = 0; j < fields.length; j++) {
-				elm[fields[j]] = row[fields[j]]
+			if (isFormatCorrect === true) {
+				let elm = {};
+				for (let j = 0; j < fields.length; j++) {
+					elm[fields[j]] = row[fields[j]]
+				}
+				elm['sent_at'] = new Date();
+				if (elm.phone) ratings.push(elm);
 			}
-			elm['sent_at'] = new Date();
-			if (elm.phone) ratings.push(elm);
 		}
 		this.setState({
 			type: 'message_ratings',
