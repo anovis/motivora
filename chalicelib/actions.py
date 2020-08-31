@@ -740,6 +740,12 @@ class UserActions:
             message = message[:m.start()] + str(recommended_goal_amount) + message[m.end():]
             u.weekly_goals_message_response[cur_key]['goal_recommendation'] = recommended_goal_amount
 
+        if latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT MINUS" in message:
+            m = re.search("\[GOAL AMOUNT MINUS (.*)\]", message)
+            recommended_goal_amount = int(m.group(1)) - latest_goal_message['goal_amount']
+            message = message[:m.start()] + str(recommended_goal_amount) + message[m.end():]
+            u.weekly_goals_message_response[cur_key]['goal_recommendation'] = recommended_goal_amount
+
         # Save the outgoing message to the responses hash
         update_hash = u.weekly_goals_message_response[cur_key]
         if type == 'progress':
@@ -824,12 +830,12 @@ class UserActions:
     #   'rating': rating (int between 0 and 10)
     #  }, ... ]
     def update_message_ratings(self, update_arr):
-        user_phones = set(row['phone'] for row in update_arr)
+        user_phones = set(int(row['phone']) for row in update_arr)
         users = []
         for user in Users.batch_get(list(user_phones)):
             users.append(user)
         for row in update_arr:
-            user = [u for u in users if u.phone == row['phone']][0]
+            user = [u for u in users if u.phone ==int(row['phone'])][0]
             sent_at = row['sent_at'][0:19]
             if len(sent_at) < 10:
                 print("Could not process sent_at value in row: %s"%(row))
