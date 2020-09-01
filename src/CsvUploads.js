@@ -191,9 +191,9 @@ class CsvUploads extends Component {
 
 	getWarning() {
 		if (this.state.type === 'message_ratings') {
-			return 'Expected headers: phone, message_id, rating'
+			return 'Expected headers: phone, msg_id, rating'
 		} else if (this.state.type === 'messages') {
-			return 'Expected headers: message_set, id, is_active, body_en, body_es (AND any column other than the previous ones is considered to be an attribute - put 1 if attribute if present or 0 if not)'
+			return 'Expected headers: msg_id, id, is_active, body_en, body_es (AND any column other than the previous ones is considered to be an attribute - put 1 if attribute if present or 0 if not)'
 		}
 	}
 	getDataFormat(columnName) {
