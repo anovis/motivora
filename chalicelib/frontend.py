@@ -200,11 +200,7 @@ def get_message_history():
   all_messages = []
   for i, daily_message_data in user.message_response.items():
     message = Messages.get(user.message_set, int(daily_message_data["message_sent"]))
-    body = message.body
-    if user.lang_code == "es":
-      body = message.body_es
-    if user.lang_code == "en":
-      body = message.body_en
+    body = message.get_body(user.lang_code)
     attrs = list(message.attr_list.as_dict().keys())
     all_messages.append({
       "rating": int(daily_message_data["message"]),

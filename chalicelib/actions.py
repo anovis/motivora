@@ -163,7 +163,7 @@ class UserActions:
             if is_test:
                 print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
             else:
-                self.send_motivational_sms(body + rating_request + self.get_anti_spam_message())
+                self.send_motivational_sms(message, body + rating_request + self.get_anti_spam_message())
                 self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
             return True
         except Exception as e:
@@ -175,7 +175,7 @@ class UserActions:
         if not (self.has_consecutive_non_ratings(user, num_non_ratings)):
             return False
         try:
-            self.send_motivational_sms(self.reminder_message_text)
+            self.send_motivational_sms(None, self.reminder_message_text)
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)
@@ -195,13 +195,17 @@ class UserActions:
         # Get created_at_date
         created_date = user.created_time.date() - timedelta(days=1)
         # Get date of last rating
-        last_rated_index = str(len(user.message_response) - 1)
-        last_rated_day = user.message_response[last_rated_index]['timestamp'][0:10]
-        last_rated_date = datetime.strptime(last_rated_day, '%Y-%m-%d').date()
-        # Use created_at + last_rated to create a last_seen date
-        last_seen_date = max(created_date, last_rated_date)
+        max_timestamp = str(created_date)
+        for k in user.message_response.keys():
+            if 'message' not in user.message_response[k]:
+                continue
+            timestamp = user.message_response[k]['timestamp'][0:10]
+            if timestamp > max_timestamp:
+                max_timestamp = timestamp
+        last_rated_day = max_timestamp
+        last_seen_date = datetime.strptime(last_rated_day, '%Y-%m-%d').date()
         today = datetime.now().date()
-        days_since_rating = (today - last_seen_date).days - 1
+        days_since_rating = max((today - last_seen_date).days - 1, 0)
         print("%s days since rating for %s"%(days_since_rating, user.phone))
         # Return True only if this the day we should be sending the message
         if days_since_rating > 0 and ((days_since_rating % num_non_ratings) == 0):
@@ -216,8 +220,10 @@ class UserActions:
         else:
             return ''
 
-    def send_motivational_sms(self, message):
-        self.send_sms(message, self.motivational_phone_number)
+    def send_motivational_sms(self, message, content):
+        #self.send_sms(content, self.motivational_phone_number)
+        if message is not None:
+            self.save_motivational_message(message)
 
     def send_direct_message_sms(self, message):
         self.send_sms(message, self.direct_message_phone_number)
@@ -329,6 +335,7 @@ class UserActions:
             messages_scored[msg['id']] /= self.total_attr_count
             # Round all scores to the nearest tenth
             messages_scored[msg['id']] = round(messages_scored[msg['id']], 1)
+            print(msg['id'], round(messages_scored[msg['id']], 1))
         return messages_scored
 
 
@@ -340,6 +347,8 @@ class UserActions:
         for msg in all_msgs_filtered:
             message = Messages.get(user.message_set, msg['id'])
             user_rating = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            if user_rating is None:
+                continue
             print("%s;%s;%s"%(msg['id'], message.body, user_rating))
             clean_tokens = get_clean_tokens_from_message(message.body)
             for clean_token in clean_tokens:
@@ -407,6 +416,8 @@ class UserActions:
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
             message = Messages.get(user.message_set, msg_idx)
             message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            if message_score is None:
+                continue
             #token_scores, rareness_scores = get_scored_words(message.body, message_score, weight, token_scores, dict_rareness, rareness_scores)
             rating_total += message_score
             attributes = message.attr_list.as_dict()
@@ -457,6 +468,8 @@ class UserActions:
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
             message = Messages.get(user.message_set, msg_idx)
             message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            if message_score is None:
+                continue
             rating_total += message_score
             attributes = message.attr_list.as_dict()
             top_ten_idx = max([int(x) for x in user.message_response.keys()]) - 10
@@ -490,7 +503,10 @@ class UserActions:
     def get_message_score_for_idx(self, message_response, msg_idx):
         for key in message_response.keys():
             if message_response[key]["message_sent"] == msg_idx:
-                return int(message_response[key]['message'])
+                if 'message' in message_response[key]:
+                    return int(message_response[key]['message'])
+                else:
+                    return None
         print(message_response)
         sentry_sdk.capture_exception(Exception('Msg Idx not found in messages sent - ' + str(msg_idx)))
         return 0
@@ -544,6 +560,14 @@ class UserActions:
         u.direct_message_response[next_key] = {
             'direction': direction,
             'message'  : message,
+            'timestamp': str(datetime.now())
+        }
+        u.save()
+
+    def save_motivational_message(self, message):
+        u = Users.get(self.phone)
+        u.message_response[str(message.id)] = {
+            'message_sent'  : message.id,
             'timestamp': str(datetime.now())
         }
         u.save()
@@ -804,17 +828,17 @@ class UserActions:
             )
             u.save()
         elif not self.is_int(self.message_received) or int(self.message_received) < 0 or int(self.message_received) > 10:
-            self.send_motivational_sms('Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
+            self.send_motivational_sms(None, 'Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
         else:
             u = Users.get(self.phone)
             # Make sure that we don't already have a rating for this message
             for k in u.message_response.keys():
-                if u.message_response[k]["message_sent"] == u.prev_message:
-                    self.send_motivational_sms("You've already rated the previous message. Please wait for the next message to send another rating.")
+                if u.message_response[k]["message_sent"] == u.prev_message and 'message' in u.message_response[k]:
+                    self.send_motivational_sms(None, "You've already rated the previous message. Please wait for the next message to send another rating.")
                     return False
             # Create a new response entry
             new_dict = u.message_response
-            new_dict[len(new_dict)]= {
+            new_dict[str(u.prev_message)]= {
                 'message': self.message_received,
                 'timestamp': str(datetime.now()),
                 'message_sent': u.prev_message

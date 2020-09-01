@@ -97,3 +97,11 @@ class Messages(Model):
             'rating_9': self.rating_9,
             'rating_10': self.rating_10,
         }
+
+    def get_body(self, lang_code):
+        body_content = self.body
+        if lang_code == "es":
+            body_content = self.body_es
+        if lang_code == "en":
+            body_content = self.body_en
+        return body_content
