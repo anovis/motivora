@@ -47,7 +47,7 @@ class MessageActions:
             if (message.id in user.messages_sent):
                 total_sent += 1
                 for k, v in user.message_response.items():
-                    if v['message_sent'] == message.id:
+                    if v['message_sent'] == message.id and 'message' in v:
                         total_rated += 1
                         total_rating += int(v['message'])
                         rating_key = "rating_%s"%(v['message'])

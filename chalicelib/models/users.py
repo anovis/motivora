@@ -71,7 +71,8 @@ class Users(Model):
         num_rated_messages = len(self.message_response.keys())
         total_rating = 0
         for i, response_data in self.message_response.items():
-            total_rating += int(response_data['message'])
+            if 'message' in response_data:
+                total_rating += int(response_data['message'])
         avg_rating = None
         if num_rated_messages > 0:
             avg_rating = round(total_rating * 1.0 / num_rated_messages, 1)
