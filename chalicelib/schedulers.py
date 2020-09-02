@@ -32,7 +32,7 @@ def every_hour(event):
 @app.schedule(Rate(5, unit=Rate.MINUTES))
 def every_minute(event):
     # Add phone numbers here that you want to send a make-up message to
-    phone_numbers = [14196150311, 17812497320, 18479270519]
+    phone_numbers = []
     for phone_number in phone_numbers:
         user = Users.get(phone_number)
         process_message(user)
@@ -76,7 +76,7 @@ def process_message(user):
     user_obj = UserActions(**user.to_dict())
     # Create invocation ID for today and this hour
     invocation_id = datetime.today().strftime('%Y-%m-%d:%H') + '-' + str(user_obj.phone)
-    # Only send for users that haven't recieved a message for this Lambda invocation
+    # Only send for users that haven't received a message for this Lambda invocation
     if user_obj.has_processed_for_invocation_id(invocation_id):
         print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
     # Only send for the first 28 days
