@@ -217,7 +217,7 @@ class UserActions:
             return ''
 
     def send_motivational_sms(self, message, content):
-        #self.send_sms(content, self.motivational_phone_number)
+        self.send_sms(content, self.motivational_phone_number)
         if message is not None:
             self.save_motivational_message(message)
 
