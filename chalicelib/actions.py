@@ -319,19 +319,24 @@ class UserActions:
         for msg in all_msgs_filtered:
             message = Messages.get(user.message_set, msg['id'])
             attributes = message.attr_list.as_dict()
+            #debug_string = ""
+            total_attrs = 0
             # Iterate through all attributes for a given message
             for attr, boolean in attributes.items():
                 # Make sure that the attribute is marked at TRUE
                 if not boolean: continue
+                total_attrs += 1
                 if attr in scored_attributes: # An attribute we've seen before, in a scored message
                     messages_scored[msg['id']] += scored_attributes[attr]
+                    #debug_string += attr + ": " + str(scored_attributes[attr]) + ", "
                 else: # An attribute that has never been scored
                     messages_scored[msg['id']] += scored_attributes['MESSAGE'] + self.unranked_attr_boost
+                    #debug_string += attr + ": " + str((scored_attributes['MESSAGE'] + self.unranked_attr_boost)) + ", "
             # Sum scores for all attributes that were not seen in this message
-            messages_scored[msg['id']] /= self.total_attr_count
+            messages_scored[msg['id']] /= total_attrs
             # Round all scores to the nearest tenth
             messages_scored[msg['id']] = round(messages_scored[msg['id']], 1)
-            print(msg['id'], round(messages_scored[msg['id']], 1))
+            #print("~%s~ %s %s"%(msg['id'], round(messages_scored[msg['id']], 1), debug_string))
         return messages_scored
 
 
