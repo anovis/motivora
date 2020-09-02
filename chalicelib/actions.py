@@ -154,21 +154,17 @@ class UserActions:
     # Retrieves the next message to be sent, formats it appropriately, and triggers the SMS sending
     def send_next_sms(self, is_test=False):
         user = Users.get(self.phone)
-        try:
-            rating_request = '\n\nHow helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]'
-            next_message_id = self.get_next_message()
-            message = Messages.get(user.message_set, next_message_id)
-            self.last_message_sent = next_message_id;
-            body = self.get_message_body(message)
-            if is_test:
-                print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
-            else:
-                self.send_motivational_sms(message, body + rating_request + self.get_anti_spam_message())
-                self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
-            return True
-        except Exception as e:
-            sentry_sdk.capture_exception(e)
-            return False
+        rating_request = '\n\nHow helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]'
+        next_message_id = self.get_next_message()
+        message = Messages.get(user.message_set, next_message_id)
+        self.last_message_sent = next_message_id;
+        body = self.get_message_body(message)
+        if is_test:
+            print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
+        else:
+            self.send_motivational_sms(message, body + rating_request + self.get_anti_spam_message())
+            self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
+        return True
 
     def send_reminder_sms_if_needed(self, num_non_ratings):
         user = Users.get(self.phone)
@@ -412,7 +408,7 @@ class UserActions:
         rated_responses = [*user.message_response.keys()]
         rating_total = 0
         for msg_sent_idx in rated_responses:
-            weight = (self.historical_message_discount_factor)**((len(rated_responses) - 1) - int(msg_sent_idx))
+            weight = max(self.historical_message_discount_factor**(len(rated_responses) - 1), 0.001) - int(msg_sent_idx)
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
             message = Messages.get(user.message_set, msg_idx)
             message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
