@@ -101,7 +101,7 @@ class UserActions:
 
         # Reminder message config
         self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
-        self.decision_tree_mistake_text = "I'm sorry. I didn't understand that. Can you re-send your response to the last question with a whole number? If you want to start over, please respond with 9."
+        self.decision_tree_mistake_text = "I'm sorry. I didn't understand that. Can you re-send your response to the last question with a whole number? If you want to start over, please respond with 99."
         self.days_before_rating_reminder = 3
 
         self.phone = int(phone)
@@ -706,6 +706,16 @@ class UserActions:
             else:
                 last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
                 type = "goals"
+
+        if response_val == 99:
+            if type == "goals":
+                u.weekly_goals_message_response.pop(cur_key, None)
+                self.initiate_goal_setting_message(u)
+            elif type == "progress":
+                u.weekly_progress_message_response.pop(cur_progress_key, None)
+                self.initiate_progress_message(u)
+            u.save()
+            return
 
         # Iterate over all decision trees to find the right match
         last_decision_tree = DecisionTrees.get(type, last_decision_tree_id)
