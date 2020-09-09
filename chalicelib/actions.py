@@ -707,6 +707,7 @@ class UserActions:
                 last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
                 type = "goals"
 
+        # Reset trees if response value is equal to the special reset value indicated to the user
         if response_val == 99:
             if type == "goals":
                 u.weekly_goals_message_response.pop(cur_key, None)
@@ -781,7 +782,7 @@ class UserActions:
 
         if latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT MINUS" in message:
             m = re.search("\[GOAL AMOUNT MINUS (.*)\]", message)
-            recommended_goal_amount = int(m.group(1)) - latest_goal_message['goal_amount']
+            recommended_goal_amount = latest_goal_message['goal_amount'] - int(m.group(1))
             message = message[:m.start()] + str(recommended_goal_amount) + message[m.end():]
             u.weekly_goals_message_response[cur_key]['goal_recommendation'] = recommended_goal_amount
 
