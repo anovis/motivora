@@ -144,7 +144,7 @@ def post_user():
     user.save()
 
   try:
-    if 'messageSetName' in payload:
+    if 'message_set' in payload:
       user.update(actions=[Users.message_set.set(payload['message_set'])]) 
   
     if 'lang_code' in payload:
