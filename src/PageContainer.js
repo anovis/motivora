@@ -166,7 +166,7 @@ class Table extends Component {
 		axios.post(Config.api + '/user', userData)
 			.then(function (response) {
 				if (response.status === 200) {
-					_this.fetchData('USERS');
+					_this.fetchData('USERS', userData.message_set || 'EBNHC');
 				}
 			})
 			.catch(function (error) {
