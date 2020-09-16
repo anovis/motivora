@@ -144,7 +144,7 @@ def post_user():
     user.save()
 
   try:
-    if 'messageSetName' in payload:
+    if 'message_set' in payload:
       user.update(actions=[Users.message_set.set(payload['message_set'])]) 
   
     if 'lang_code' in payload:
@@ -200,13 +200,17 @@ def get_message_history():
   all_messages = []
   for i, daily_message_data in user.message_response.items():
     message = Messages.get(user.message_set, int(daily_message_data["message_sent"]))
+    body = message.get_body(user.lang_code)
     attrs = list(message.attr_list.as_dict().keys())
+    message_rating = "-"
+    if "message" in daily_message_data:
+      message_rating = int(daily_message_data["message"])
     all_messages.append({
-      "rating": int(daily_message_data["message"]),
+      "rating": message_rating,
       "timestamp": daily_message_data["timestamp"],
       "data_type": "message",
       "id": message.id,
-      "body": message.body,
+      "body": body,
       "attrs": attrs,
       "category": "daily",
       "direction": "outgoing"

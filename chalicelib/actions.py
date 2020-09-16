@@ -47,7 +47,7 @@ class MessageActions:
             if (message.id in user.messages_sent):
                 total_sent += 1
                 for k, v in user.message_response.items():
-                    if v['message_sent'] == message.id:
+                    if v['message_sent'] == message.id and 'message' in v:
                         total_rated += 1
                         total_rating += int(v['message'])
                         rating_key = "rating_%s"%(v['message'])
@@ -101,7 +101,7 @@ class UserActions:
 
         # Reminder message config
         self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
-        self.decision_tree_mistake_text = "I'm sorry. I didn't understand that. Can you re-send your response to the last question with a whole number? If you want to start over, please respond with 9."
+        self.decision_tree_mistake_text = "I'm sorry. I didn't understand that. Can you re-send your response to the last question with a whole number? If you want to start over, please respond with 99."
         self.days_before_rating_reminder = 3
 
         self.phone = int(phone)
@@ -154,28 +154,24 @@ class UserActions:
     # Retrieves the next message to be sent, formats it appropriately, and triggers the SMS sending
     def send_next_sms(self, is_test=False):
         user = Users.get(self.phone)
-        try:
-            rating_request = '\n\nHow helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]'
-            next_message_id = self.get_next_message()
-            message = Messages.get(user.message_set, next_message_id)
-            self.last_message_sent = next_message_id;
-            body = self.get_message_body(message)
-            if is_test:
-                print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
-            else:
-                self.send_motivational_sms(body + rating_request + self.get_anti_spam_message())
-                self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
-            return True
-        except Exception as e:
-            sentry_sdk.capture_exception(e)
-            return False
+        rating_request = '\n\nHow helpful was this message? [Scale of 0-10, with 0=not helpful at all and 10=very helpful]'
+        next_message_id = self.get_next_message()
+        message = Messages.get(user.message_set, next_message_id)
+        self.last_message_sent = next_message_id;
+        body = self.get_message_body(message)
+        if is_test:
+            print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
+        else:
+            self.send_motivational_sms(message, body + rating_request + self.get_anti_spam_message())
+            self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
+        return True
 
     def send_reminder_sms_if_needed(self, num_non_ratings):
         user = Users.get(self.phone)
         if not (self.has_consecutive_non_ratings(user, num_non_ratings)):
             return False
         try:
-            self.send_motivational_sms(self.reminder_message_text)
+            self.send_motivational_sms(None, self.reminder_message_text)
             return True
         except Exception as e:
             sentry_sdk.capture_exception(e)
@@ -195,13 +191,17 @@ class UserActions:
         # Get created_at_date
         created_date = user.created_time.date() - timedelta(days=1)
         # Get date of last rating
-        last_rated_index = str(len(user.message_response) - 1)
-        last_rated_day = user.message_response[last_rated_index]['timestamp'][0:10]
-        last_rated_date = datetime.strptime(last_rated_day, '%Y-%m-%d').date()
-        # Use created_at + last_rated to create a last_seen date
-        last_seen_date = max(created_date, last_rated_date)
+        max_timestamp = str(created_date)
+        for k in user.message_response.keys():
+            if 'message' not in user.message_response[k]:
+                continue
+            timestamp = user.message_response[k]['timestamp'][0:10]
+            if timestamp > max_timestamp:
+                max_timestamp = timestamp
+        last_rated_day = max_timestamp
+        last_seen_date = datetime.strptime(last_rated_day, '%Y-%m-%d').date()
         today = datetime.now().date()
-        days_since_rating = (today - last_seen_date).days - 1
+        days_since_rating = max((today - last_seen_date).days - 1, 0)
         print("%s days since rating for %s"%(days_since_rating, user.phone))
         # Return True only if this the day we should be sending the message
         if days_since_rating > 0 and ((days_since_rating % num_non_ratings) == 0):
@@ -216,8 +216,10 @@ class UserActions:
         else:
             return ''
 
-    def send_motivational_sms(self, message):
-        self.send_sms(message, self.motivational_phone_number)
+    def send_motivational_sms(self, message, content):
+        self.send_sms(content, self.motivational_phone_number)
+        if message is not None:
+            self.save_motivational_message(message)
 
     def send_direct_message_sms(self, message):
         self.send_sms(message, self.direct_message_phone_number)
@@ -317,18 +319,24 @@ class UserActions:
         for msg in all_msgs_filtered:
             message = Messages.get(user.message_set, msg['id'])
             attributes = message.attr_list.as_dict()
+            #debug_string = ""
+            total_attrs = 0
             # Iterate through all attributes for a given message
             for attr, boolean in attributes.items():
                 # Make sure that the attribute is marked at TRUE
                 if not boolean: continue
+                total_attrs += 1
                 if attr in scored_attributes: # An attribute we've seen before, in a scored message
                     messages_scored[msg['id']] += scored_attributes[attr]
+                    #debug_string += attr + ": " + str(scored_attributes[attr]) + ", "
                 else: # An attribute that has never been scored
                     messages_scored[msg['id']] += scored_attributes['MESSAGE'] + self.unranked_attr_boost
+                    #debug_string += attr + ": " + str((scored_attributes['MESSAGE'] + self.unranked_attr_boost)) + ", "
             # Sum scores for all attributes that were not seen in this message
-            messages_scored[msg['id']] /= self.total_attr_count
+            messages_scored[msg['id']] /= total_attrs
             # Round all scores to the nearest tenth
             messages_scored[msg['id']] = round(messages_scored[msg['id']], 1)
+            #print("~%s~ %s %s"%(msg['id'], round(messages_scored[msg['id']], 1), debug_string))
         return messages_scored
 
 
@@ -340,6 +348,8 @@ class UserActions:
         for msg in all_msgs_filtered:
             message = Messages.get(user.message_set, msg['id'])
             user_rating = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            if user_rating is None:
+                continue
             print("%s;%s;%s"%(msg['id'], message.body, user_rating))
             clean_tokens = get_clean_tokens_from_message(message.body)
             for clean_token in clean_tokens:
@@ -403,10 +413,12 @@ class UserActions:
         rated_responses = [*user.message_response.keys()]
         rating_total = 0
         for msg_sent_idx in rated_responses:
-            weight = (self.historical_message_discount_factor)**((len(rated_responses) - 1) - int(msg_sent_idx))
+            weight = max(self.historical_message_discount_factor**(len(rated_responses) - 1), 0.001) - int(msg_sent_idx)
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
             message = Messages.get(user.message_set, msg_idx)
             message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            if message_score is None:
+                continue
             #token_scores, rareness_scores = get_scored_words(message.body, message_score, weight, token_scores, dict_rareness, rareness_scores)
             rating_total += message_score
             attributes = message.attr_list.as_dict()
@@ -457,6 +469,8 @@ class UserActions:
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
             message = Messages.get(user.message_set, msg_idx)
             message_score = user_obj.get_message_score_for_idx(user.message_response, msg_idx)
+            if message_score is None:
+                continue
             rating_total += message_score
             attributes = message.attr_list.as_dict()
             top_ten_idx = max([int(x) for x in user.message_response.keys()]) - 10
@@ -490,7 +504,10 @@ class UserActions:
     def get_message_score_for_idx(self, message_response, msg_idx):
         for key in message_response.keys():
             if message_response[key]["message_sent"] == msg_idx:
-                return int(message_response[key]['message'])
+                if 'message' in message_response[key]:
+                    return int(message_response[key]['message'])
+                else:
+                    return None
         print(message_response)
         sentry_sdk.capture_exception(Exception('Msg Idx not found in messages sent - ' + str(msg_idx)))
         return 0
@@ -544,6 +561,14 @@ class UserActions:
         u.direct_message_response[next_key] = {
             'direction': direction,
             'message'  : message,
+            'timestamp': str(datetime.now())
+        }
+        u.save()
+
+    def save_motivational_message(self, message):
+        u = Users.get(self.phone)
+        u.message_response[str(message.id)] = {
+            'message_sent'  : message.id,
             'timestamp': str(datetime.now())
         }
         u.save()
@@ -682,6 +707,17 @@ class UserActions:
                 last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
                 type = "goals"
 
+        # Reset trees if response value is equal to the special reset value indicated to the user
+        if response_val == 99:
+            if type == "goals":
+                u.weekly_goals_message_response.pop(cur_key, None)
+                self.initiate_goal_setting_message(u)
+            elif type == "progress":
+                u.weekly_progress_message_response.pop(cur_progress_key, None)
+                self.initiate_progress_message(u)
+            u.save()
+            return
+
         # Iterate over all decision trees to find the right match
         last_decision_tree = DecisionTrees.get(type, last_decision_tree_id)
         decision_trees = DecisionTrees.query(type, DecisionTrees.id > 0)
@@ -746,7 +782,7 @@ class UserActions:
 
         if latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT MINUS" in message:
             m = re.search("\[GOAL AMOUNT MINUS (.*)\]", message)
-            recommended_goal_amount = int(m.group(1)) - latest_goal_message['goal_amount']
+            recommended_goal_amount = latest_goal_message['goal_amount'] - int(m.group(1))
             message = message[:m.start()] + str(recommended_goal_amount) + message[m.end():]
             u.weekly_goals_message_response[cur_key]['goal_recommendation'] = recommended_goal_amount
 
@@ -804,17 +840,17 @@ class UserActions:
             )
             u.save()
         elif not self.is_int(self.message_received) or int(self.message_received) < 0 or int(self.message_received) > 10:
-            self.send_motivational_sms('Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
+            self.send_motivational_sms(None, 'Please reply with a rating for the previous message between 0 and 10. [0=not helpful at all and 10=very helpful]')
         else:
             u = Users.get(self.phone)
             # Make sure that we don't already have a rating for this message
             for k in u.message_response.keys():
-                if u.message_response[k]["message_sent"] == u.prev_message:
-                    self.send_motivational_sms("You've already rated the previous message. Please wait for the next message to send another rating.")
+                if u.message_response[k]["message_sent"] == u.prev_message and 'message' in u.message_response[k]:
+                    self.send_motivational_sms(None, "You've already rated the previous message. Please wait for the next message to send another rating.")
                     return False
             # Create a new response entry
             new_dict = u.message_response
-            new_dict[len(new_dict)]= {
+            new_dict[str(u.prev_message)]= {
                 'message': self.message_received,
                 'timestamp': str(datetime.now()),
                 'message_sent': u.prev_message

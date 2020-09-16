@@ -1,8 +1,10 @@
 from chalicelib import app
 from chalice import Rate
 from datetime import datetime
+import pytz
 from chalicelib.models import Users, Invocations
 from chalicelib.actions import UserActions, MessageActions
+
 
 import sentry_sdk
 from sentry_sdk.integrations.aws_lambda import AwsLambdaIntegration
@@ -52,10 +54,17 @@ def send_weekly_messages(event):
             if user.message_set != "Text4Health":
                 continue
             user_obj = UserActions(**user.to_dict())
-            if cur_day_of_week == goal_message_sent_day_of_week:
-                user_obj.initiate_goal_setting_message(user)
-            if cur_day_of_week == progress_message_sent_day_of_week:
-                user_obj.initiate_progress_message(user)
+            hours_since_creation = divmod((pytz.UTC.localize(datetime.today()) - user.created_time).total_seconds(), 3600)[0]
+            if hours_since_creation < 24.0*7 and cur_day_of_week != goal_message_sent_day_of_week:
+                if hours_since_creation < 24.0:
+                    user_obj.initiate_goal_setting_message(user)
+                if hours_since_creation >= 24.0 * 2 and hours_since_creation < 24.0 * 3:
+                    user_obj.initiate_progress_message(user)
+            else:
+                if cur_day_of_week == goal_message_sent_day_of_week:
+                    user_obj.initiate_goal_setting_message(user)
+                if cur_day_of_week == progress_message_sent_day_of_week:
+                    user_obj.initiate_progress_message(user)
 
 def get_et_hour():
     hour = datetime.now().hour - 4
@@ -76,7 +85,7 @@ def process_message(user):
     user_obj = UserActions(**user.to_dict())
     # Create invocation ID for today and this hour
     invocation_id = datetime.today().strftime('%Y-%m-%d:%H') + '-' + str(user_obj.phone)
-    # Only send for users that haven't recieved a message for this Lambda invocation
+    # Only send for users that haven't received a message for this Lambda invocation
     if user_obj.has_processed_for_invocation_id(invocation_id):
         print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
     # Only send for the first 28 days
