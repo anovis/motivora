@@ -117,7 +117,7 @@ class UserActions:
         self.total_attr_count = 6
         self.historical_message_discount_factor = 0.1 # Determines how quickly older ratings are down-weighted
         self.unranked_attr_boost = 0.1 # Additional score boost for messages with attrs that have not yet been ranked
-        self.prob_of_selection_on_iteration = 0. # Minimal boost for top messages
+        self.prob_of_selection_on_iteration = 0.1 # Minimal boost for top messages
         self.preferred_attr_boost = 0.5 # Constant score boost for preferred categories
 
     def is_user(self):
