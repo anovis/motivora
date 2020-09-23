@@ -441,7 +441,7 @@ class UserActions:
                     attribute_scores[attr]['absolute_count'] += 1
                 #print("Added: %s, %s (%s) to %s = %s"%(message_score, weight, message_score*weight, attr, attribute_scores[attr]['weighted_score']))
         # Compute normalized scores for each attribute (taking into account the weighted_count for each)
-        normalized_attribute_scores = {'MESSAGE': rating_total / len(rated_responses)}
+        normalized_attribute_scores = {'MESSAGE': (rating_total + 0.01) / (len(rated_responses) + 0.01)}
         for attr, score_hash in attribute_scores.items():
             weighted_score = attribute_scores[attr]['weighted_score'] / attribute_scores[attr]['weighted_count']
             normalized_attribute_scores[attr] = weighted_score
