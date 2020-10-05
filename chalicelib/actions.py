@@ -254,7 +254,10 @@ class UserActions:
 
     def get_next_message(self):
         u = Users.get(self.phone)
-        next_message = self.get_recommended_message()
+        if u.message_set == "MASTERY":
+            next_message = self.get_next_sequential_message()
+        else:
+            next_message = self.get_recommended_message()
         message = Messages.get(u.message_set, next_message)
         log_message = message.to_json()
         log_message['attr_list'] = message.to_json()['attr_list'].as_dict()
@@ -264,6 +267,13 @@ class UserActions:
     def sent_messages_length(self):
         user = Users.get(self.phone)
         return len(user.messages_sent) if user.messages_sent != None else 0
+
+    def get_next_sequential_message(self):
+        user = Users.get(self.phone)
+        if not user.messages_sent:
+            return 1
+        else:
+            return max(user.messages_sent) + 1
 
     def get_recommended_message(self):
         user = Users.get(self.phone)
