@@ -127,6 +127,13 @@ class UserActions:
         except Exception as e:
             return False
 
+    def program_is_complete(self):
+        u = Users.get(self.phone)
+        if u.message_set == "MASTERY":
+            return self.sent_messages_length() >= 14
+        else:
+            return self.sent_messages_length() >= 72
+
     def has_processed_for_invocation_id(self, invocation_id):
         try:
             found = Invocations.query(invocation_id)

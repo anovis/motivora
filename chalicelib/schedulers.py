@@ -89,7 +89,7 @@ def process_message(user):
     if user_obj.has_processed_for_invocation_id(invocation_id):
         print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
     # Only send for total_days in the program
-    elif user_obj.sent_messages_length() >= user_obj.total_days:
+    elif user_obj.program_is_complete():
         print('Program ended ' + str(user_obj.phone) + '. Setting send_message to False.')
         user.update(
             actions=[
