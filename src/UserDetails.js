@@ -4,7 +4,7 @@ import Config from './config';
 import axios from 'axios';
 import loader from './images/ajax-loader.gif';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowRight, faBell } from '@fortawesome/free-solid-svg-icons';
 import InputRange from 'react-input-range';
 import 'react-input-range/lib/css/index.css';
 import DatePicker from "react-datepicker";
@@ -14,6 +14,8 @@ import "react-datepicker/dist/react-datepicker.css";
 class UserDetails extends Component {
 	constructor(props) {
 		super(props);
+		let today = new Date();
+		today.setHours(23,59,59,999);
 		this.state = {
 			phone: props.match.params.phone,
 			smsBody: '',
@@ -41,7 +43,7 @@ class UserDetails extends Component {
 				enablers: {},
 				barriers: {},
 				startDate: _getLastWeek(),
-				endDate: new Date()
+				endDate: today
 			},
 			enablers: [],
 			barriers: [],
@@ -66,12 +68,17 @@ class UserDetails extends Component {
   		this.updateFilters = this.updateFilters.bind(this);
   		this.sortMessages = this.sortMessages.bind(this);
   		this.processMessages = this.processMessages.bind(this);
+  		this.setNewFlag = this.setNewFlag.bind(this);
 	}
 	componentDidMount() {
-		this.fetchMessageHistory();
+		this.fetchMessageHistory(true);
+		let _this = this;
+		setInterval(function() { 
+			_this.fetchMessageHistory(false);
+		}, 10000);
 		this.fetchAttrs();
 	}
-	fetchMessageHistory() {
+	fetchMessageHistory(showLoader) {
 		let endpoint = Config.api + '/users/message_history';
 		let params = {
 			phone: this.state.phone
@@ -79,11 +86,16 @@ class UserDetails extends Component {
 		if (this.state.lastTimestamp) {
 			params.since = this.state.lastTimestamp;
 		}
-		this.setState({loadingData: true});
+		if (showLoader === true) {
+			this.setState({loadingData: true});
+		}
 		axios.get(endpoint, {params: params})
 			.then((response) => {
 				let { enablers, barriers, attrs } = this.processMessagesMetadata(response.data.data);
 				let filters = this.updateFilters({ attrs: attrs, enablers: enablers, barriers: barriers });
+				if (this.state.lastTimestamp) {
+					this.setNewFlag(response.data.data);
+				}
 				let messages = this.processMessages(response.data.data);
 				let lastTimestamp;
 				if (messages.length > 0) {
@@ -101,10 +113,18 @@ class UserDetails extends Component {
 			})
 			.catch((error) => {
 				window.alert(error)
-				this.setState({
-					loadingData: false,
-				});
+				if (showLoader === true) {
+					this.setState({loadingData: false});
+				}
 			})
+	}
+	setNewFlag(messages) {
+		messages.map(message => {
+			message.new = true;
+			setTimeout(function() {
+				message.new = false;
+			}, 10000)
+		})
 	}
 	processMessagesMetadata(messages) {
 		let attrs = [];
@@ -202,7 +222,10 @@ class UserDetails extends Component {
 	    })
 	    .then(response => {
 	    	if (response && response.status === 200) {
-	        	window.alert('SMS successfully sent')
+	        	window.alert('SMS successfully sent');
+	        	this.setState({
+		      		smsBody: ''
+		    	});
 	    	} else {
 	        	window.alert('An error occured on the server. Please ensure that the phone number provided is correct');
 	    	}
@@ -292,6 +315,10 @@ class UserDetails extends Component {
   		let filters = this.state.filters;
   		filters.startDate = start;
   		filters.endDate = end;
+  		if (filters.endDate) {
+  			filters.endDate.setHours(23,59,59,999);
+  			console.log(filters.endDate)
+  		}
   		this.setState({filters: filters});
   	}
 
@@ -360,7 +387,6 @@ class UserDetails extends Component {
 		} else {
 			return (
 				<div className="text-left" style={{ padding: '20px'}}>
-					<h1>{ this.state.lastTimestamp }</h1>
 					<Container>
 						<Row>
 							<Col xs={4}>
@@ -423,6 +449,9 @@ class UserDetails extends Component {
 												role="alert" 
 												className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
 											>
+				  								<span>
+				  									{ (message.new === true) ? <FontAwesomeIcon icon={faBell} size="lg" color="red"/> : null } 
+				  								</span>
 												<b><i>{ this.formatTimestamp(message.timestamp) }</i> { (message.rating != null) ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
 												<span>
 				  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 

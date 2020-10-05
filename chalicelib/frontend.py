@@ -200,7 +200,7 @@ def get_message_history():
   user_obj = UserActions(**user.to_dict())
   all_messages = []
   for i, daily_message_data in user.message_response.items():
-    if since_timestamp is not None and since_timestamp.replace("T", " ") > daily_message_data["timestamp"].replace("T", " "):
+    if since_timestamp is not None and since_timestamp.replace("T", " ") >= daily_message_data["timestamp"].replace("T", " "):
       continue
     message = Messages.get(user.message_set, int(daily_message_data["message_sent"]))
     body = message.get_body(user.lang_code)
@@ -219,14 +219,14 @@ def get_message_history():
       "direction": "outgoing"
     })
   for i, direct_message_data in user.direct_message_response.items():
-    if since_timestamp is not None and since_timestamp.replace("T", " ") > direct_message_data["timestamp"].replace("T", " "):
+    if since_timestamp is not None and since_timestamp.replace("T", " ") >= direct_message_data["timestamp"].replace("T", " "):
       continue
     direct_message = direct_message_data
     direct_message["category"] = "direct"
     all_messages.append(direct_message)
   for i, weekly_goals_data in user.weekly_goals_message_response.items():
     for message in weekly_goals_data["responses"]:
-      if since_timestamp is not None and since_timestamp.replace("T", " ") > message["timestamp"].replace("T", " "):
+      if since_timestamp is not None and since_timestamp.replace("T", " ") >= message["timestamp"].replace("T", " "):
         continue
       all_messages.append({
         "timestamp": message['timestamp'],
@@ -241,7 +241,7 @@ def get_message_history():
 
   for i, weekly_goals_data in user.weekly_progress_message_response.items():
     for message in weekly_goals_data["responses"]:
-      if since_timestamp is not None and since_timestamp.replace("T", " ") > message["timestamp"].replace("T", " "):
+      if since_timestamp is not None and since_timestamp.replace("T", " ") >= message["timestamp"].replace("T", " "):
         continue
       all_messages.append({
         "timestamp": message['timestamp'],

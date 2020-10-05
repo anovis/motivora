@@ -10,7 +10,7 @@ const config = {
 	USERS: {
 		created_time: false,
 		phone: { type: 'number' },
-		message_set: { type: 'select', options: { values: ['EBNHC', 'Text4Health'] } },
+		message_set: { type: 'select', options: { values: ['EBNHC', 'Text4Health', 'MASTERY'] } },
 		time: { type: 'number' },
 		send_message: { type: 'checkbox', options: { values: 'true:false' }} ,
 		lang_code: { type: 'select', options: { values: ['en', 'es'] } },

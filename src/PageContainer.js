@@ -43,6 +43,7 @@ class PageContainer extends Component {
 									<Form.Control as="select" onChange={this.handleMessageSetChange}>
 			  							<option>EBNHC</option>
 			  							<option>Text4Health</option>
+			  							<option>MASTERY</option>
 			  						</Form.Control>
 			  					</Form.Group>
 			  				</Form>
