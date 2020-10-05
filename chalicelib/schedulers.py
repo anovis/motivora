@@ -88,15 +88,17 @@ def process_message(user):
     # Only send for users that haven't received a message for this Lambda invocation
     if user_obj.has_processed_for_invocation_id(invocation_id):
         print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
-    # Only send for the first 28 days
-    elif user_obj.sent_messages_length() >= user_obj.total_days:
-        print('Program ended (28 days) ' + str(user_obj.phone) + '. Setting send_message to False.')
+    # Only send for total_days in the program
+    elif user_obj.program_is_complete():
+        print('Program ended ' + str(user_obj.phone) + '. Setting send_message to False.')
         user.update(
             actions=[
                 Users.send_message.set(False)
             ]
         )
         user.save()
+    elif user_obj.message_set == "MASTERY" and datetime.today().weekday() not in [0, 3] :
+        print('Only send MASTERY messages on M / th')
     else:
         print('Sending message to ' + str(user_obj.phone))
         is_successful = user_obj.send_next_sms()
