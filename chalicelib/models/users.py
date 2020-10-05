@@ -33,6 +33,7 @@ class Users(Model):
     preferred_attrs   = UnicodeSetAttribute(default=[])
     created_time      = UTCDateTimeAttribute(default=datetime.now(), null=False)
     is_real_user      = BooleanAttribute(default=True)
+    welcome_message_received = BooleanAttribute(default=False)
 
     # Message response fields
     message_response  = JSONAttribute(default={}, null=True)
@@ -62,7 +63,8 @@ class Users(Model):
             'weekly_progress_message_response': self.weekly_progress_message_response,
             'direct_message_response': self.direct_message_response,
             'created_time': created_at,
-            'is_real_user': self.is_real_user
+            'is_real_user': self.is_real_user,
+            'welcome_message_received': self.welcome_message_received
         }
 
     def to_frontend(self):

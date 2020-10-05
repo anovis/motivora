@@ -102,6 +102,7 @@ class UserActions:
         # Reminder message config
         self.reminder_message_text = "Hi! Rating messages is one way we know which ones are most helpful. Please rate the messages you receive, as this will help us send you the most useful messages we can!"
         self.decision_tree_mistake_text = "I'm sorry. I didn't understand that. Can you re-send your response to the last question with a whole number? If you want to start over, please respond with 99."
+        self.welcome_message = "Welcome to the Text4Health program! We will send you a message each day to help you feel positive, be physically active, and make healthy food choices. Please rate as many messages as you can, so we know which ones you like the best!"
         self.days_before_rating_reminder = 3
 
         self.phone = int(phone)
@@ -169,9 +170,28 @@ class UserActions:
         if is_test:
             print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
         else:
+            self.send_welcome_sms_if_needed()
             self.send_motivational_sms(message, body + rating_request + self.get_anti_spam_message())
             self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
         return True
+
+    def send_welcome_sms_if_needed(self):
+        user = Users.get(self.phone)
+        if user.welcome_message_received or user.message_set != "Text4Health":
+            return False
+        try:
+            self.send_motivational_sms(None, self.welcome_message)
+            print("Sending welcome message: " + self.welcome_message)
+            user.update(
+                actions=[
+                    Users.welcome_message_received.set(True)
+                ]
+            )
+            user.save()
+            return True
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
+            return False
 
     def send_reminder_sms_if_needed(self, num_non_ratings):
         user = Users.get(self.phone)
