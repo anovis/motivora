@@ -44,7 +44,8 @@ class UserDetails extends Component {
 				endDate: new Date()
 			},
 			enablers: [],
-			barriers: []
+			barriers: [],
+			lastTimestamp: null
 		};
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
 		this.fetchAttrs = this.fetchAttrs.bind(this);
@@ -61,6 +62,10 @@ class UserDetails extends Component {
   		this.onSearch = this.onSearch.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
   		this.roundNumber = this.roundNumber.bind(this);
+  		this.processMessagesMetadata = this.processMessagesMetadata.bind(this);
+  		this.updateFilters = this.updateFilters.bind(this);
+  		this.sortMessages = this.sortMessages.bind(this);
+  		this.processMessages = this.processMessages.bind(this);
 	}
 	componentDidMount() {
 		this.fetchMessageHistory();
@@ -71,42 +76,27 @@ class UserDetails extends Component {
 		let params = {
 			phone: this.state.phone
 		}
+		if (this.state.lastTimestamp) {
+			params.since = this.state.lastTimestamp;
+		}
 		this.setState({loadingData: true});
 		axios.get(endpoint, {params: params})
 			.then((response) => {
-				let attrs = [];
-				let enablers = this.state.enablers || [];
-				let barriers = this.state.barriers || [];
-				response.data.data.map(message => {
-					if (message.attrs) {
-						attrs = attrs.concat(message.attrs).motivoraUnique();
-					}
-					if (message.barrier) {
-						barriers.push(message.barrier);
-						barriers = barriers.motivoraUnique();
-					}
-					if (message.enabler) {
-						enablers.push(message.enabler);
-						enablers = enablers.motivoraUnique();
-					}
-				});
-				let filters = this.state.filters;
-				attrs.map(attr => {
-					filters.attributes[attr] = true;
-				});
-				enablers.map(val => {
-					filters.enablers[val] = true;
-				});
-				barriers.map(val => {
-					filters.barriers[val] = true;
-				});
+				let { enablers, barriers, attrs } = this.processMessagesMetadata(response.data.data);
+				let filters = this.updateFilters({ attrs: attrs, enablers: enablers, barriers: barriers });
+				let messages = this.processMessages(response.data.data);
+				let lastTimestamp;
+				if (messages.length > 0) {
+					lastTimestamp = messages[0].timestamp;
+				}
 				this.setState({
-					messages: response.data.data,
+					messages: messages,
 					attrs: attrs,
 					enablers: enablers,
 					barriers: barriers,
 					loadingData: false,
-					filters: filters
+					filters: filters,
+					lastTimestamp: lastTimestamp
 				});
 			})
 			.catch((error) => {
@@ -115,6 +105,58 @@ class UserDetails extends Component {
 					loadingData: false,
 				});
 			})
+	}
+	processMessagesMetadata(messages) {
+		let attrs = [];
+		let enablers = this.state.enablers || [];
+		let barriers = this.state.barriers || [];
+		messages.map(message => {
+			if (message.attrs) {
+				attrs = attrs.concat(message.attrs).motivoraUnique();
+			}
+			if (message.barrier) {
+				barriers.push(message.barrier);
+				barriers = barriers.motivoraUnique();
+			}
+			if (message.enabler) {
+				enablers.push(message.enabler);
+				enablers = enablers.motivoraUnique();
+			}
+		});
+		return { enablers, barriers, attrs }
+	}
+	updateFilters(params) {
+		let { attrs, enablers, barriers } = params;
+		let filters = this.state.filters;
+		attrs.map(attr => {
+			filters.attributes[attr] = true;
+		});
+		enablers.map(val => {
+			filters.enablers[val] = true;
+		});
+		barriers.map(val => {
+			filters.barriers[val] = true;
+		});
+		return filters;
+	}
+	processMessages(messages) {
+		let output = this.state.messages || [];
+		messages.map(message => output.push(message));
+		this.sortMessages(output);
+		return output;
+	}
+	sortMessages(messages) {
+		messages.sort(function(a, b) {
+			const timestampA = a.timestamp;
+			const timestampB = b.timestamp;
+			let comparison = 0;
+			if (timestampA > timestampB) {
+				comparison = -1;
+			} else if (timestampA < timestampB) {
+				comparison = 1;
+			}
+			return comparison;
+		});
 	}
 	fetchAttrs() {
 		let endpoint = Config.api + '/users/attrs';
@@ -318,6 +360,7 @@ class UserDetails extends Component {
 		} else {
 			return (
 				<div className="text-left" style={{ padding: '20px'}}>
+					<h1>{ this.state.lastTimestamp }</h1>
 					<Container>
 						<Row>
 							<Col xs={4}>
