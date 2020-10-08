@@ -97,8 +97,8 @@ def process_message(user):
             ]
         )
         user.save()
-    elif user_obj.message_set == "MASTERY" and datetime.today().weekday() not in [0, 3] :
-        print('Only send MASTERY messages on M / th')
+    elif user.message_set == "MASTERY" and datetime.today().weekday() not in [0, 3] :
+        print('Only send MASTERY messages on M / Th')
     else:
         print('Sending message to ' + str(user_obj.phone))
         is_successful = user_obj.send_next_sms()
