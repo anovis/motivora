@@ -612,6 +612,14 @@ class UserActions:
 
 
     def handle_direct_message(self):
+        if self.message_received.strip().lower() in ['stop','end']:
+            u = Users.get(self.phone)
+            u.update(
+                actions=[
+                    Users.send_message.set(False)
+                ]
+            )
+            u.save()
         self.save_direct_message('incoming', self.message_received)
 
     def initiate_goal_setting_message(self, u):
@@ -707,6 +715,14 @@ class UserActions:
 
     def handle_weekly_message(self):
         u = Users.get(self.phone)
+        if self.message_received.strip().lower() in ['stop','end']:
+            u.update(
+                actions=[
+                    Users.send_message.set(False)
+                ]
+            )
+            u.save()
+
         if (len(u.weekly_goals_message_response.keys()) == 0):
             self.initiate_goal_setting_message(u)
             return

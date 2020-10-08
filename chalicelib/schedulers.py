@@ -51,6 +51,9 @@ def send_weekly_messages(event):
         print("Fetching users with send_message True and with hour: " + str(hour))
         # Iterate through users for this time
         for user in user_list:
+            if not user.send_message:
+                print('User has deactivated messages.')
+                continue
             if user.message_set != "Text4Health":
                 continue
             user_obj = UserActions(**user.to_dict())
@@ -86,7 +89,9 @@ def process_message(user):
     # Create invocation ID for today and this hour
     invocation_id = datetime.today().strftime('%Y-%m-%d:%H') + '-' + str(user_obj.phone)
     # Only send for users that haven't received a message for this Lambda invocation
-    if user_obj.has_processed_for_invocation_id(invocation_id):
+    if not user.send_message:
+        print('User has deactivated messages.')
+    elif user_obj.has_processed_for_invocation_id(invocation_id):
         print('Already processed ' + str(user_obj.phone) + ' for Invocation ID: ' + invocation_id)
     # Only send for total_days in the program
     elif user_obj.program_is_complete():

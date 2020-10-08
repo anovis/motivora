@@ -17,8 +17,6 @@ def handle_twilio():
 
         parsed_request = {key.decode(): val[0].decode().strip() for key, val in parse_qs(raw_request).items()}
         phone = parsed_request.get('From')
-        # TODO only EBNHC for now
-        message_set = "EBNHC"
         try:
           user = Users.get(int(phone))
           user_class = UserActions(phone, message_set=user.message_set, **parsed_request)
