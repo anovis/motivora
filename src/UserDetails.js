@@ -4,7 +4,7 @@ import Config from './config';
 import axios from 'axios';
 import loader from './images/ajax-loader.gif';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faArrowRight } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faArrowRight, faBell } from '@fortawesome/free-solid-svg-icons';
 import InputRange from 'react-input-range';
 import 'react-input-range/lib/css/index.css';
 import DatePicker from "react-datepicker";
@@ -14,6 +14,8 @@ import "react-datepicker/dist/react-datepicker.css";
 class UserDetails extends Component {
 	constructor(props) {
 		super(props);
+		let today = new Date();
+		today.setHours(23,59,59,999);
 		this.state = {
 			phone: props.match.params.phone,
 			smsBody: '',
@@ -41,10 +43,11 @@ class UserDetails extends Component {
 				enablers: {},
 				barriers: {},
 				startDate: _getLastWeek(),
-				endDate: new Date()
+				endDate: today
 			},
 			enablers: [],
-			barriers: []
+			barriers: [],
+			lastTimestamp: null
 		};
 		this.fetchMessageHistory = this.fetchMessageHistory.bind(this);
 		this.fetchAttrs = this.fetchAttrs.bind(this);
@@ -61,60 +64,119 @@ class UserDetails extends Component {
   		this.onSearch = this.onSearch.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
   		this.roundNumber = this.roundNumber.bind(this);
+  		this.processMessagesMetadata = this.processMessagesMetadata.bind(this);
+  		this.updateFilters = this.updateFilters.bind(this);
+  		this.sortMessages = this.sortMessages.bind(this);
+  		this.processMessages = this.processMessages.bind(this);
+  		this.setNewFlag = this.setNewFlag.bind(this);
 	}
 	componentDidMount() {
-		this.fetchMessageHistory();
+		this.fetchMessageHistory(true);
+		let _this = this;
+		setInterval(function() { 
+			_this.fetchMessageHistory(false);
+		}, 10000);
 		this.fetchAttrs();
 	}
-	fetchMessageHistory() {
+	fetchMessageHistory(showLoader) {
 		let endpoint = Config.api + '/users/message_history';
 		let params = {
 			phone: this.state.phone
 		}
-		this.setState({loadingData: true});
+		if (this.state.lastTimestamp) {
+			params.since = this.state.lastTimestamp;
+		}
+		if (showLoader === true) {
+			this.setState({loadingData: true});
+		}
 		axios.get(endpoint, {params: params})
 			.then((response) => {
-				let attrs = [];
-				let enablers = this.state.enablers || [];
-				let barriers = this.state.barriers || [];
-				response.data.data.map(message => {
-					if (message.attrs) {
-						attrs = attrs.concat(message.attrs).motivoraUnique();
-					}
-					if (message.barrier) {
-						barriers.push(message.barrier);
-						barriers = barriers.motivoraUnique();
-					}
-					if (message.enabler) {
-						enablers.push(message.enabler);
-						enablers = enablers.motivoraUnique();
-					}
-				});
-				let filters = this.state.filters;
-				attrs.map(attr => {
-					filters.attributes[attr] = true;
-				});
-				enablers.map(val => {
-					filters.enablers[val] = true;
-				});
-				barriers.map(val => {
-					filters.barriers[val] = true;
-				});
+				let { enablers, barriers, attrs } = this.processMessagesMetadata(response.data.data);
+				let filters = this.updateFilters({ attrs: attrs, enablers: enablers, barriers: barriers });
+				if (this.state.lastTimestamp) {
+					this.setNewFlag(response.data.data);
+				}
+				let messages = this.processMessages(response.data.data);
+				let lastTimestamp;
+				if (messages.length > 0) {
+					lastTimestamp = messages[0].timestamp;
+				}
 				this.setState({
-					messages: response.data.data,
+					messages: messages,
 					attrs: attrs,
 					enablers: enablers,
 					barriers: barriers,
 					loadingData: false,
-					filters: filters
+					filters: filters,
+					lastTimestamp: lastTimestamp
 				});
 			})
 			.catch((error) => {
 				window.alert(error)
-				this.setState({
-					loadingData: false,
-				});
+				if (showLoader === true) {
+					this.setState({loadingData: false});
+				}
 			})
+	}
+	setNewFlag(messages) {
+		messages.map(message => {
+			message.new = true;
+			setTimeout(function() {
+				message.new = false;
+			}, 10000)
+		})
+	}
+	processMessagesMetadata(messages) {
+		let attrs = [];
+		let enablers = this.state.enablers || [];
+		let barriers = this.state.barriers || [];
+		messages.map(message => {
+			if (message.attrs) {
+				attrs = attrs.concat(message.attrs).motivoraUnique();
+			}
+			if (message.barrier) {
+				barriers.push(message.barrier);
+				barriers = barriers.motivoraUnique();
+			}
+			if (message.enabler) {
+				enablers.push(message.enabler);
+				enablers = enablers.motivoraUnique();
+			}
+		});
+		return { enablers, barriers, attrs }
+	}
+	updateFilters(params) {
+		let { attrs, enablers, barriers } = params;
+		let filters = this.state.filters;
+		attrs.map(attr => {
+			filters.attributes[attr] = true;
+		});
+		enablers.map(val => {
+			filters.enablers[val] = true;
+		});
+		barriers.map(val => {
+			filters.barriers[val] = true;
+		});
+		return filters;
+	}
+	processMessages(messages) {
+		let output = this.state.messages || [];
+		messages.map(message => output.push(message));
+		this.sortMessages(output);
+		return output;
+	}
+	sortMessages(messages) {
+		messages.sort(function(a, b) {
+			const timestampA = a.timestamp;
+			const timestampB = b.timestamp;
+			let comparison = 0;
+			if (timestampA > timestampB) {
+				comparison = -1;
+			} else if (timestampA < timestampB) {
+				comparison = 1;
+			}
+			return comparison;
+		});
 	}
 	fetchAttrs() {
 		let endpoint = Config.api + '/users/attrs';
@@ -160,7 +222,10 @@ class UserDetails extends Component {
 	    })
 	    .then(response => {
 	    	if (response && response.status === 200) {
-	        	window.alert('SMS successfully sent')
+	        	window.alert('SMS successfully sent');
+	        	this.setState({
+		      		smsBody: ''
+		    	});
 	    	} else {
 	        	window.alert('An error occured on the server. Please ensure that the phone number provided is correct');
 	    	}
@@ -250,6 +315,10 @@ class UserDetails extends Component {
   		let filters = this.state.filters;
   		filters.startDate = start;
   		filters.endDate = end;
+  		if (filters.endDate) {
+  			filters.endDate.setHours(23,59,59,999);
+  			console.log(filters.endDate)
+  		}
   		this.setState({filters: filters});
   	}
 
@@ -380,6 +449,9 @@ class UserDetails extends Component {
 												role="alert" 
 												className={`alert alert-${ this.getAlertColor(message) } text-${ this.getTextDirection(message) }`}
 											>
+				  								<span>
+				  									{ (message.new === true) ? <FontAwesomeIcon icon={faBell} size="lg" color="red"/> : null } 
+				  								</span>
 												<b><i>{ this.formatTimestamp(message.timestamp) }</i> { (message.rating != null) ? <Badge variant={ this.getBadgeColor(message.rating) } className="pull-right">{ message.rating }</Badge> : null }</b>
 												<span>
 				  									{ (message.direction === 'outgoing') ? <FontAwesomeIcon icon={faArrowRight} size="xs"/> : null } 
