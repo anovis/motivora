@@ -34,7 +34,7 @@ class Users(Model):
     created_time      = UTCDateTimeAttribute(default=datetime.now(), null=False)
     is_real_user      = BooleanAttribute(default=True)
     welcome_message_received = BooleanAttribute(default=False)
-    next_phone_call   = UnicodeAttribute(default='', null=True)
+    next_phone_call   = UnicodeAttribute(default='-', null=True)
 
     # Message response fields
     message_response  = JSONAttribute(default={}, null=True)

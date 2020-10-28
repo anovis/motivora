@@ -144,27 +144,27 @@ def post_user():
     user.save()
 
   try:
-    if 'message_set' in payload:
+    if 'message_set' in payload and payload['message_set'] != "":
       user.update(actions=[Users.message_set.set(payload['message_set'])]) 
   
-    if 'lang_code' in payload:
+    if 'lang_code' in payload and payload['lang_code'] != "":
       user.update(actions=[Users.lang_code.set(payload['lang_code'])]) 
   
-    if 'time' in payload:
+    if 'time' in payload and payload['time'] != "":
       user.update(actions=[Users.time.set(int(payload['time']))]) 
   
-    if 'preferred_attrs' in payload:
+    if 'preferred_attrs' in payload and payload['preferred_attrs'] != "":
       user.update(actions=[Users.preferred_attrs.set(payload['preferred_attrs'])]) 
 
-    if 'send_message' in payload:
+    if 'send_message' in payload and payload['send_message'] != "":
       sendMessage = (payload['send_message'] == 'true');
       user.update(actions=[Users.send_message.set(sendMessage)]) 
 
-    if 'is_real_user' in payload:
+    if 'is_real_user' in payload and payload['is_real_user'] != "":
       sendMessage = (payload['is_real_user'] == 'true');
       user.update(actions=[Users.is_real_user.set(sendMessage)]) 
 
-    if 'next_phone_call' in payload:
+    if 'next_phone_call' in payload and payload['next_phone_call'] != "":
       user.update(actions=[Users.next_phone_call.set(payload['next_phone_call'])]) 
 
   except Exception as e:
