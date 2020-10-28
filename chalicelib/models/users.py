@@ -34,6 +34,7 @@ class Users(Model):
     created_time      = UTCDateTimeAttribute(default=datetime.now(), null=False)
     is_real_user      = BooleanAttribute(default=True)
     welcome_message_received = BooleanAttribute(default=False)
+    next_phone_call   = UnicodeAttribute(default=None)
 
     # Message response fields
     message_response  = JSONAttribute(default={}, null=True)
@@ -45,7 +46,10 @@ class Users(Model):
     time_index        = TimeIndex()
 
     def to_json(self):
-        return self.to_dict()
+        json = self.to_dict()
+        json['messages_sent'] = list(json['messages_sent'])
+        json['preferred_attrs'] = list(json['preferred_attrs'])
+        return json
 
     def to_dict(self):
         created_at = str(self.created_time)
@@ -59,12 +63,14 @@ class Users(Model):
             'messages_sent': self.messages_sent,
             'attr_scores': self.attr_scores,
             'preferred_attrs': self.preferred_attrs,
+            'message_response': self.message_response,
             'weekly_goals_message_response': self.weekly_goals_message_response,
             'weekly_progress_message_response': self.weekly_progress_message_response,
             'direct_message_response': self.direct_message_response,
             'created_time': created_at,
             'is_real_user': self.is_real_user,
-            'welcome_message_received': self.welcome_message_received
+            'welcome_message_received': self.welcome_message_received,
+            'next_phone_call': self.next_phone_call
         }
 
     def to_frontend(self):
@@ -90,5 +96,6 @@ class Users(Model):
             'num_sent_messages': num_sent_messages,
             'num_rated_messages': num_rated_messages,
             'average_rating': avg_rating,
-            'is_real_user': self.is_real_user
+            'is_real_user': self.is_real_user,
+            'next_phone_call': self.next_phone_call
         }

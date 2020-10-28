@@ -36,7 +36,9 @@ class Messages(Model):
     rating_10 = NumberAttribute(default=0)
 
     def to_json(self):
-        return self.to_dict()
+        json = self.to_dict()
+        json['attr_list'] = list(json['attr_list'])
+        return json
 
     def to_dict(self):
         return {

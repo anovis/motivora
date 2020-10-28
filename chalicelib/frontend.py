@@ -164,6 +164,9 @@ def post_user():
       sendMessage = (payload['is_real_user'] == 'true');
       user.update(actions=[Users.is_real_user.set(sendMessage)]) 
 
+    if 'next_phone_call' in payload:
+      user.update(actions=[Users.next_phone_call.set(payload['next_phone_call'])]) 
+
   except Exception as e:
     print(e)
     return Response(
