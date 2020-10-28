@@ -52,11 +52,11 @@ def send_weekly_messages(event):
         print("Fetching users with send_message True and with hour: " + str(hour))
         # Iterate through users for this time
         for user in user_list:
+            user_obj = UserActions(**user.to_dict())
             if not user.send_message:
                 print('User has deactivated messages.')
                 continue
             if user.message_set == "Text4Health":
-                user_obj = UserActions(**user.to_dict())
                 hours_since_creation = divmod((pytz.UTC.localize(datetime.today()) - user.created_time).total_seconds(), 3600)[0]
                 if hours_since_creation < 24.0*7 and cur_day_of_week != goal_message_sent_day_of_week:
                     if hours_since_creation < 24.0:
@@ -73,7 +73,7 @@ def send_weekly_messages(event):
                  next_phone_call = datetime.strptime(str(user.next_phone_call)[0:10], '%Y-%m-%d')
                  day_before_next_phone_call = str(next_phone_call - timedelta(days=1))[0:10]
                  if current_date == day_before_next_phone_call:
-                    user_obj.initiate_progress_message(user)
+                    user_obj.initiate_progress_message(user, "mastery")
 
 
 def get_et_hour():
@@ -111,7 +111,7 @@ def process_message(user):
             ]
         )
         user.save()
-    elif user.message_set == "MASTERY" and (len(user.next_phone_call) < 10 or (next_phone_call - datetime.today()).days in [4, 6]):
+    elif user.message_set == "MASTERY" and (len(user.next_phone_call) < 10 or (next_phone_call - datetime.today()).days not in [4, 6]):
         print('Only send MASTERY messages 4 or 6 days before the next_phone_call')
     else:
         print('Sending message to ' + str(user_obj.phone))

@@ -287,7 +287,7 @@ class UserActions:
             next_message = self.get_recommended_message()
         message = Messages.get(u.message_set, next_message)
         log_message = message.to_json()
-        log_message['attr_list'] = message.to_json()['attr_list'].as_dict()
+        log_message['attr_list'] = message.to_json()['attr_list']
         self.log("Chosen next message: " + str(log_message))
         return next_message
 
@@ -657,7 +657,7 @@ class UserActions:
         self.send_goal_setting_sms(message)
 
 
-    def initiate_progress_message(self, u):
+    def initiate_progress_message(self, u, category="progress"):
         new_key = 0
         prev_goal_hash = {
             'goal_type': None,
@@ -667,7 +667,7 @@ class UserActions:
         if (len(u.weekly_goals_message_response.keys()) > 0):
             new_key = str(sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1])
             prev_goal_hash = u.weekly_goals_message_response[new_key]
-        decision_tree = self.get_first_decision_tree("progress", prev_goal_hash)
+        decision_tree = self.get_first_decision_tree(category, prev_goal_hash)
         u.weekly_progress_message_response[new_key] = {
             'goal_type': prev_goal_hash['goal_type'],
             'goal_subtype': prev_goal_hash['goal_subtype'],
