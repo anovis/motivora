@@ -307,7 +307,7 @@ def get_ranked_attrs():
       headers={'Content-Type': 'text/plain'}
     )
   return Response(
-    body={"data": {"ranked_attrs": ranked_attrs, "preferred_attrs": list(user.preferred_attrs)}},
+    body={"data": {"ranked_attrs": ranked_attrs, "preferred_attrs": list(user.preferred_attrs), "details": user.to_frontend()}},
     status_code=200,
     headers={'Content-Type': 'text/plain'}
   )
