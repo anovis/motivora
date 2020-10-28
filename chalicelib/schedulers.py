@@ -1,6 +1,7 @@
 from chalicelib import app
 from chalice import Rate
 from datetime import datetime
+from datetime import timedelta
 import pytz
 from chalicelib.models import Users, Invocations
 from chalicelib.actions import UserActions, MessageActions
@@ -54,20 +55,26 @@ def send_weekly_messages(event):
             if not user.send_message:
                 print('User has deactivated messages.')
                 continue
-            if user.message_set != "Text4Health":
-                continue
-            user_obj = UserActions(**user.to_dict())
-            hours_since_creation = divmod((pytz.UTC.localize(datetime.today()) - user.created_time).total_seconds(), 3600)[0]
-            if hours_since_creation < 24.0*7 and cur_day_of_week != goal_message_sent_day_of_week:
-                if hours_since_creation < 24.0:
-                    user_obj.initiate_goal_setting_message(user)
-                if hours_since_creation >= 24.0 * 2 and hours_since_creation < 24.0 * 3:
+            if user.message_set == "Text4Health":
+                user_obj = UserActions(**user.to_dict())
+                hours_since_creation = divmod((pytz.UTC.localize(datetime.today()) - user.created_time).total_seconds(), 3600)[0]
+                if hours_since_creation < 24.0*7 and cur_day_of_week != goal_message_sent_day_of_week:
+                    if hours_since_creation < 24.0:
+                        user_obj.initiate_goal_setting_message(user)
+                    if hours_since_creation >= 24.0 * 2 and hours_since_creation < 24.0 * 3:
+                        user_obj.initiate_progress_message(user)
+                else:
+                    if cur_day_of_week == goal_message_sent_day_of_week:
+                        user_obj.initiate_goal_setting_message(user)
+                    if cur_day_of_week == progress_message_sent_day_of_week:
+                        user_obj.initiate_progress_message(user)
+            if user.message_set == "MASTERY":
+                 current_date = str(datetime.now())[0:10]
+                 next_phone_call = datetime.strptime(str(user.next_phone_call)[0:10], '%Y-%m-%d')
+                 day_before_next_phone_call = str(next_phone_call - timedelta(days=1))[0:10]
+                 if current_date == day_before_next_phone_call:
                     user_obj.initiate_progress_message(user)
-            else:
-                if cur_day_of_week == goal_message_sent_day_of_week:
-                    user_obj.initiate_goal_setting_message(user)
-                if cur_day_of_week == progress_message_sent_day_of_week:
-                    user_obj.initiate_progress_message(user)
+
 
 def get_et_hour():
     hour = datetime.now().hour - 4
@@ -88,6 +95,8 @@ def process_message(user):
     user_obj = UserActions(**user.to_dict())
     # Create invocation ID for today and this hour
     invocation_id = datetime.today().strftime('%Y-%m-%d:%H') + '-' + str(user_obj.phone)
+    if len(user.next_phone_call) >= 10:
+        next_phone_call = datetime.strptime(str(user.next_phone_call)[0:10], '%Y-%m-%d')
     # Only send for users that haven't received a message for this Lambda invocation
     if not user.send_message:
         print('User has deactivated messages.')
@@ -102,8 +111,8 @@ def process_message(user):
             ]
         )
         user.save()
-    elif user.message_set == "MASTERY" and datetime.today().weekday() not in [0, 3] :
-        print('Only send MASTERY messages on M / Th')
+    elif user.message_set == "MASTERY" and (len(user.next_phone_call) < 10 or (next_phone_call - datetime.today()).days in [4, 6]):
+        print('Only send MASTERY messages 4 or 6 days before the next_phone_call')
     else:
         print('Sending message to ' + str(user_obj.phone))
         is_successful = user_obj.send_next_sms()
