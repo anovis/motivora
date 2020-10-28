@@ -18,7 +18,8 @@ const config = {
 		num_rated_messages: false,
 		average_rating: false,
 		preferred_attrs: { type: 'textarea'},
-		is_real_user: { type: 'checkbox', options: { values: 'true:false' }} 
+		is_real_user: { type: 'checkbox', options: { values: 'true:false' }},
+		next_phone_call: { type: 'textarea'}
 	}
 
 }

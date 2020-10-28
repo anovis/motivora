@@ -102,7 +102,7 @@ class Table extends Component {
 				endpoint = Config.api + '/responses';
 				break;
 			case'USERS':
-				this.setState({columns:['created_time', 'phone','message_set','average_rating', 'time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages', 'is_real_user', 'preferred_attrs']});
+				this.setState({columns:['created_time', 'phone','message_set','average_rating', 'time','send_message','lang_code', 'num_sent_messages', 'num_rated_messages', 'next_phone_call', 'is_real_user', 'preferred_attrs']});
 				endpoint = Config.api + '/users';
 				break;
 			case 'MESSAGES':
@@ -197,6 +197,12 @@ class Table extends Component {
 	  		return (new Date(date)).toLocaleDateString('en-US', options);
   		}
   	}
+  	formatDate(date) {
+  		if (date) {
+	  		let options = {month: 'long', year: 'numeric', day: 'numeric'};
+	  		return (new Date(date)).toLocaleDateString('en-US', options);
+  		}
+  	}
 	
 	isExpandableRow(row) {
 		if (this.props.activePage === 'MESSAGES') {
@@ -232,7 +238,17 @@ class Table extends Component {
 					var date = new Date(row[columnName]);
 					return _this.formatTimestamp(date);
 
-				} else if (columnName === 'phone') {
+				} else if (columnName === 'next_phone_call') {
+					if (row[columnName]) {
+						var date = new Date(row[columnName]);
+						return _this.formatDate(date);
+					} else {
+						return "-"
+					}
+
+				} 
+
+				else if (columnName === 'phone') {
 
 					return <Link to={`/user-details/${cell}`}>+{ cell }</Link>;
 

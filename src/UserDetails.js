@@ -61,6 +61,7 @@ class UserDetails extends Component {
   		this.onEnablerFilter = this.onEnablerFilter.bind(this);
   		this.onBarrierFilter = this.onBarrierFilter.bind(this);
   		this.onDateFilterChange = this.onDateFilterChange.bind(this);
+  		this.onNextPhoneCallChange = this.onNextPhoneCallChange.bind(this);
   		this.onSearch = this.onSearch.bind(this);
   		this.filterMessages = this.filterMessages.bind(this);
   		this.roundNumber = this.roundNumber.bind(this);
@@ -185,9 +186,15 @@ class UserDetails extends Component {
 		}
 		axios.get(endpoint, {params: params})
 			.then((response) => {
+				let nextPhoneCallStr = (response.data.data.details || {}).next_phone_call;
+				let nextPhoneCall;
+				if (nextPhoneCallStr) {
+					nextPhoneCall = Date.parse(nextPhoneCallStr)
+				}
 				this.setState({
 					ranked_attrs: response.data.data.ranked_attrs,
 					preferred_attrs: response.data.data.preferred_attrs,
+					next_phone_call: nextPhoneCall
 				});
 			})
 			.catch((error) => {console.log(error)})
@@ -317,9 +324,25 @@ class UserDetails extends Component {
   		filters.endDate = end;
   		if (filters.endDate) {
   			filters.endDate.setHours(23,59,59,999);
-  			console.log(filters.endDate)
   		}
   		this.setState({filters: filters});
+  	}
+  	onNextPhoneCallChange(date) {
+
+		let payload = {
+			phone: this.state.phone,
+			next_phone_call: date
+		};
+		let _this = this;
+		axios.post(Config.api + '/user', payload)
+			.then(function (response) {
+				console.log('Next phone call updated', response)
+  				_this.setState({next_phone_call: date});
+			})
+			.catch(function (error) {
+				console.log(error);
+			});
+
   	}
 
   	filterMessages() {
@@ -392,6 +415,12 @@ class UserDetails extends Component {
 							<Col xs={4}>
 								<b>Participant: +{ this.state.phone }</b>
 				    			<hr/>
+				    			<b>Next phone call:</b>
+								<DatePicker
+									selected={this.state.next_phone_call}
+									onChange={this.onNextPhoneCallChange}
+								/>
+								<hr/>
 								<b>Preferred attributes:</b>
 								<ul>
 									{
