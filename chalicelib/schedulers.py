@@ -97,6 +97,7 @@ def process_message(user):
     invocation_id = datetime.today().strftime('%Y-%m-%d:%H') + '-' + str(user_obj.phone)
     if len(user.next_phone_call) >= 10:
         next_phone_call = datetime.strptime(str(user.next_phone_call)[0:10], '%Y-%m-%d')
+        today = datetime.strptime(str(datetime.today())[0:10], '%Y-%m-%d')
     # Only send for users that haven't received a message for this Lambda invocation
     if not user.send_message:
         print('User has deactivated messages.')
@@ -111,7 +112,7 @@ def process_message(user):
             ]
         )
         user.save()
-    elif user.message_set == "MASTERY" and (len(user.next_phone_call) < 10 or (next_phone_call - datetime.today()).days not in [4, 6]):
+    elif user.message_set == "MASTERY" and (len(user.next_phone_call) < 10 or (next_phone_call - today).days not in [4, 6]):
         print('Only send MASTERY messages 4 or 6 days before the next_phone_call')
     else:
         print('Sending message to ' + str(user_obj.phone))

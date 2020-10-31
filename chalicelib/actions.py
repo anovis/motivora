@@ -751,7 +751,10 @@ class UserActions:
                 return
             else:
                 last_decision_tree_id = latest_progress_message['responses'][-1]['decision_tree_id']
-                type = "progress"
+                if u.message_set == "MASTERY":
+                    type = "mastery"
+                else:
+                    type = "progress"
         else:
             if (latest_goal_message['status'] == 'complete'):
                 self.initiate_progress_message(u)
