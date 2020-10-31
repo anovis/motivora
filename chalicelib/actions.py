@@ -747,8 +747,11 @@ class UserActions:
         if (cur_key == cur_progress_key):
             latest_progress_message = u.weekly_progress_message_response[cur_key]
             if (latest_progress_message['status'] == 'complete'):
-                self.initiate_goal_setting_message(u)
-                return
+                if u.message_set == "MASTERY":
+                    type = "mastery"
+                else:
+                    self.initiate_goal_setting_message(u)
+                    return
             else:
                 last_decision_tree_id = latest_progress_message['responses'][-1]['decision_tree_id']
                 if u.message_set == "MASTERY":
@@ -757,8 +760,11 @@ class UserActions:
                     type = "progress"
         else:
             if (latest_goal_message['status'] == 'complete'):
-                self.initiate_progress_message(u)
-                return
+                if u.message_set == "MASTERY":
+                    type = "mastery"
+                else:
+                    self.initiate_progress_message(u)
+                    return
             else:
                 last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
                 type = "goals"
