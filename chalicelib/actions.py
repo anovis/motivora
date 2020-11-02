@@ -852,7 +852,7 @@ class UserActions:
 
         # Save the outgoing message to the responses hash
         update_hash = u.weekly_goals_message_response[cur_key]
-        if type == 'progress':
+        if type == 'progress' or type == 'mastery':
             update_hash = u.weekly_progress_message_response[cur_key]
         update_hash['responses'].append({
             'direction': 'outgoing',
