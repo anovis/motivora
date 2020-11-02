@@ -753,7 +753,8 @@ class UserActions:
                     self.initiate_goal_setting_message(u)
                     return
             else:
-                last_decision_tree_id = latest_progress_message['responses'][-1]['decision_tree_id']
+                outgoing_messages = [x for x in latest_progress_message['responses'] if x['direction'] == 'outgoing']
+                last_decision_tree_id = outgoing_messages[-1]['decision_tree_id']
                 if u.message_set == "MASTERY":
                     type = "mastery"
                 else:
@@ -766,7 +767,8 @@ class UserActions:
                     self.initiate_progress_message(u)
                     return
             else:
-                last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
+                outgoing_messages = [x for x in latest_progress_message['responses'] if x['direction'] == 'outgoing']
+                last_decision_tree_id = outgoing_messages[-1]['decision_tree_id']
                 type = "goals"
 
         # Reset trees if response value is equal to the special reset value indicated to the user
