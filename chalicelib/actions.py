@@ -167,11 +167,13 @@ class UserActions:
         message = Messages.get(user.message_set, next_message_id)
         self.last_message_sent = next_message_id;
         body = self.get_message_body(message)
+        if (next_message_id != 1 or user.message_set != "MASTERY"):
+            body += rating_request
         if is_test:
-            print("Would send messge: %s"%(body + rating_request + self.get_anti_spam_message()))
+            print("Would send messge: %s"%(body + self.get_anti_spam_message()))
         else:
             self.send_welcome_sms_if_needed()
-            self.send_motivational_sms(message, body + rating_request + self.get_anti_spam_message())
+            self.send_motivational_sms(message, body + self.get_anti_spam_message())
             self.send_reminder_sms_if_needed(self.days_before_rating_reminder)
         return True
 

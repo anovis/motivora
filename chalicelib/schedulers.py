@@ -91,6 +91,25 @@ def get_weekly_message_hour():
     else:
         return [hour + 2]
 
+def send_next_message(user_obj, invocation_id):
+    print('Sending message to ' + str(user_obj.phone))
+    is_successful = user_obj.send_next_sms()
+    if is_successful:
+        print('Setting next message')
+        user_obj.set_next_message()
+        # Keep track of the fact that we processed this user for this
+        # Lambda invocation. Could be that we don't get to all of them
+        # and so the Lambda function would automatically retry.
+        print('Setting invocation ID')
+        new_invocation = Invocations(
+            invocation_id=invocation_id
+        )
+        new_invocation.save()
+    else:
+        print('Message sending unsuccessful for ' + str(user_obj.phone))
+        sentry_sdk.capture_exception('Message sending unsuccessful for ' + str(user_obj.phone))
+
+
 def process_message(user):
     user_obj = UserActions(**user.to_dict())
     # Create invocation ID for today and this hour
@@ -98,6 +117,13 @@ def process_message(user):
     if len(user.next_phone_call) >= 10:
         next_phone_call = datetime.strptime(str(user.next_phone_call)[0:10], '%Y-%m-%d')
         today = datetime.strptime(str(datetime.today())[0:10], '%Y-%m-%d')
+
+    # Send the first MASTERY message separate from the rest of the schedule
+    if (next_phone_call - today).days <= 6:
+        if user.message_set == "MASTERY" and user_obj.sent_messages_length() <= 1 and user.prev_message != 1:
+            is_successful = user_obj.send_next_sms()
+            user_obj.set_next_message()
+
     # Only send for users that haven't received a message for this Lambda invocation
     if not user.send_message:
         print('User has deactivated messages.')
@@ -112,25 +138,11 @@ def process_message(user):
             ]
         )
         user.save()
-    elif user.message_set == "MASTERY" and (len(user.next_phone_call) < 10 or (next_phone_call - today).days not in [4, 6]):
-        print('Only send MASTERY messages 4 or 6 days before the next_phone_call')
+    elif user.message_set == "MASTERY" and (len(user.next_phone_call) < 10 or (next_phone_call - today).days not in [3, 5]):
+        print('Only send MASTERY messages 3 or 5 days before the next_phone_call')
     else:
-        print('Sending message to ' + str(user_obj.phone))
-        is_successful = user_obj.send_next_sms()
-        if is_successful:
-            print('Setting next message')
-            user_obj.set_next_message()
-            # Keep track of the fact that we processed this user for this
-            # Lambda invocation. Could be that we don't get to all of them
-            # and so the Lambda function would automatically retry.
-            print('Setting invocation ID')
-            new_invocation = Invocations(
-                invocation_id=invocation_id
-            )
-            new_invocation.save()
-        else:
-            print('Message sending unsuccessful for ' + str(user_obj.phone))
-            sentry_sdk.capture_exception('Message sending unsuccessful for ' + str(user_obj.phone))
+        send_next_message(user_obj, invocation_id)
+        
 
 
 
