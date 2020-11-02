@@ -196,9 +196,13 @@ def list_users():
 def get_message_history():
   # In use in the interface
   payload = app.current_request.json_body
-  phone = int(app.current_request.query_params.get('phone'))
+  since_timestamp = None
+  if app.current_request.query_params is not None:
+    phone = int(app.current_request.query_params.get('phone'))
+    since_timestamp = app.current_request.query_params.get('since')
+  else:
+    phone = payload['phone']
   user = Users.get(phone)
-  since_timestamp = app.current_request.query_params.get('since')
 
   user_obj = UserActions(**user.to_dict())
   all_messages = []
@@ -297,6 +301,7 @@ def get_ranked_attrs():
   phone = int(app.current_request.query_params.get('phone'))
   user = Users.get(phone)
   user_obj = UserActions(**user.to_dict())
+  ranked_attrs =[]
   try:
     ranked_attrs = user_obj.get_scored_attributes_for_frontend(user_obj, user)
   except Exception as e:

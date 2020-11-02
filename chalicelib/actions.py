@@ -533,7 +533,7 @@ class UserActions:
                 continue
             final_score = round(attribute_scores[attr]['absolute_score'] / attribute_scores[attr]['absolute_count'], 1)
             final_attr_scores[attr] = final_score
-        final_attr_scores['MESSAGE'] = round(rating_total / len(rated_responses), 1)
+        final_attr_scores['MESSAGE'] = round((rating_total + 0.01) / (len(rated_responses) + 0.01), 1)
 
         return final_attr_scores
 
