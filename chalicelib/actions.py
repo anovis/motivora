@@ -7,6 +7,7 @@ import random
 from heapq import nlargest
 import pdb
 import re
+import itertools
 
 import string
 #import nltk
@@ -500,8 +501,7 @@ class UserActions:
     def get_scored_attributes_for_frontend(self, user_obj, user):
         # Compute an average score per category the message has associated with it
         attribute_scores = {}
-        #token_scores = {}
-        #rareness_scores = {}
+        rated_response_hash = {k: v for k, v in user.message_response.items() if "message" in v}
         rated_responses = [k for k, v in user.message_response.items() if "message" in v]
         rating_total = 0
         for msg_sent_idx in rated_responses:
@@ -512,8 +512,9 @@ class UserActions:
                 continue
             rating_total += message_score
             attributes = message.attr_list.as_dict()
-            top_ten_idx = max([int(x) for x in user.message_response.keys()]) - 10
-            if (int(msg_sent_idx) > top_ten_idx):
+            sorted_rated_messages = {k: v for k, v in sorted(rated_response_hash.items(), key=lambda item: item[1]['timestamp'], reverse=True)}
+            top_ten_idx = dict(itertools.islice(sorted_rated_messages.items(), 10)).keys()
+            if msg_sent_idx in top_ten_idx:
                 attributes["RECENT MESSAGE"] = True
             for attr, boolean in attributes.items():
                 if not boolean: continue
@@ -525,7 +526,6 @@ class UserActions:
                 else:
                     attribute_scores[attr]['absolute_score'] += message_score
                     attribute_scores[attr]['absolute_count'] += 1
-        #print(attribute_scores)
         # Compute final scores for each attribute
         filtered_attrs = ['MESSAGE', 'RECENT MESSAGE', 'Activity', 'Directive', 'Diet', 'Self-care', 'Social', 'Positive Psychology',
             'Positive psychology', 'Overall diet', 'Diet: Fruit/Veg', 'Fat/Chol', 'Physical Activity', 'Activity', 'Sedentary Time']
