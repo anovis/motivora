@@ -119,7 +119,7 @@ def process_message(user):
         today = datetime.strptime(str(datetime.today())[0:10], '%Y-%m-%d')
 
     # Send the first MASTERY message separate from the rest of the schedule
-    if (next_phone_call - today).days <= 6:
+    if len(user.next_phone_call) >= 10 and (next_phone_call - today).days <= 6:
         if user.message_set == "MASTERY" and user_obj.sent_messages_length() <= 1 and user.prev_message != 1:
             is_successful = user_obj.send_next_sms()
             user_obj.set_next_message()
