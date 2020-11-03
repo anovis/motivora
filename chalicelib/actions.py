@@ -769,8 +769,7 @@ class UserActions:
                     self.initiate_progress_message(u)
                     return
             else:
-                outgoing_messages = [x for x in latest_progress_message['responses'] if x['direction'] == 'outgoing']
-                last_decision_tree_id = outgoing_messages[-1]['decision_tree_id']
+                last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
                 type = "goals"
 
         # Reset trees if response value is equal to the special reset value indicated to the user
