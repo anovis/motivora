@@ -449,7 +449,7 @@ class UserActions:
         attribute_scores = {}
         #token_scores = {}
         #rareness_scores = {}
-        rated_responses = [*user.message_response.keys()]
+        rated_responses = [k for k, v in user.message_response.items() if "message" in v]
         rating_total = 0
         for msg_sent_idx in rated_responses:
             weight = max(self.historical_message_discount_factor**(len(rated_responses) - 1), 0.001) - int(msg_sent_idx)
@@ -502,7 +502,7 @@ class UserActions:
         attribute_scores = {}
         #token_scores = {}
         #rareness_scores = {}
-        rated_responses = [*user.message_response.keys()]
+        rated_responses = [k for k, v in user.message_response.items() if "message" in v]
         rating_total = 0
         for msg_sent_idx in rated_responses:
             msg_idx = int(user.message_response[msg_sent_idx]['message_sent'])
@@ -535,7 +535,9 @@ class UserActions:
                 continue
             final_score = round(attribute_scores[attr]['absolute_score'] / attribute_scores[attr]['absolute_count'], 1)
             final_attr_scores[attr] = final_score
-        final_attr_scores['MESSAGE'] = round((rating_total + 0.01) / (len(rated_responses) + 0.01), 1)
+        final_attr_scores['MESSAGE'] = 0
+        if len(rated_responses) > 0:
+            final_attr_scores['MESSAGE'] = round(rating_total / len(rated_responses), 1)
 
         return final_attr_scores
 
