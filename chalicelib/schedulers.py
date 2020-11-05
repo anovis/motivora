@@ -58,7 +58,7 @@ def send_weekly_messages(event):
                 continue
             if user.message_set == "Text4Health":
                 hours_since_creation = divmod((pytz.UTC.localize(datetime.today()) - user.created_time).total_seconds(), 3600)[0]
-                if hours_since_creation < 24.0*7 and cur_day_of_week != goal_message_sent_day_of_week:
+                if hours_since_creation < 24.0*7:
                     if hours_since_creation < 24.0:
                         user_obj.initiate_goal_setting_message(user)
                     if hours_since_creation >= 24.0 * 2 and hours_since_creation < 24.0 * 3:
