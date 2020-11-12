@@ -92,12 +92,12 @@ class UserDetails extends Component {
 		}
 		axios.get(endpoint, {params: params})
 			.then((response) => {
-				let { enablers, barriers, attrs } = this.processMessagesMetadata(response.data.data);
-				let filters = this.updateFilters({ attrs: attrs, enablers: enablers, barriers: barriers });
 				if (this.state.lastTimestamp) {
 					this.setNewFlag(response.data.data);
 				}
 				let messages = this.processMessages(response.data.data);
+				let { enablers, barriers, attrs } = this.processMessagesMetadata(response.data.data, this.state.filters.startDate, this.state.filters.endDate);
+				let filters = this.updateFilters({ attrs: attrs, enablers: enablers, barriers: barriers });
 				let lastTimestamp;
 				if (messages.length > 0) {
 					lastTimestamp = messages[0].timestamp;
@@ -127,15 +127,22 @@ class UserDetails extends Component {
 			}, 10000)
 		})
 	}
-	processMessagesMetadata(messages) {
-		let attrs = [];
-		let enablers = this.state.enablers || [];
-		let barriers = this.state.barriers || [];
+	processMessagesMetadata(messages, startDate, endDate, initVars) {
+		let attrs = initVars ? [] : (this.state.attrs || []);
+		let enablers = initVars ? [] : (this.state.enablers || []);
+		let barriers = initVars ? [] : (this.state.barriers || []);
 		messages.map(message => {
+  			if (message.timestamp) {
+  				let date = new Date(message.timestamp);
+  				if ((date > endDate) || (date < startDate)) {
+  					return;
+  				}
+  			}
 			if (message.attrs) {
 				attrs = attrs.concat(message.attrs).motivoraUnique();
 			}
 			if (message.barrier) {
+
 				barriers.push(message.barrier);
 				barriers = barriers.motivoraUnique();
 			}
@@ -326,6 +333,14 @@ class UserDetails extends Component {
   			filters.endDate.setHours(23,59,59,999);
   		}
   		this.setState({filters: filters});
+  		let { enablers, barriers, attrs } = this.processMessagesMetadata(this.state.messages, filters.startDate, filters.endDate, true);
+  		filters = this.updateFilters({ attrs: attrs, enablers: enablers, barriers: barriers });
+		this.setState({
+			attrs: attrs,
+			enablers: enablers,
+			barriers: barriers,
+			filters: filters
+		});
   	}
   	onNextPhoneCallChange(date) {
 

@@ -199,7 +199,7 @@ class Table extends Component {
   	}
   	formatDate(date) {
   		if (date) {
-	  		let options = {month: 'long', year: 'numeric', day: 'numeric'};
+	  		let options = {month: 'long', year: 'numeric', day: 'numeric', timeZone: "America/New_York"};
 	  		return (new Date(date)).toLocaleDateString('en-US', options);
   		}
   	}
