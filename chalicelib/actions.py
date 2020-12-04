@@ -727,10 +727,6 @@ class UserActions:
             )
             u.save()
 
-        if (len(u.weekly_goals_message_response.keys()) == 0):
-            self.initiate_goal_setting_message(u)
-            return
-
         # Exclude non-numeric responses
         response_val = self.message_received
         try:
@@ -741,15 +737,17 @@ class UserActions:
             return
 
         # Identify what type of message we should be sending
-        cur_key = sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1]
+        cur_key = -1
+        if (len(u.weekly_goals_message_response.keys()) > 0):
+            cur_key = sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1]
+            latest_goal_message = u.weekly_goals_message_response[cur_key]
         cur_progress_key = -1
         if (len(u.weekly_progress_message_response.keys()) > 0):
             cur_progress_key = sorted(u.weekly_progress_message_response.keys(), key=lambda x: int(x))[-1]
-        latest_goal_message = u.weekly_goals_message_response[cur_key]
+            latest_progress_message = u.weekly_progress_message_response[cur_key]
         type = "goals"
         last_decision_tree_id = None
         if (cur_key == cur_progress_key):
-            latest_progress_message = u.weekly_progress_message_response[cur_key]
             if (latest_progress_message['status'] == 'complete'):
                 if u.message_set == "MASTERY":
                     type = "mastery"
