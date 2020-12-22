@@ -110,7 +110,7 @@ class UserActions:
         self.message_received = kwargs.get('Body','').lower()
 
         # Total program days (including first day with no motivational message)
-        self.total_days = 72
+        self.total_days = 100
         self.initial_static_msg_days = 16
         self.last_message_sent = 0
         self.anti_spam_phone_numbers = [19782108436]
@@ -133,8 +133,12 @@ class UserActions:
         u = Users.get(self.phone)
         if u.message_set == "MASTERY":
             return self.sent_messages_length() >= 14
-        else:
+        elif u.message_set == "EBNHC":
             return self.sent_messages_length() >= 72
+        elif u.message_set == "Text4Health":
+            return self.sent_messages_length() >= 100
+        else:
+            return self.total_days
 
     def has_processed_for_invocation_id(self, invocation_id):
         try:
@@ -737,6 +741,8 @@ class UserActions:
             return
 
         # Identify what type of message we should be sending
+        latest_goal_message = None
+        latest_progress_message = None
         cur_key = -1
         if (len(u.weekly_goals_message_response.keys()) > 0):
             cur_key = sorted(u.weekly_goals_message_response.keys(), key=lambda x: int(x))[-1]
@@ -744,10 +750,10 @@ class UserActions:
         cur_progress_key = -1
         if (len(u.weekly_progress_message_response.keys()) > 0):
             cur_progress_key = sorted(u.weekly_progress_message_response.keys(), key=lambda x: int(x))[-1]
-            latest_progress_message = u.weekly_progress_message_response[cur_key]
+            latest_progress_message = u.weekly_progress_message_response[cur_progress_key]
         type = "goals"
         last_decision_tree_id = None
-        if (cur_key == cur_progress_key):
+        if (cur_key == -1 or cur_key == cur_progress_key):
             if (latest_progress_message['status'] == 'complete'):
                 if u.message_set == "MASTERY":
                     type = "mastery"
@@ -772,6 +778,7 @@ class UserActions:
                 last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
                 type = "goals"
 
+        print("Proceeding with type: %s"%(type))
         # Reset trees if response value is equal to the special reset value indicated to the user
         if response_val == 99:
             if type == "goals":
@@ -835,32 +842,34 @@ class UserActions:
         if (type == "goals"):
             u.weekly_goals_message_response[cur_key]['responses'].append(incoming_message)
         else:
-            u.weekly_progress_message_response[cur_key]['responses'].append(incoming_message)
+            u.weekly_progress_message_response[cur_progress_key]['responses'].append(incoming_message)
 
         # Then compute the outgoing message
         message = decision_tree.message
-        if latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT PLUS" in message:
+        if latest_goal_message is not None and latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT PLUS" in message:
             m = re.search("\[GOAL AMOUNT PLUS (.*)\]", message)
             recommended_goal_amount = int(m.group(1)) + latest_goal_message['goal_amount']
             message = message[:m.start()] + str(recommended_goal_amount) + message[m.end():]
             u.weekly_goals_message_response[cur_key]['goal_recommendation'] = recommended_goal_amount
 
-        if latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT MINUS" in message:
+        if latest_goal_message is not None and latest_goal_message['goal_amount'] is not None and "GOAL AMOUNT MINUS" in message:
             m = re.search("\[GOAL AMOUNT MINUS (.*)\]", message)
             recommended_goal_amount = latest_goal_message['goal_amount'] - int(m.group(1))
             message = message[:m.start()] + str(recommended_goal_amount) + message[m.end():]
-            u.weekly_goals_message_response[cur_key]['goal_recommendation'] = recommended_goal_amount
+            u.weekly_goals_message_response[cur_progress_key]['goal_recommendation'] = recommended_goal_amount
 
         # Save the outgoing message to the responses hash
-        update_hash = u.weekly_goals_message_response[cur_key]
+        update_hash = {}
+        if cur_key > -1:
+            u.weekly_goals_message_response[cur_key]
         if type == 'progress' or type == 'mastery':
-            update_hash = u.weekly_progress_message_response[cur_key]
-        update_hash['responses'].append({
-            'direction': 'outgoing',
-            'message': message,
-            'timestamp': str(datetime.now()),
-            'decision_tree_id': decision_tree.id,
-        })
+            update_hash = u.weekly_progress_message_response[cur_progress_key]
+            update_hash['responses'].append({
+                'direction': 'outgoing',
+                'message': message,
+                'timestamp': str(datetime.now()),
+                'decision_tree_id': decision_tree.id,
+            })
 
         # Record additional properties, based on the decision tree
         if decision_tree.is_terminal:
