@@ -860,7 +860,7 @@ class UserActions:
 
         # Save the outgoing message to the responses hash
         update_hash = {}
-        if cur_key > -1:
+        if int(cur_key) > -1:
             u.weekly_goals_message_response[cur_key]
         if type == 'progress' or type == 'mastery':
             update_hash = u.weekly_progress_message_response[cur_progress_key]
