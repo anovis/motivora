@@ -53,6 +53,12 @@ def send_weekly_messages(event):
         # Iterate through users for this time
         for user in user_list:
             user_obj = UserActions(**user.to_dict())
+            if user.message_set == "MASTERY":
+                 current_date = str(datetime.now())[0:10]
+                 next_phone_call = datetime.strptime(str(user.next_phone_call)[0:10], '%Y-%m-%d')
+                 day_before_next_phone_call = str(next_phone_call - timedelta(days=1))[0:10]
+                 if current_date == day_before_next_phone_call:
+                    user_obj.initiate_progress_message(user, "mastery")
             if not user.send_message:
                 print('User has deactivated messages.')
                 continue
@@ -68,12 +74,6 @@ def send_weekly_messages(event):
                         user_obj.initiate_goal_setting_message(user)
                     if cur_day_of_week == progress_message_sent_day_of_week:
                         user_obj.initiate_progress_message(user)
-            if user.message_set == "MASTERY":
-                 current_date = str(datetime.now())[0:10]
-                 next_phone_call = datetime.strptime(str(user.next_phone_call)[0:10], '%Y-%m-%d')
-                 day_before_next_phone_call = str(next_phone_call - timedelta(days=1))[0:10]
-                 if current_date == day_before_next_phone_call:
-                    user_obj.initiate_progress_message(user, "mastery")
 
 
 def get_et_hour():
