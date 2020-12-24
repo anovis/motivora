@@ -77,19 +77,12 @@ def send_weekly_messages(event):
 
 
 def get_et_hour():
-    hour = datetime.now().hour - 4
-    if hour < 0:
-        hour += 24
+    hour = datetime.now().hour - 5
     return hour
 
 def get_weekly_message_hour():
     hour = get_et_hour()
-    if hour < 13:
-        return [hour - 2]
-    elif hour >= 13 and hour <= 16:
-        return [hour + 2, hour - 2]
-    else:
-        return [hour + 2]
+    return hour
 
 def send_next_message(user_obj, invocation_id):
     print('Sending message to ' + str(user_obj.phone))
