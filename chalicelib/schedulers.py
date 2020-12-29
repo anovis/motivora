@@ -82,7 +82,7 @@ def get_et_hour():
 
 def get_weekly_message_hour():
     hour = get_et_hour()
-    return hour
+    return [hour]
 
 def send_next_message(user_obj, invocation_id):
     print('Sending message to ' + str(user_obj.phone))
