@@ -775,7 +775,7 @@ class UserActions:
                     self.initiate_progress_message(u)
                     return
             else:
-                latest_response_index = len(latest_goal_message['responses']) - 2
+                latest_response_index = len(latest_goal_message['responses']) - 1
                 last_decision_tree_id = latest_goal_message['responses'][latest_response_index]['decision_tree_id']
                 type = "goals"
 
