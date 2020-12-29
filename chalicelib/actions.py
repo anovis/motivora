@@ -863,12 +863,12 @@ class UserActions:
         update_hash = u.weekly_goals_message_response[cur_key]
         if type == 'progress' or type == 'mastery':
             update_hash = u.weekly_progress_message_response[cur_progress_key]
-            update_hash['responses'].append({
-                'direction': 'outgoing',
-                'message': message,
-                'timestamp': str(datetime.now()),
-                'decision_tree_id': decision_tree.id,
-            })
+        update_hash['responses'].append({
+            'direction': 'outgoing',
+            'message': message,
+            'timestamp': str(datetime.now()),
+            'decision_tree_id': decision_tree.id,
+        })
 
         # Record additional properties, based on the decision tree
         if decision_tree.is_terminal:
