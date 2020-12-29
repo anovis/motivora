@@ -775,7 +775,8 @@ class UserActions:
                     self.initiate_progress_message(u)
                     return
             else:
-                last_decision_tree_id = latest_goal_message['responses'][-1]['decision_tree_id']
+                latest_response_index = len(latest_goal_message['responses']) - 2
+                last_decision_tree_id = latest_goal_message['responses'][latest_response_index]['decision_tree_id']
                 type = "goals"
 
         print("Proceeding with type: %s"%(type))
@@ -859,9 +860,7 @@ class UserActions:
             u.weekly_goals_message_response[cur_progress_key]['goal_recommendation'] = recommended_goal_amount
 
         # Save the outgoing message to the responses hash
-        update_hash = {}
-        if int(cur_key) > -1:
-            update_hash = u.weekly_goals_message_response[cur_key]
+        update_hash = u.weekly_goals_message_response[cur_key]
         if type == 'progress' or type == 'mastery':
             update_hash = u.weekly_progress_message_response[cur_progress_key]
             update_hash['responses'].append({
