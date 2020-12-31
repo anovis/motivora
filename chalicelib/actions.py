@@ -860,7 +860,8 @@ class UserActions:
             u.weekly_goals_message_response[cur_progress_key]['goal_recommendation'] = recommended_goal_amount
 
         # Save the outgoing message to the responses hash
-        update_hash = u.weekly_goals_message_response[cur_key]
+        if type == 'goals':
+            update_hash = u.weekly_goals_message_response[cur_key]
         if type == 'progress' or type == 'mastery':
             update_hash = u.weekly_progress_message_response[cur_progress_key]
         update_hash['responses'].append({
