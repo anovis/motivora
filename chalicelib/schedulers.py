@@ -48,8 +48,8 @@ def send_weekly_messages(event):
     cur_day_of_week = datetime.today().weekday()
     hours = get_weekly_message_hour()
     for hour in hours:
-        user_list = Users.time_index.query(hour, Users.send_message == True)
-        print("Fetching users with send_message True and with hour: " + str(hour))
+        user_list = Users.time_index.query(hour)
+        print("Fetching users with hour: " + str(hour))
         # Iterate through users for this time
         for user in user_list:
             user_obj = UserActions(**user.to_dict())
